@@ -50,12 +50,12 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
                 return
             }
 
-        handler.groupManager.groups.remove(groupUuid)?.let { group ->
-            group.players.forEach { handler.groupManager.leave(it) }
-        } ?: run {
+        val group = handler.groupManager.groups[groupUuid] ?: run {
             source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.delete.error.no_group"))
             return
         }
+
+        handler.groupManager.deleteGroup(group)
 
         source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.delete.success"))
     }

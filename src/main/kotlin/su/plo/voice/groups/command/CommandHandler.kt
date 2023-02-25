@@ -33,11 +33,6 @@ class CommandHandler(
 
     override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
 
-//        if (arguments.isEmpty()) {
-//            source.sendMessage(MinecraftTextComponent.translatable("pv.addon.radio.command.usage"))
-//            return
-//        }
-
         subCommands[arguments[0]]?.let {
             it.execute(source, arguments)
             return

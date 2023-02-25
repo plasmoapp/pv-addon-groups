@@ -135,7 +135,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         }
 
         if (player != null) {
-            group.owner = player
+            group.owner = player.instance.gameProfile
             handler.groupManager.join(player, group)
         }
 

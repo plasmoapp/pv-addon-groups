@@ -22,6 +22,8 @@ class GroupsAddon {
 
     var groupManager: GroupsManager? = null
 
+    fun getAddonFolder(server: PlasmoVoiceServer): File = File(server.configFolder, "addons/groups")
+
     private val activationName = "groups"
     @EventSubscribe
     fun onConfigLoaded(event: VoiceServerConfigLoadedEvent) {
@@ -30,8 +32,7 @@ class GroupsAddon {
 
         val config = try {
 
-            val addonFolder = File(server.configFolder, "addons/groups")
-                .also { it.mkdirs() }
+            val addonFolder = getAddonFolder(server).also { it.mkdirs() }
 
             server.languages.register(
                 { resourcePath: String -> getLanguageResource(resourcePath)
@@ -70,11 +71,13 @@ class GroupsAddon {
             config.sourceLineWeight
         )
 
+        groupManager = GroupsManager(config, server, this, activation, sourceLine)
+
         server.eventBus.register(this, ActivationListener(
             server, this, activation, sourceLine
         ))
 
-        groupManager = GroupsManager(config, server, this, activation, sourceLine)
+        server.eventBus.register(this, groupManager!!)
     }
 
     @EventSubscribe

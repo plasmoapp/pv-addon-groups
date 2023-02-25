@@ -18,6 +18,7 @@ class ActivationListener(
 ) : BaseProximityServerActivation(voiceServer, "radio", PermissionDefault.TRUE) {
 
 //    private val permissions = voiceServer.minecraftServer.permissionsManager
+
 //    @EventSubscribe(priority = EventPriority.HIGHEST)
 //    override fun onActivationRegister(event: ServerActivationRegisterEvent) {
 //        val activation: ServerActivation = event.activation
