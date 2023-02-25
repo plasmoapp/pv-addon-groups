@@ -1,0 +1,25 @@
+[client.pv.activation]
+radio = "Radio"
+
+[server.pv.addon.groups.command.create.arg]
+name = "<Name>"
+password = "<Password>"
+permissions = "<List of comma separated permissions>"
+
+[server.pv.addon.groups]
+divider = "-----------------------------------------------------"
+
+[server.pv.addon.groups.icons]
+password_protected = "⛨"
+
+[server.pv.addon.groups.tooltip]
+password_protected = "Group is password protected"
+
+[server.pv.addon.groups.format]
+group_name = "%s"
+group_uuid = "Uuid: %s"
+players_and_owner = "Players: %1$s, owned by %2$s"
+only_players = "Players: %s"
+
+[server.pv.addon.groups.command.error]
+no_permission = "No permission: %s"
