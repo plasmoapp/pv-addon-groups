@@ -55,12 +55,12 @@ class BrowseCommand(handler: CommandHandler): SubCommand(handler) {
 
         val passwordProtected = if (group.password != null) {
             MinecraftTextComponent.translatable("pv.addon.groups.icons.password_protected")
-                .append(
-                    MinecraftTextComponent.literal(" ")
-                )
                 .hoverEvent(MinecraftTextHoverEvent.showText(
                     MinecraftTextComponent.translatable("pv.addon.groups.tooltip.password_protected")
                 ))
+//                .append(
+//                    MinecraftTextComponent.literal(" ")
+//                )
         } else {
             MinecraftTextComponent.empty()
         }
@@ -68,15 +68,15 @@ class BrowseCommand(handler: CommandHandler): SubCommand(handler) {
         val name = passwordProtected
             .append(
                 MinecraftTextComponent.translatable("pv.addon.groups.format.group_name", group.name)
+                    .hoverEvent(MinecraftTextHoverEvent.showText(
+                        MinecraftTextComponent.translatable("pv.addon.groups.format.group_uuid", group.id.toString())
+                    ))
             )
-            .hoverEvent(MinecraftTextHoverEvent.showText(
-                MinecraftTextComponent.translatable("pv.addon.groups.format.group_uuid", group.id.toString())
-            ))
 
         val players = if (group.owner == null) {
             MinecraftTextComponent.translatable("pv.addon.groups.format.only_players", group.playerCount)
         } else {
-            MinecraftTextComponent.translatable("pv.addon.groups.format.players_and_owner", group.playerCount, group.owner!!.info.playerNick)
+            MinecraftTextComponent.translatable("pv.addon.groups.format.players_and_owner", group.playerCount, group.owner!!.instance.name)
         }
 
         source.sendMessage(name)

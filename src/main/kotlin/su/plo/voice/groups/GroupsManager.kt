@@ -24,21 +24,21 @@ class GroupsManager(
         leave(player)
 
         val source = server.sourceManager.createDirectSource(addon, sourceLine, "opus", false)
-        source.addFilter { it.info.playerId != player.info.playerId }
+        source.addFilter { it.instance != player.instance }
         source.setSender(player)
         source.setPlayers(group::players)
 
-        groupByPlayer[player.info.playerId] = group
+        groupByPlayer[player.instance.uuid] = group
         sourceByPlayer[player.instance.uuid] = source
         group.players.add(player)
     }
 
     fun leave(player: VoicePlayer): Boolean {
 
-        sourceByPlayer.remove(player.info.playerId)
+        sourceByPlayer.remove(player.instance.uuid)
             ?.let { server.sourceManager.remove(it) }
 
-        val group = groupByPlayer.remove(player.info.playerId)
+        val group = groupByPlayer.remove(player.instance.uuid)
         val wasRemoved = group?.players?.remove(player)
 
         if (group?.persistent == false) {

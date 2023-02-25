@@ -45,7 +45,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
     private fun parseArguments(arguments: Array<out String>): Arguments = arguments
         .mapIndexed { index, value -> if (value.contains(":")) index else null }
         .filterNotNull()
-        .let { flagIndexes -> flagIndexes.mapIndexed() { index, flagIndex ->
+        .let { flagIndexes -> flagIndexes.mapIndexed { index, flagIndex ->
             val endIndex = flagIndexes.getOrNull(index + 1) ?: arguments.size
             arguments.slice(flagIndex..endIndex.minus(1))
                 .joinToString("")
@@ -103,7 +103,9 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
             .also {
                 if (handler.checkNotNullAndNoPermission(it, source, "create.name")) return
             }
-            ?: player?.instance?.name
+            ?: player?.instance?.name?.let {
+                handler.groupManager.config.defaultGroupNameFormat.replace("%player%", it)
+            }
             ?: "Server"
 
         if (name.length !in 3..16) {
