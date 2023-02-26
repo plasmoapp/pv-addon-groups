@@ -1,6 +1,7 @@
 package su.plo.voice.groups.utils.extend
 
 import su.plo.lib.api.chat.MinecraftTextComponent
+import su.plo.lib.api.chat.MinecraftTranslatableText
 import su.plo.lib.api.server.command.MinecraftCommandSource
 import su.plo.lib.api.server.player.MinecraftServerPlayer
 import su.plo.voice.api.server.PlasmoVoiceServer
@@ -10,31 +11,30 @@ fun MinecraftCommandSource.getVoicePlayer(server: PlasmoVoiceServer) = if (this 
     server.playerManager.getPlayerById(this.uuid).orElse(null)
 } else null
 
-fun MinecraftCommandSource.sendTranslatable(key: String, args: Any? = null) {
+fun MinecraftCommandSource.sendTranslatable(key: String, vararg args: Any?) {
     sendMessage(MinecraftTextComponent.translatable(key, args))
 }
 
-fun MinecraftCommandSource.checkNotNullAndNoPermission(
+fun MinecraftCommandSource.checkNotNullAndNoAddonPermission(
     value: Any?,
     permission: String
-): Boolean = ((value != null) && !hasPermission(permission))
+): Boolean = ((value != null) && !hasAddonPermission(permission))
     .also { if (it) noPermissionError(permission) }
 
-fun MinecraftCommandSource.hasPermission(command: String): Boolean =
+fun MinecraftCommandSource.hasAddonPermission(command: String): Boolean =
     this.hasPermission("pv.addon.groups.*") || this.hasPermission("pv.addon.groups.$command")
 
-
 fun MinecraftCommandSource.parseUuidOrPrintError(string: String): UUID? = string
-    ?.runCatching { UUID.fromString(string) }
-    ?.getOrNull()
+    .runCatching { UUID.fromString(string) }
+    .getOrNull()
     ?: run {
-        sendTranslatable("pv.addon.groups.command.delete.usage")
+        sendTranslatable("pv.addon.groups.error.uuid_parse", string)
         null
     }
 
-fun MinecraftCommandSource.checkPermissionAndPrintError(permission: String): Boolean =
-    !hasPermission(permission).also {
-        if (it) sendTranslatable("pv.addon.groups.error.no_permission", permission)
+fun MinecraftCommandSource.checkAddonPermissionAndPrintError(permission: String): Boolean =
+    !hasAddonPermission(permission).also {
+        if (!it) sendTranslatable("pv.addon.groups.error.no_permission", permission)
     }
 
 fun MinecraftCommandSource.noPermissionError(permission: String) =
@@ -46,5 +46,14 @@ fun MinecraftCommandSource.playerOnlyCommandError() =
 fun MinecraftCommandSource.groupNotFoundError() =
     sendTranslatable("pv.addon.groups.error.group_not_found")
 
+fun MinecraftCommandSource.notInGroupError() =
+    sendTranslatable("pv.addon.groups.error.not_in_group")
+
 fun MinecraftCommandSource.printDivider() =
     sendTranslatable("pv.addon.groups.divider")
+
+fun MinecraftCommandSource.sendMessage(components: List<MinecraftTextComponent>) =
+    components.forEach { sendMessage(it) }
+
+fun MinecraftCommandSource.printEmpty() =
+    sendMessage(MinecraftTextComponent.empty())

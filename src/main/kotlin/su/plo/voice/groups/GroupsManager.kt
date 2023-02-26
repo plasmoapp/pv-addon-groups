@@ -63,6 +63,7 @@ class GroupsManager(
         if (group?.persistent == false) {
             if (group.owner?.id == player.instance.uuid)
                 group.owner = group.onlinePlayers.randomOrNull()?.instance?.gameProfile
+                group.owner?.let { group.notifyPlayersTranslatable("server.pv.addon.groups.notifications.new_owner", it) }
             if (group.onlinePlayers.isEmpty()) deleteGroup(group)
         }
 

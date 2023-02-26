@@ -11,10 +11,7 @@ import su.plo.voice.api.server.PlasmoVoiceServer
 import su.plo.voice.api.server.event.command.CommandsRegisterEvent
 import su.plo.voice.api.server.event.config.VoiceServerConfigLoadedEvent
 import su.plo.voice.groups.command.CommandHandler
-import su.plo.voice.groups.command.subcommand.CreateCommand
-import su.plo.voice.groups.command.subcommand.DeleteCommand
-import su.plo.voice.groups.command.subcommand.BrowseCommand
-import su.plo.voice.groups.command.subcommand.LeaveCommand
+import su.plo.voice.groups.command.subcommand.*
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -90,9 +87,7 @@ class GroupsAddon {
             ?.also { fe -> fe.groupByPlayer.mapNotNull {
                 val group = groupManager!!.groups[it.value] ?: return@mapNotNull null
                 groupManager!!.groupByPlayer[it.key] = group
-                println("Pepega 2")
             } }
-
 
         server.eventBus.register(this, ActivationListener(
             server, this, activation, sourceLine
@@ -110,6 +105,9 @@ class GroupsAddon {
                 .addSubCommand(::DeleteCommand)
                 .addSubCommand(::BrowseCommand)
                 .addSubCommand(::LeaveCommand)
+                .addSubCommand(::JoinCommand)
+                .addSubCommand(::TransferCommand)
+                .addSubCommand(::InfoCommand)
         )
     }
 

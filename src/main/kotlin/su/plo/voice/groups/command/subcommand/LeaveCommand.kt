@@ -18,11 +18,11 @@ class LeaveCommand(handler: CommandHandler): SubCommand(handler) {
 
     override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
 
-        if (source.checkPermissionAndPrintError("leave")) return
+        if (source.checkAddonPermissionAndPrintError("leave")) return
 
         val player = source.getVoicePlayer(handler.voiceServer) ?: return source.playerOnlyCommandError()
 
-        val group = handler.groupManager.groups[player.instance.uuid] ?: return source.groupNotFoundError()
+        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return source.notInGroupError()
 
         handler.groupManager.leave(player)
 

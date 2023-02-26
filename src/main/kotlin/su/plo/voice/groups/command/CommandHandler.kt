@@ -7,6 +7,7 @@ import su.plo.lib.api.server.permission.PermissionDefault
 import su.plo.lib.api.server.player.MinecraftServerPlayer
 import su.plo.voice.api.server.PlasmoVoiceServer
 import su.plo.voice.groups.GroupsAddon
+import su.plo.voice.groups.utils.extend.hasAddonPermission
 import su.plo.voice.groups.utils.extend.sendTranslatable
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -53,7 +54,7 @@ class CommandHandler(
 
         if (arguments.size == 1) return subCommands.keys.stream()
             .filter { command -> command.startsWith(subCommand) }
-            .filter { command -> source.hasPermission(command) }
+            .filter { command -> source.hasAddonPermission(command) }
             .collect(Collectors.toList())
 
         subCommands[subCommand]?.let { return it.suggest(source, arguments) }

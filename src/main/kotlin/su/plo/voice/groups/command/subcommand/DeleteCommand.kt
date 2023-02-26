@@ -6,10 +6,7 @@ import su.plo.lib.api.server.permission.PermissionDefault
 import su.plo.lib.api.server.player.MinecraftServerPlayer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
-import su.plo.voice.groups.utils.extend.getVoicePlayer
-import su.plo.voice.groups.utils.extend.groupNotFoundError
-import su.plo.voice.groups.utils.extend.noPermissionError
-import su.plo.voice.groups.utils.extend.sendTranslatable
+import su.plo.voice.groups.utils.extend.*
 import java.util.*
 
 class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
@@ -17,6 +14,7 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
     override val name = "delete"
 
     override val permissions = listOf(
+        "delete" to PermissionDefault.TRUE,
         "delete.owner" to PermissionDefault.TRUE,
         "delete.all" to PermissionDefault.OP,
         "delete.*" to PermissionDefault.OP,
@@ -60,8 +58,8 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
         val isOwner = group.owner?.id == player?.instance?.uuid
 
         when {
-            source.hasPermission("delete.all") || source.hasPermission("delete.*") -> Unit
-            source.hasPermission("delete.owner") && isOwner -> Unit
+            source.hasAddonPermission("delete.all") || source.hasAddonPermission("delete.*") -> Unit
+            source.hasAddonPermission("delete.owner") && isOwner -> Unit
             else -> return source.noPermissionError(
                 if (isOwner) "delete.owner" else "delete.all"
             )
