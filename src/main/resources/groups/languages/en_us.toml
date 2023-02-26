@@ -2,13 +2,13 @@
 radio = "Radio"
 
 [server.pv.addon.groups.command.create.arg]
-name = "<Name>"
-password = "<Password>"
-permissions = "<List of comma separated permissions>"
+name = "<name>"
+password = "<password>"
+permissions = "<list of comma separated permissions>"
 
 [server.pv.addon.groups.arg]
-groups_uuid = "<Group Uuid>"
-password = "<Password>"
+groups_uuid = "<group Uuid>"
+password = "<password>"
 
 [server.pv.addon.groups]
 divider = "&8&m-----------------------------------------------------"
@@ -24,6 +24,7 @@ group_uuid = "Uuid: %s"
 group_name = "&9[%s]"
 players_and_owner = "&7Players: &r%1$s&7, owned by &r%2$s"
 only_players = "&7Players: &r%s"
+invite = "%1$s invited you to join voice group %2$s"
 
 [server.pv.addon.groups.notifications]
 new_owner = "%s is the new owner of the group"

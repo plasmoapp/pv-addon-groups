@@ -46,7 +46,7 @@ class Group(
     }
 
     private fun notifyPlayers(text: MinecraftTextComponent) {
-        val component = MinecraftTextComponent.translatable("pv.addon.groups.format.group_name")
+        val component = MinecraftTextComponent.translatable("pv.addon.groups.format.group_name", name)
             .append(MinecraftTextComponent.literal(" "))
             .append(text)
         players.forEach { it.instance.sendMessage(component) }
@@ -65,9 +65,11 @@ class Group(
 
     private val joinCommand = "/groups join $id"
 
+    private val joinCommandWithPassword = "/groups join $id $password"
+
     private val leaveCommand = "/groups leave"
 
-    private fun joinButton() = MinecraftTextComponent.translatable("pv.addon.groups.button.join").let {
+    fun joinButton() = MinecraftTextComponent.translatable("pv.addon.groups.button.join").let {
         if (password == null) {
             it.clickEvent(MinecraftTextClickEvent.runCommand(joinCommand))
         } else {
@@ -75,7 +77,19 @@ class Group(
         }.hoverEvent(MinecraftTextHoverEvent.showText(MinecraftTextComponent.literal(joinCommand)))
     }
 
-    private fun leaveButton() = MinecraftTextComponent.translatable("pv.addon.groups.button.leave")
+    fun joinButtonWithPassword() = MinecraftTextComponent.translatable("pv.addon.groups.button.join").let {
+        if (password == null) {
+            it.clickEvent(MinecraftTextClickEvent.runCommand(joinCommand))
+                .hoverEvent(MinecraftTextHoverEvent.showText(MinecraftTextComponent.literal(joinCommand)))
+        } else {
+            it.clickEvent(MinecraftTextClickEvent.runCommand(joinCommandWithPassword))
+                .hoverEvent(MinecraftTextHoverEvent.showText(MinecraftTextComponent.literal("$joinCommand *******")))
+        }
+    }
+
+    fun inlineChatComponent() = MinecraftTextComponent.translatable("pv.addon.groups.format.group_name", name)
+
+    fun leaveButton() = MinecraftTextComponent.translatable("pv.addon.groups.button.leave")
         .clickEvent(MinecraftTextClickEvent.runCommand(leaveCommand))
         .hoverEvent(MinecraftTextHoverEvent.showText(MinecraftTextComponent.literal(leaveCommand)))
 

@@ -41,7 +41,7 @@ class GroupsAddon {
                 File(addonFolder, "languages")
             )
 
-            val configFile = File(addonFolder, "radio.toml")
+            val configFile = File(addonFolder, "config.toml")
 
             toml.load<Config>(Config::class.java, configFile, false)
                 .also { toml.save(Config::class.java, it, configFile) }
@@ -108,6 +108,7 @@ class GroupsAddon {
                 .addSubCommand(::JoinCommand)
                 .addSubCommand(::TransferCommand)
                 .addSubCommand(::InfoCommand)
+                .addSubCommand(::InviteCommand)
         )
     }
 
