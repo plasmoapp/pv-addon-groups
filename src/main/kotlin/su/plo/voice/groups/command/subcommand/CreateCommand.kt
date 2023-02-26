@@ -7,6 +7,9 @@ import su.plo.lib.api.server.player.MinecraftServerPlayer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
 import su.plo.voice.groups.group.Group
+import su.plo.voice.groups.utils.extend.checkNotNullAndNoPermission
+import su.plo.voice.groups.utils.extend.checkPermissionAndPrintError
+import su.plo.voice.groups.utils.extend.getVoicePlayer
 import java.util.*
 
 class CreateCommand(handler: CommandHandler): SubCommand(handler) {
@@ -70,14 +73,14 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
 
         if (!insideFlag) return flags
             .filterNot { parseArguments(arguments).usedFlags.contains(it) }
-            .filter { handler.hasPermission(source, "create.$it") }
+            .filter { source.hasPermission("create.$it") }
             .map { "$it:" }
 
         val flagName = arguments.findLast { it.contains(":") }
             ?.split(":", limit = 2)
             ?.getOrNull(0)
 
-        if (!handler.hasPermission(source, "create.$flagName")) return listOf()
+        if (!source.hasPermission("create.$flagName")) return listOf()
 
         return when (flagName) {
             "name" -> listOf(handler.getTranslationByKey("pv.addon.groups.command.create.arg.name", source))
@@ -90,18 +93,15 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
 
     override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
 
-        if (!handler.hasPermission(source, "create"))
-            return handler.noPermission(source, "create")
+        if (source.checkPermissionAndPrintError("create")) return
 
         val parsedArgs = parseArguments(arguments)
 
-        val player = if (source is MinecraftServerPlayer) {
-            handler.voiceServer.playerManager.getPlayerById(source.uuid).orElse(null)
-        } else null
+        val player = source.getVoicePlayer(handler.voiceServer)
 
         val name = parsedArgs.name
             .also {
-                if (handler.checkNotNullAndNoPermission(it, source, "create.name")) return
+                if (source.checkNotNullAndNoPermission(it, "create.name")) return
             }
             ?: player?.instance?.name?.let {
                 handler.groupManager.config.defaultGroupNameFormat.replace("%player%", it)
@@ -115,15 +115,15 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
 
         val password = parsedArgs.password
 
-        if (handler.checkNotNullAndNoPermission(password, source, "create.password")) return
+        if (source.checkNotNullAndNoPermission(password, "create.password")) return
 
         val permissions = parsedArgs.permissions
 
-        if (handler.checkNotNullAndNoPermission(permissions, source, "create.permissions")) return
+        if (source.checkNotNullAndNoPermission(permissions, "create.permissions")) return
 
         val persistent = parsedArgs.persistent
             .also {
-                if (handler.checkNotNullAndNoPermission(it, source, "create.persistent")) return
+                if (source.checkNotNullAndNoPermission(it, "create.persistent")) return
             } ?: false
 
         val group = Group(UUID.randomUUID(), name, password, persistent)

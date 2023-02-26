@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "1.8.10"
-    kotlin("kapt") version "1.8.10"
-    kotlin("plugin.serialization") version "1.8.10"
+    kotlin("jvm") version "1.6.10"
+    kotlin("kapt") version "1.6.10"
+    kotlin("plugin.serialization") version "1.6.10"
 }
 
 group = "su.plo"
@@ -22,7 +22,7 @@ dependencies {
 
     compileOnly("su.plo.voice.api:server:2.0.0+ALPHA")
     compileOnly("su.plo.config:config:1.0.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
 
     kapt("su.plo.voice.api:server:2.0.0+ALPHA")
     kapt("com.google.guava:guava:31.1-jre")

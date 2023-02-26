@@ -7,19 +7,28 @@ password = "<Password>"
 permissions = "<List of comma separated permissions>"
 
 [server.pv.addon.groups]
-divider = "-----------------------------------------------------"
+divider = "&8&m-----------------------------------------------------"
 
 [server.pv.addon.groups.icons]
-password_protected = "⛨"
+password_protected = "&9⛨"
 
 [server.pv.addon.groups.tooltip]
 password_protected = "Group is password protected"
 
 [server.pv.addon.groups.format]
-group_name = "%s"
-group_uuid = "Uuid: %s"
-players_and_owner = "Players: %1$s, owned by %2$s"
-only_players = "Players: %s"
+group_name = "&9[%s]"
+group_uuid = "&7Uuid: &r%s"
+players_and_owner = "&7Players: &r%1$s&7, owned by &r%2$s"
+only_players = "&7Players: &r%s"
 
-[server.pv.addon.groups.command.error]
-no_permission = "No permission: %s"
+[server.pv.addon.groups.notifications]
+new_owner = "%s is the new owner of the group"
+player_joined = "%s joined the group"
+player_left = "%s left the group"
+group_deleted = "Group was deleted"
+
+[server.pv.addon.groups.buttons]
+join = "&e→ Join"
+
+[server.pv.addon.groups.error]
+no_permission = "&cNo permission: %s"

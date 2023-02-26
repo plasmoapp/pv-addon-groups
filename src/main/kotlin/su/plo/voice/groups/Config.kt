@@ -20,7 +20,7 @@ class Config {
     val sourceLineWeight = 10
 
     @ConfigField(path = "default_group_name_format")
-    val defaultGroupNameFormat = "%player%'s name"
+    val defaultGroupNameFormat = "%player%'s group"
 
 
 //

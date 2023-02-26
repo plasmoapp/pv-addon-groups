@@ -6,7 +6,10 @@ import su.plo.lib.api.server.permission.PermissionDefault
 import su.plo.lib.api.server.player.MinecraftServerPlayer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
-import su.plo.voice.groups.group.Group
+import su.plo.voice.groups.utils.extend.getVoicePlayer
+import su.plo.voice.groups.utils.extend.groupNotFoundError
+import su.plo.voice.groups.utils.extend.noPermissionError
+import su.plo.voice.groups.utils.extend.sendTranslatable
 import java.util.*
 
 class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
@@ -21,7 +24,7 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
 
     override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
 
-        if (arguments.size != 2) return listOf("HmMMmMMm")
+        if (arguments.size != 2) return listOf("")
 
         val uuidArgument = arguments[1]
 
@@ -50,13 +53,24 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
                 return
             }
 
-        val group = handler.groupManager.groups[groupUuid] ?: run {
-            source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.delete.error.no_group"))
-            return
+        val group = handler.groupManager.groups[groupUuid] ?: return source.groupNotFoundError()
+
+        val player = source.getVoicePlayer(handler.voiceServer)
+
+        val isOwner = group.owner?.id == player?.instance?.uuid
+
+        when {
+            source.hasPermission("delete.all") || source.hasPermission("delete.*") -> Unit
+            source.hasPermission("delete.owner") && isOwner -> Unit
+            else -> return source.noPermissionError(
+                if (isOwner) "delete.owner" else "delete.all"
+            )
         }
+
+        group.notifyPlayersTranslatable("pv.addon.groups.notifications.group_deleted")
 
         handler.groupManager.deleteGroup(group)
 
-        source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.delete.success"))
+        source.sendTranslatable("pv.addon.groups.command.delete.success")
     }
 }

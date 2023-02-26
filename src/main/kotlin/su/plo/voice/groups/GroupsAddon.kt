@@ -1,5 +1,7 @@
 package su.plo.voice.groups
 
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
 import su.plo.voice.api.addon.AddonScope
@@ -12,6 +14,7 @@ import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.subcommand.CreateCommand
 import su.plo.voice.groups.command.subcommand.DeleteCommand
 import su.plo.voice.groups.command.subcommand.BrowseCommand
+import su.plo.voice.groups.command.subcommand.LeaveCommand
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -30,9 +33,9 @@ class GroupsAddon {
 
         val server = event.server
 
-        val config = try {
+        val addonFolder = getAddonFolder(server).also { it.mkdirs() }
 
-            val addonFolder = getAddonFolder(server).also { it.mkdirs() }
+        val config = try {
 
             server.languages.register(
                 { resourcePath: String -> getLanguageResource(resourcePath)
@@ -73,6 +76,24 @@ class GroupsAddon {
 
         groupManager = GroupsManager(config, server, this, activation, sourceLine)
 
+        File(addonFolder, "groups.json")
+            .takeIf { it.isFile }
+            ?.readText()
+            ?.runCatching { Json.decodeFromString<GroupsManager.Data>(this) }
+            ?.getOrNull()
+            ?.also { fe -> fe.groups.forEach { group ->
+                group.ownerUUID
+                    ?.let { server.minecraftServer.getGameProfile(it).orElse(null) }
+                    ?.let { group.data.owner = it }
+                groupManager!!.groups[group.data.id] = group.data
+            } }
+            ?.also { fe -> fe.groupByPlayer.mapNotNull {
+                val group = groupManager!!.groups[it.value] ?: return@mapNotNull null
+                groupManager!!.groupByPlayer[it.key] = group
+                println("Pepega 2")
+            } }
+
+
         server.eventBus.register(this, ActivationListener(
             server, this, activation, sourceLine
         ))
@@ -88,6 +109,7 @@ class GroupsAddon {
                 .addSubCommand(::CreateCommand)
                 .addSubCommand(::DeleteCommand)
                 .addSubCommand(::BrowseCommand)
+                .addSubCommand(::LeaveCommand)
         )
     }
 

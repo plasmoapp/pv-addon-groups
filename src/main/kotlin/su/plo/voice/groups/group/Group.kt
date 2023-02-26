@@ -4,7 +4,7 @@ import su.plo.voice.api.server.player.VoicePlayer
 import java.util.UUID
 
 import kotlinx.serialization.*
-import kotlinx.serialization.json.*
+import su.plo.lib.api.chat.MinecraftTextComponent
 import su.plo.voice.groups.utils.serializer.UUIDSerializer
 import su.plo.voice.proto.data.player.MinecraftGameProfile
 
@@ -32,12 +32,22 @@ class Group(
 
     val sortedOnlinePlayers: List<VoicePlayer>
         get() = onlinePlayers.sortedBy { it.instance.name }
-}
 
-@Serializable
-data class GroupData(
-    @Serializable(with = UUIDSerializer::class)
-    val ownerUUID: UUID?,
-    val players: Set<@Serializable(with = UUIDSerializer::class) UUID>,
-    val data: Group
-)
+    fun notifyPlayers(text: MinecraftTextComponent) {
+        val component = MinecraftTextComponent.translatable("pv.addon.groups.format.group_name")
+            .append(MinecraftTextComponent.literal(" "))
+            .append(text)
+        players.forEach { it.instance.sendMessage(component) }
+    }
+
+    fun notifyPlayersTranslatable(key: String, args: Any? = null) =
+        notifyPlayers(MinecraftTextComponent.translatable(key, args))
+
+    @Serializable
+    data class Data(
+        @Serializable(with = UUIDSerializer::class)
+        val ownerUUID: UUID?,
+        val players: Set<@Serializable(with = UUIDSerializer::class) UUID>,
+        val data: Group,
+    )
+}
