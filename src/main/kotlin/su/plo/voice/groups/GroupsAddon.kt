@@ -109,6 +109,7 @@ class GroupsAddon {
                 .addSubCommand(::TransferCommand)
                 .addSubCommand(::InfoCommand)
                 .addSubCommand(::InviteCommand)
+                .addSubCommand(::SetCommand)
         )
     }
 

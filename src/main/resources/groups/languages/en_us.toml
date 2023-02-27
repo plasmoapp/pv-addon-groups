@@ -15,10 +15,6 @@ page = "&7Page &r%s/%s"
 [server.pv.addon.groups.icons]
 password_protected = "&6⛨"
 
-[server.pv.addon.groups.error]
-uuid_parse = "'%s' is not a Uuid"
-no_permission = "&cNo permission: %s"
-
 [server.pv.addon.groups.command.create.arg]
 password = "<password>"
 permissions = "<list of comma separated permissions>"
@@ -41,4 +37,17 @@ player_join = "%s joined the group"
 group_deleted = "Group was deleted"
 
 [client.pv.activation]
-radio = "Radio"
+radio = "Groups"
+
+[server.pv.addon.groups.error]
+uuid_parse = "&cUuid parse error. '%s' is not a Uuid"
+no_permission = "&cNo permission: '%s'"
+group_not_found = "&cGroup not found"
+not_in_group = "&cYou need to be in the group to execute this command"
+unknown = "&cUnknown error"
+name_length = "&cGroup name name should be betweeen %1$s and %2$s characters long"
+
+
+[server.pv.addon.groups.command.set.error]
+usage = "&cUsage: /groups set <flag> <value>"
+unknown_flag = "&cUnknown flag: '%1$s'. Available flags: %2$s"

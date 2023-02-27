@@ -39,10 +39,10 @@ class CommandHandler(
         "password" to PermissionDefault.TRUE,
         "permissions" to PermissionDefault.OP,
         "persistent" to PermissionDefault.OP,
-    )
+    ).toMap()
 
     init {
-        flags.map { "flag.${it.first}" to it.second }
+        flags.map { "flag.${it.key}" to it.value }
             .also { registerPermissions(it) }
     }
 

@@ -43,7 +43,13 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         }.associate {
             val split = it.split(":", limit = 2)
             split.getOrNull(0)!!.trim() to split.getOrNull(1)?.trim()
-        }.let { args -> Arguments(
+        }
+//        }.also { args ->
+//            args.keys.find { !handler.flags.keys.contains(it) }?.let {
+//                return source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.create.error.name_length"))
+//            }
+//        }
+        .let { args -> Arguments(
             args["name"],
             args["password"]?.split(" ")?.firstOrNull(),
             args["permissions"]?.split(",")?.map { it.trim() },
@@ -63,7 +69,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         val lastArg = arguments.lastOrNull() ?: ""
 
         if (!insideFlag) return handler.flags
-            .map { it.first }
+            .map { it.key }
             .filterNot { parseArguments(arguments).usedFlags.contains(it) }
             .filter { source.hasFlagPermission(it) && it.startsWith(lastArg) }
             .map { "$it:" }
@@ -98,8 +104,11 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
             } ?: handler.groupManager.config.defaultGroupNameFormat
                 .replace("%player%", (player?.instance?.name ?: "Server"))
 
-        if (name.length !in 3..16) {
-            source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.create.error.name_length"))
+        val min = handler.groupManager.config.minimumNameLength
+        val max = handler.groupManager.config.maximumNameLength
+
+        if (name.length !in min..max) {
+            source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.error.name_length"))
             return
         }
 

@@ -50,7 +50,10 @@ class JoinCommand(handler: CommandHandler): SubCommand(handler) {
 
         val player = source.getVoicePlayer(handler.voiceServer) ?: return source.playerOnlyCommandError()
 
-        val group = source.parseUuidOrPrintError(arguments[1])
+        val uuidArg = arguments.getOrNull(1) ?: return
+            source.sendTranslatable("pv.addon.groups.command.join.error.usage")
+
+        val group = source.parseUuidOrPrintError(uuidArg)
             .let { it ?: return }
             .let { handler.groupManager.groups[it] ?: return source.groupNotFoundError() }
 

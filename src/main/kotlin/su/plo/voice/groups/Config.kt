@@ -22,6 +22,12 @@ class Config {
     @ConfigField(path = "default_group_name_format")
     val defaultGroupNameFormat = "%player%'s group"
 
+    @ConfigField(path = "minimum_name_length")
+    val minimumNameLength = 3
+
+    @ConfigField(path = "maximum_name_length")
+    val maximumNameLength = 16
+
 
 //
 //    @NoArgsConstructor
