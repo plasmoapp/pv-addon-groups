@@ -7,10 +7,7 @@ import su.plo.lib.api.server.player.MinecraftServerPlayer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
 import su.plo.voice.groups.group.Group
-import su.plo.voice.groups.utils.extend.checkNotNullAndNoAddonPermission
-import su.plo.voice.groups.utils.extend.checkAddonPermissionAndPrintError
-import su.plo.voice.groups.utils.extend.getVoicePlayer
-import su.plo.voice.groups.utils.extend.hasAddonPermission
+import su.plo.voice.groups.utils.extend.*
 import java.util.*
 
 class CreateCommand(handler: CommandHandler): SubCommand(handler) {
@@ -19,17 +16,6 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
 
     override val permissions = listOf(
         "create" to PermissionDefault.TRUE,
-        "create.name" to PermissionDefault.TRUE,
-        "create.password" to PermissionDefault.TRUE,
-        "create.persistent" to PermissionDefault.OP,
-        "create.permissions" to PermissionDefault.OP,
-    )
-
-    private val flags = listOf(
-        "name",
-        "password",
-        "permissions",
-        "persistent",
     )
 
     private data class Arguments(
@@ -52,16 +38,16 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         .let { flagIndexes -> flagIndexes.mapIndexed { index, flagIndex ->
             val endIndex = flagIndexes.getOrNull(index + 1) ?: arguments.size
             arguments.slice(flagIndex..endIndex.minus(1))
-                .joinToString("")
-                .filterNot { it.isWhitespace() } }
+                .joinToString(" ")
+        }
         }.associate {
             val split = it.split(":", limit = 2)
-            split.getOrNull(0)!! to split.getOrNull(1)
-        }.let { Arguments(
-            it["name"],
-            it["password"],
-            it["permissions"]?.split(","),
-            it["persistent"]?.toBooleanStrictOrNull()
+            split.getOrNull(0)!!.trim() to split.getOrNull(1)?.trim()
+        }.let { args -> Arguments(
+            args["name"],
+            args["password"]?.split(" ")?.firstOrNull(),
+            args["permissions"]?.split(",")?.map { it.trim() },
+            args["persistent"]?.toBooleanStrictOrNull()
         )
     }
 
@@ -69,19 +55,25 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
     override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
 
         val insideFlag = arguments.getOrNull(arguments.size.minus(2))
-            ?.let { it.contains(":") || it.endsWith(",") }
+            ?.let {
+                (it.contains(":") || it.endsWith(","))
+            }
             ?: false
 
-        if (!insideFlag) return flags
+        val lastArg = arguments.lastOrNull() ?: ""
+
+        if (!insideFlag) return handler.flags
+            .map { it.first }
             .filterNot { parseArguments(arguments).usedFlags.contains(it) }
-            .filter { source.hasAddonPermission("create.$it") }
+            .filter { source.hasFlagPermission(it) && it.startsWith(lastArg) }
             .map { "$it:" }
 
         val flagName = arguments.findLast { it.contains(":") }
             ?.split(":", limit = 2)
             ?.getOrNull(0)
+            ?: return listOf()
 
-        if (!source.hasAddonPermission("create.$flagName")) return listOf()
+        if (!source.hasFlagPermission(flagName)) return listOf()
 
         return when (flagName) {
             "name" -> listOf(handler.getTranslationByKey("pv.addon.groups.command.create.arg.name", source))
@@ -102,7 +94,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
 
         val name = parsedArgs.name
             .also {
-                if (source.checkNotNullAndNoAddonPermission(it, "create.name")) return
+                if (source.checkNotNullAndNoFlagPermission(it, "name")) return
             } ?: handler.groupManager.config.defaultGroupNameFormat
                 .replace("%player%", (player?.instance?.name ?: "Server"))
 
@@ -113,15 +105,15 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
 
         val password = parsedArgs.password
 
-        if (source.checkNotNullAndNoAddonPermission(password, "create.password")) return
+        if (source.checkNotNullAndNoFlagPermission(password, "password")) return
 
         val permissions = parsedArgs.permissions
 
-        if (source.checkNotNullAndNoAddonPermission(permissions, "create.permissions")) return
+        if (source.checkNotNullAndNoFlagPermission(permissions, "permissions")) return
 
         val persistent = parsedArgs.persistent
             .also {
-                if (source.checkNotNullAndNoAddonPermission(it, "create.persistent")) return
+                if (source.checkNotNullAndNoFlagPermission(it, "persistent")) return
             } ?: false
 
         val group = Group(UUID.randomUUID(), name, password, persistent)
@@ -139,4 +131,6 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
 
         source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.create.success", group.name))
     }
+
+    override fun checkCanExecute(source: MinecraftCommandSource): Boolean = source.hasAddonPermission("create")
 }

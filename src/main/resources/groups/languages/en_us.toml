@@ -1,41 +1,44 @@
-[client.pv.activation]
-radio = "Radio"
-
-[server.pv.addon.groups.command.create.arg]
-name = "<name>"
-password = "<password>"
-permissions = "<list of comma separated permissions>"
-
-[server.pv.addon.groups.arg]
-groups_uuid = "<group Uuid>"
-password = "<password>"
-
 [server.pv.addon.groups]
 divider = "&8&m-----------------------------------------------------"
 
-[server.pv.addon.groups.icons]
-password_protected = "&9⛨"
-
 [server.pv.addon.groups.tooltip]
-password_protected = "Group is password protected"
 group_uuid = "Uuid: %s"
+password_protected = "Group is password protected"
 
 [server.pv.addon.groups.format]
-group_name = "&9[%s]"
+group_name = "&6[%s]"
 players_and_owner = "&7Players: &r%1$s&7, owned by &r%2$s"
 only_players = "&7Players: &r%s"
 invite = "%1$s invited you to join voice group %2$s"
+page = "&7Page &r%s/%s"
+
+[server.pv.addon.groups.icons]
+password_protected = "&6⛨"
+
+[server.pv.addon.groups.error]
+uuid_parse = "'%s' is not a Uuid"
+no_permission = "&cNo permission: %s"
+
+[server.pv.addon.groups.command.create.arg]
+password = "<password>"
+permissions = "<list of comma separated permissions>"
+name = "<name>"
+
+[server.pv.addon.groups.button]
+next = "&e>"
+leave = "&c← Leave"
+prev = "&e<"
+join = "&e→ Join"
+
+[server.pv.addon.groups.arg]
+groups_uuid = "<group uuid>"
+password = "<password>"
 
 [server.pv.addon.groups.notifications]
 new_owner = "%s is the new owner of the group"
-player_joined = "%s joined the group"
 player_left = "%s left the group"
+player_join = "%s joined the group"
 group_deleted = "Group was deleted"
 
-[server.pv.addon.groups.button]
-join = "&e→ Join"
-leave = "&c← Leave"
-
-[server.pv.addon.groups.error]
-no_permission = "&cNo permission: %s"
-uuid_parse = "'%s' is not a Uuid"
+[client.pv.activation]
+radio = "Radio"

@@ -34,9 +34,26 @@ class CommandHandler(
         return this
     }
 
+    val flags = listOf(
+        "name" to PermissionDefault.TRUE,
+        "password" to PermissionDefault.TRUE,
+        "permissions" to PermissionDefault.OP,
+        "persistent" to PermissionDefault.OP,
+    )
+
+    init {
+        flags.map { "flag.${it.first}" to it.second }
+            .also { registerPermissions(it) }
+    }
+
     override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
 
-        subCommands[arguments[0]]?.let {
+        val subCommand = arguments.getOrNull(0) ?: run {
+            subCommands["browse"]?.execute(source, arguments)
+            return
+        }
+
+        subCommands[subCommand]?.let {
             it.execute(source, arguments)
             return
         }
@@ -52,10 +69,10 @@ class CommandHandler(
 
         val subCommand = arguments[0]
 
-        if (arguments.size == 1) return subCommands.keys.stream()
-            .filter { command -> command.startsWith(subCommand) }
-            .filter { command -> source.hasAddonPermission(command) }
-            .collect(Collectors.toList())
+        if (arguments.size == 1) return subCommands
+            .filter { it.key.startsWith(subCommand) && it.value.checkCanExecute(source) }
+            .keys
+            .toList()
 
         subCommands[subCommand]?.let { return it.suggest(source, arguments) }
 

@@ -30,4 +30,9 @@ class LeaveCommand(handler: CommandHandler): SubCommand(handler) {
 
         group.notifyPlayersTranslatable("pv.addon.groups.notifications.player_left", player.instance.name)
     }
+
+    override fun checkCanExecute(source: MinecraftCommandSource): Boolean =
+        source.getVoicePlayer(handler.voiceServer)
+            ?.let { handler.groupManager.groupByPlayer[it.instance.uuid] }
+            ?.let { true } ?: false
 }

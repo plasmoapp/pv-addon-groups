@@ -14,7 +14,6 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
     override val name = "delete"
 
     override val permissions = listOf(
-        "delete" to PermissionDefault.TRUE,
         "delete.owner" to PermissionDefault.TRUE,
         "delete.all" to PermissionDefault.OP,
         "delete.*" to PermissionDefault.OP,
@@ -22,40 +21,42 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
 
     override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
 
-        if (arguments.size != 2) return listOf("")
+//        if (arguments.size != 2) return listOf("")
+//
+//        val uuidArgument = arguments[1]
+//
+//        if (handler.hasPermission(source, arrayOf("delete.all", "delete.*")))
+//            return handler.groupManager.groups.values
+//                .map { it.id.toString() }
+//                .filter { it.startsWith(uuidArgument) }
+//
+//        val player = if (source is MinecraftServerPlayer) {
+//            handler.voiceServer.playerManager.getPlayerById(source.uuid).orElse(null)
+//        } else null
+//
+//        return handler.groupManager.groups.values
+//            .filter { it.owner == player }
+//            .map { it.id.toString() }
+//            .filter { it.startsWith(uuidArgument) }
 
-        val uuidArgument = arguments[1]
-
-        if (handler.hasPermission(source, arrayOf("delete.all", "delete.*")))
-            return handler.groupManager.groups.values
-                .map { it.id.toString() }
-                .filter { it.startsWith(uuidArgument) }
-
-        val player = if (source is MinecraftServerPlayer) {
-            handler.voiceServer.playerManager.getPlayerById(source.uuid).orElse(null)
-        } else null
-
-        return handler.groupManager.groups.values
-            .filter { it.owner == player }
-            .map { it.id.toString() }
-            .filter { it.startsWith(uuidArgument) }
+        return listOf()
     }
 
     override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
 
-        val groupUuid = arguments.getOrNull(1)
-            ?.runCatching { UUID.fromString(this) }
-            ?.getOrNull()
-            ?: run {
-                source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.delete.usage"))
-                return
-            }
+//        val groupUuid = arguments.getOrNull(1)
+//            ?.runCatching { UUID.fromString(this) }
+//            ?.getOrNull()
+//            ?: run {
+//                source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.delete.usage"))
+//                return
+//            }
 
-        val group = handler.groupManager.groups[groupUuid] ?: return source.groupNotFoundError()
+        val player = source.getVoicePlayer(handler.voiceServer) ?: return source.playerOnlyCommandError()
 
-        val player = source.getVoicePlayer(handler.voiceServer)
+        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return source.notInGroupError()
 
-        val isOwner = group.owner?.id == player?.instance?.uuid
+        val isOwner = group.owner?.id == player.instance.uuid
 
         when {
             source.hasAddonPermission("delete.all") || source.hasAddonPermission("delete.*") -> Unit
@@ -71,4 +72,20 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
 
         source.sendTranslatable("pv.addon.groups.command.delete.success")
     }
+
+    override fun checkCanExecute(source: MinecraftCommandSource): Boolean {
+
+        val player = source.getVoicePlayer(handler.voiceServer) ?: return false
+        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return false
+
+        val isOwner = group.owner?.id == player.instance.uuid
+
+        return when {
+            source.hasAddonPermission("delete.owner") && isOwner -> true
+            source.hasAddonPermission("delete.all") -> true
+            source.hasAddonPermission("delete.*") -> true
+            else -> false
+        }
+    }
+
 }

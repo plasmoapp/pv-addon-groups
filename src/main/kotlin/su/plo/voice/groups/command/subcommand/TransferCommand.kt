@@ -11,7 +11,6 @@ class TransferCommand(handler: CommandHandler): SubCommand(handler) {
     override val name = "transfer"
 
     override val permissions = listOf(
-        "transfer" to PermissionDefault.TRUE,
         "transfer.owner" to PermissionDefault.TRUE,
         "transfer.all" to PermissionDefault.OP,
         "transfer.*" to PermissionDefault.OP,
@@ -58,8 +57,23 @@ class TransferCommand(handler: CommandHandler): SubCommand(handler) {
             return source.sendTranslatable("pv.addon.groups.command.transfer.error.already_owner")
 
         group.owner = profile
-        group.owner?.let { group.notifyPlayersTranslatable("server.pv.addon.groups.notifications.new_owner", it) }
+        group.owner?.let { group.notifyPlayersTranslatable("server.pv.addon.groups.notifications.new_owner", it.name) }
 
         source.sendTranslatable("pv.addon.groups.command.leave.success", group.name)
+    }
+
+    override fun checkCanExecute(source: MinecraftCommandSource): Boolean {
+
+        val player = source.getVoicePlayer(handler.voiceServer) ?: return false
+        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return false
+
+        val isOwner = group.owner?.id == player.instance.uuid
+
+        return when {
+            source.hasAddonPermission("transfer.owner") && isOwner -> true
+            source.hasAddonPermission("transfer.all") -> true
+            source.hasAddonPermission("transfer.*") -> true
+            else -> false
+        }
     }
 }

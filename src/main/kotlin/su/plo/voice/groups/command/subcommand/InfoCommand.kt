@@ -11,7 +11,6 @@ class InfoCommand(handler: CommandHandler): SubCommand(handler) {
     override val name = "info"
 
     override val permissions = listOf(
-        "info" to PermissionDefault.TRUE,
         "info.owner" to PermissionDefault.TRUE,
         "info.member" to PermissionDefault.TRUE,
         "info.*" to PermissionDefault.OP,
@@ -40,4 +39,20 @@ class InfoCommand(handler: CommandHandler): SubCommand(handler) {
         source.printDivider()
 
     }
+
+    override fun checkCanExecute(source: MinecraftCommandSource): Boolean {
+
+        val player = source.getVoicePlayer(handler.voiceServer) ?: return false
+        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return false
+
+        val isOwner = group.owner?.id == player.instance.uuid
+
+        return when {
+            source.hasAddonPermission("info.member") -> true
+            isOwner && source.hasAddonPermission("info.owner") -> true
+            source.hasAddonPermission("info.*") -> true
+            else -> false
+        }
+    }
+
 }

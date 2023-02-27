@@ -1,5 +1,6 @@
 package su.plo.voice.groups.command.subcommand
 
+import su.plo.lib.api.chat.MinecraftTextComponent
 import su.plo.lib.api.server.command.MinecraftCommandSource
 import su.plo.lib.api.server.permission.PermissionDefault
 import su.plo.voice.groups.command.CommandHandler
@@ -11,7 +12,6 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
     override val name = "invite"
 
     override val permissions = listOf(
-        "invite" to PermissionDefault.TRUE,
         "invite.owner" to PermissionDefault.TRUE,
         "invite.member" to PermissionDefault.TRUE,
         "invite.*" to PermissionDefault.OP,
@@ -68,5 +68,20 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
         invitedPlayer.sendTranslatable("pv.addon.groups.format.invite", player.instance.name, group.inlineChatComponent())
         invitedPlayer.sendMessage(group.joinButtonWithPassword())
         invitedPlayer.printDivider()
+    }
+
+    override fun checkCanExecute(source: MinecraftCommandSource): Boolean {
+
+        val player = source.getVoicePlayer(handler.voiceServer) ?: return false
+        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return false
+
+        val isOwner = group.owner?.id == player.instance.uuid
+
+        return when {
+            source.hasAddonPermission("invite.owner") && isOwner -> true
+            source.hasAddonPermission("invite.member") -> true
+            source.hasAddonPermission("invite.*") -> true
+            else -> false
+        }
     }
 }

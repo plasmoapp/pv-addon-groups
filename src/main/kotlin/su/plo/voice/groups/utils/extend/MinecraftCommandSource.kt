@@ -12,17 +12,20 @@ fun MinecraftCommandSource.getVoicePlayer(server: PlasmoVoiceServer) = if (this 
 } else null
 
 fun MinecraftCommandSource.sendTranslatable(key: String, vararg args: Any?) {
-    sendMessage(MinecraftTextComponent.translatable(key, args))
+    sendMessage(MinecraftTextComponent.translatable(key, *args))
 }
 
-fun MinecraftCommandSource.checkNotNullAndNoAddonPermission(
+fun MinecraftCommandSource.checkNotNullAndNoFlagPermission(
     value: Any?,
-    permission: String
-): Boolean = ((value != null) && !hasAddonPermission(permission))
-    .also { if (it) noPermissionError(permission) }
+    flag: String
+): Boolean = ((value != null) && !hasFlagPermission(flag))
+    .also { if (it) noPermissionError("flag.$flag") }
 
 fun MinecraftCommandSource.hasAddonPermission(command: String): Boolean =
     this.hasPermission("pv.addon.groups.*") || this.hasPermission("pv.addon.groups.$command")
+
+fun MinecraftCommandSource.hasFlagPermission(flag: String): Boolean =
+    this.hasPermission("pv.addon.groups.*") || this.hasPermission("pv.addon.groups.flag.$flag")
 
 fun MinecraftCommandSource.parseUuidOrPrintError(string: String): UUID? = string
     .runCatching { UUID.fromString(string) }
@@ -38,7 +41,7 @@ fun MinecraftCommandSource.checkAddonPermissionAndPrintError(permission: String)
     }
 
 fun MinecraftCommandSource.noPermissionError(permission: String) =
-    sendTranslatable("pv.addon.groups.error.no_permission", permission)
+    sendTranslatable("pv.addon.groups.error.no_permission", "pv.addon.groups.$permission")
 
 fun MinecraftCommandSource.playerOnlyCommandError() =
     sendTranslatable("pv.error.player_only_command")

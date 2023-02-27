@@ -53,7 +53,7 @@ class Group(
     }
 
     fun notifyPlayersTranslatable(key: String, vararg args: Any?) =
-        notifyPlayers(MinecraftTextComponent.translatable(key, args))
+        notifyPlayers(MinecraftTextComponent.translatable(key, *args))
 
     @Serializable
     data class Data(
@@ -87,9 +87,9 @@ class Group(
         }
     }
 
-    fun inlineChatComponent() = MinecraftTextComponent.translatable("pv.addon.groups.format.group_name", name)
+    fun inlineChatComponent(): MinecraftTextComponent = MinecraftTextComponent.translatable("pv.addon.groups.format.group_name", name)
 
-    fun leaveButton() = MinecraftTextComponent.translatable("pv.addon.groups.button.leave")
+    fun leaveButton(): MinecraftTextComponent = MinecraftTextComponent.translatable("pv.addon.groups.button.leave")
         .clickEvent(MinecraftTextClickEvent.runCommand(leaveCommand))
         .hoverEvent(MinecraftTextHoverEvent.showText(MinecraftTextComponent.literal(leaveCommand)))
 

@@ -73,6 +73,8 @@ class JoinCommand(handler: CommandHandler): SubCommand(handler) {
         source.sendTranslatable("pv.addon.groups.command.join.success", group.name)
     }
 
+    override fun checkCanExecute(source: MinecraftCommandSource): Boolean = source.hasAddonPermission("join")
+
     private fun checkCantJoin(
         group: Group,
         player: VoiceServerPlayer,
