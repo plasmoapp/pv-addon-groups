@@ -125,7 +125,13 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
                 if (source.checkNotNullAndNoFlagPermission(it, "persistent")) return
             } ?: false
 
-        val group = Group(UUID.randomUUID(), name, password, persistent)
+        val group = Group(
+            handler.groupManager.sourceLine.createBroadcastSet(),
+            UUID.randomUUID(),
+            name,
+            password,
+            persistent
+        )
 
         handler.groupManager.groups[group.id] = group
 

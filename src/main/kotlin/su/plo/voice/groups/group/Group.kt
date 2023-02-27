@@ -1,35 +1,50 @@
 package su.plo.voice.groups.group
 
-import su.plo.voice.api.server.player.VoicePlayer
-import java.util.UUID
-
-import kotlinx.serialization.*
+import kotlinx.serialization.Serializable
 import su.plo.lib.api.chat.MinecraftTextClickEvent
 import su.plo.lib.api.chat.MinecraftTextComponent
 import su.plo.lib.api.chat.MinecraftTextHoverEvent
 import su.plo.lib.api.server.command.MinecraftCommandSource
+import su.plo.voice.api.server.audio.line.ServerPlayersSet
+import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.utils.extend.getVoicePlayer
 import su.plo.voice.groups.utils.serializer.UUIDSerializer
 import su.plo.voice.proto.data.player.MinecraftGameProfile
+import java.util.*
 
 @Serializable
-class Group(
+data class GroupOfflineData(
+    @Serializable(with = UUIDSerializer::class)
+    val ownerUUID: UUID?,
+    val players: Set<@Serializable(with = UUIDSerializer::class) UUID>,
+    val data: GroupData
+)
+
+@Serializable
+open class GroupData(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID,
     var name: String,
     var password: String? = null,
     var persistent: Boolean = false,
-) {
-    @Transient
+)
+
+class Group(
+    val playersSet: ServerPlayersSet,
+    id: UUID,
+    name: String,
+    password: String? = null,
+    persistent: Boolean = false,
+) : GroupData(id, name, password, persistent) {
     var owner: MinecraftGameProfile? = null
-    @Transient
-    val players: HashSet<VoicePlayer> = HashSet()
     val bannedPlayers: HashSet<@Serializable(with = UUIDSerializer::class) UUID> = HashSet()
     var permissionsFilter: HashSet<String> = HashSet()
 
+    val players: Collection<VoicePlayer> = playersSet.players
+
     val onlinePlayers: List<VoicePlayer>
-        get() = players.filter { it.instance.isOnline }
+        get() = playersSet.players.filter { it.instance.isOnline }
 
     val playerCount: Int get() = players.size
 
@@ -54,14 +69,6 @@ class Group(
 
     fun notifyPlayersTranslatable(key: String, vararg args: Any?) =
         notifyPlayers(MinecraftTextComponent.translatable(key, *args))
-
-    @Serializable
-    data class Data(
-        @Serializable(with = UUIDSerializer::class)
-        val ownerUUID: UUID?,
-        val players: Set<@Serializable(with = UUIDSerializer::class) UUID>,
-        val data: Group,
-    )
 
     private val joinCommand = "/groups join $id"
 
@@ -92,6 +99,13 @@ class Group(
     fun leaveButton(): MinecraftTextComponent = MinecraftTextComponent.translatable("pv.addon.groups.button.leave")
         .clickEvent(MinecraftTextClickEvent.runCommand(leaveCommand))
         .hoverEvent(MinecraftTextHoverEvent.showText(MinecraftTextComponent.literal(leaveCommand)))
+
+    fun asOfflineData() =
+        GroupOfflineData(
+            owner?.id,
+            players.map { it.instance.uuid }.toSet(),
+            this
+        )
 
     fun asTextComponents(handler: CommandHandler, source: MinecraftCommandSource? = null): List<MinecraftTextComponent> = listOf(
 

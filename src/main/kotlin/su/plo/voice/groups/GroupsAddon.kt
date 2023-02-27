@@ -12,6 +12,7 @@ import su.plo.voice.api.server.event.command.CommandsRegisterEvent
 import su.plo.voice.api.server.event.config.VoiceServerConfigLoadedEvent
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.subcommand.*
+import su.plo.voice.groups.group.Group
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -41,7 +42,7 @@ class GroupsAddon {
                 File(addonFolder, "languages")
             )
 
-            val configFile = File(addonFolder, "config.toml")
+            val configFile = File(addonFolder, "groups.toml")
 
             toml.load<Config>(Config::class.java, configFile, false)
                 .also { toml.save(Config::class.java, it, configFile) }
@@ -53,9 +54,9 @@ class GroupsAddon {
         val activation = server.activationManager.createBuilder(
             this,
             activationName,
-            "pv.activation.radio",
+            "pv.activation.groups",
             "plasmovoice:textures/icons/microphone_group.png",
-            "pv.activation.radio",
+            "pv.activation.groups",
             config.activationWeight
         )
             .setProximity(false)
@@ -63,15 +64,17 @@ class GroupsAddon {
             .setStereoSupported(false)
             .build()
 
-        val sourceLine = server.sourceLineManager.register(
+        val sourceLine = server.sourceLineManager.registerPlayers(
             this,
             activationName,
-            "pv.activation.radio",
+            "pv.activation.groups",
             "plasmovoice:textures/icons/speaker_group.png",
             config.sourceLineWeight
         )
 
-        groupManager = GroupsManager(config, server, this, activation, sourceLine)
+        val groupManager = GroupsManager(config, server, this, activation, sourceLine).also {
+            this.groupManager = it
+        }
 
         File(addonFolder, "groups.json")
             .takeIf { it.isFile }
@@ -79,21 +82,29 @@ class GroupsAddon {
             ?.runCatching { Json.decodeFromString<GroupsManager.Data>(this) }
             ?.getOrNull()
             ?.also { fe -> fe.groups.forEach { group ->
-                group.ownerUUID
-                    ?.let { server.minecraftServer.getGameProfile(it).orElse(null) }
-                    ?.let { group.data.owner = it }
-                groupManager!!.groups[group.data.id] = group.data
+                group.data.apply {
+                    groupManager.groups[id] = Group(
+                        sourceLine.createBroadcastSet(),
+                        id,
+                        name,
+                        password,
+                        persistent
+                    ).apply {
+                        owner = group.ownerUUID
+                            ?.let { server.minecraftServer.getGameProfile(it).orElse(null) }
+                    }
+                }
             } }
             ?.also { fe -> fe.groupByPlayer.mapNotNull {
-                val group = groupManager!!.groups[it.value] ?: return@mapNotNull null
-                groupManager!!.groupByPlayer[it.key] = group
+                val group = groupManager.groups[it.value] ?: return@mapNotNull null
+                groupManager.groupByPlayer[it.key] = group
             } }
 
         server.eventBus.register(this, ActivationListener(
-            server, this, activation, sourceLine
+            server, groupManager, activation
         ))
 
-        server.eventBus.register(this, groupManager!!)
+        server.eventBus.register(this, groupManager)
     }
 
     @EventSubscribe

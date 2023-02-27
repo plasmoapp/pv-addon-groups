@@ -3,20 +3,17 @@ package su.plo.voice.groups
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import su.plo.voice.api.event.EventPriority
 import su.plo.voice.api.event.EventSubscribe
 import su.plo.voice.api.server.PlasmoVoiceServer
 import su.plo.voice.api.server.audio.capture.ServerActivation
-import su.plo.voice.api.server.audio.line.ServerSourceLine
+import su.plo.voice.api.server.audio.line.ServerPlayersSourceLine
 import su.plo.voice.api.server.audio.source.ServerDirectSource
 import su.plo.voice.api.server.event.VoiceServerShutdownEvent
-import su.plo.voice.api.server.event.connection.UdpClientConnectEvent
 import su.plo.voice.api.server.event.connection.UdpClientConnectedEvent
 import su.plo.voice.api.server.event.connection.UdpClientDisconnectedEvent
-import su.plo.voice.api.server.event.player.PlayerJoinEvent
-import su.plo.voice.api.server.event.player.PlayerQuitEvent
 import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.group.Group
+import su.plo.voice.groups.group.GroupOfflineData
 import su.plo.voice.groups.utils.serializer.UUIDSerializer
 import java.io.File
 import java.util.*
@@ -25,9 +22,9 @@ import java.util.concurrent.ConcurrentHashMap
 class GroupsManager(
     val config: Config,
     val server: PlasmoVoiceServer,
-    val addon: GroupsAddon,
+    private val addon: GroupsAddon,
     val activation: ServerActivation,
-    val sourceLine: ServerSourceLine,
+    val sourceLine: ServerPlayersSourceLine,
 ) {
     val groupByPlayer: MutableMap<UUID, Group> = ConcurrentHashMap()
     val groups: MutableMap<UUID, Group> = ConcurrentHashMap()
@@ -39,7 +36,8 @@ class GroupsManager(
         leave(player)
         initSource(player, group)
         groupByPlayer[player.instance.uuid] = group
-        group.players.add(player)
+        group.playersSet.addPlayer(player)
+        sourceLine.setPlayersSet(player, group.playersSet) // todo: DRY
     }
 
     private fun initSource(player: VoicePlayer, group: Group) {
@@ -56,7 +54,11 @@ class GroupsManager(
             ?.let { server.sourceManager.remove(it) }
 
         val group = groupByPlayer.remove(player.instance.uuid)
-        val didLeft = group?.players?.remove(player)
+        val didLeft = group?.playersSet?.let {
+            it.removePlayer(player.instance.uuid).also {
+                sourceLine.setPlayersSet(player, null)
+            }
+        }
 
         if (didLeft == false) return false
 
@@ -80,8 +82,9 @@ class GroupsManager(
         val playerId = player.instance.uuid
 
         groupByPlayer[playerId]?.let { group ->
-            group.players.removeIf { it.instance.uuid == playerId }
-            group.players.add(player)
+            group.playersSet.removePlayer(playerId)
+            group.playersSet.addPlayer(player)
+            sourceLine.setPlayersSet(player, group.playersSet)
             initSource(player, group)
         }
     }
@@ -99,11 +102,7 @@ class GroupsManager(
     fun onVoiceServerShutdown(event: VoiceServerShutdownEvent) {
         val groups = groups.values
             .filter { it.persistent }
-            .map { group -> Group.Data(
-                group.owner?.id,
-                group.players.map { it.instance.uuid }.toSet(),
-                group,
-            )}
+            .map { it.asOfflineData() }
 
         File(addon.getAddonFolder(server), "groups.json")
             .writeText(Json.encodeToString(Data(
@@ -114,7 +113,7 @@ class GroupsManager(
 
     @Serializable
     data class Data(
-        val groups: List<Group.Data>,
+        val groups: List<GroupOfflineData>,
         val groupByPlayer: Map<
                 @Serializable(with = UUIDSerializer::class) UUID,
                 @Serializable(with = UUIDSerializer::class) UUID
