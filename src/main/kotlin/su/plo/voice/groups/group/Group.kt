@@ -99,6 +99,12 @@ class Group(
     fun leaveButton(): MinecraftTextComponent = MinecraftTextComponent.translatable("pv.addon.groups.button.leave")
         .clickEvent(MinecraftTextClickEvent.runCommand(leaveCommand))
         .hoverEvent(MinecraftTextHoverEvent.showText(MinecraftTextComponent.literal(leaveCommand)))
+        .append(MinecraftTextComponent.literal("  "))
+        .append(inviteButton())
+
+    private fun inviteButton(): MinecraftTextComponent = MinecraftTextComponent.translatable("pv.addon.groups.button.invite")
+        .clickEvent(MinecraftTextClickEvent.suggestCommand("/groups invite "))
+        .hoverEvent(MinecraftTextHoverEvent.showText(MinecraftTextComponent.literal("/groups invite")))
 
     fun asOfflineData() =
         GroupOfflineData(

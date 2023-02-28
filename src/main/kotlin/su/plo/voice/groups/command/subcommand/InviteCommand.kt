@@ -32,9 +32,15 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
 
     override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
 
-        val player = source.getVoicePlayer(handler.voiceServer) ?: return source.playerOnlyCommandError()
+        val player = source.getVoicePlayer(handler.voiceServer) ?: run {
+            source.playerOnlyCommandError()
+            return
+        }
 
-        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return source.notInGroupError()
+        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: run {
+            source.notInGroupError()
+            return
+        }
 
         val isOwner = group.owner == player
 
@@ -46,23 +52,30 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
             else -> return source.noPermissionError("invite.owner")
         }
 
-        val playerName = arguments.getOrNull(1)
-            ?: return source.sendTranslatable("pv.addon.groups.command.invite.error.usage")
+        val playerName = arguments.getOrNull(1) ?: run {
+            source.sendTranslatable("pv.addon.groups.command.invite.error.usage")
+            return
+        }
 
-        if (playerName == player.instance.name)
-            return source.sendTranslatable("pv.addon.groups.command.invite.error.invite_self")
+        if (playerName == player.instance.name) {
+            source.sendTranslatable("pv.addon.groups.command.invite.error.invite_self")
+            return
+        }
 
         val invitedPlayer = handler.voiceServer.minecraftServer
             .getPlayerByName(playerName)
-            .orElse(null) ?: return source.sendTranslatable("pv.addon.groups.error.player_not_found")
-
-        handler.groupManager.groupByPlayer[invitedPlayer.uuid]
-            ?.let {
-                if (it.id == group.id)
-                    return source.sendTranslatable("pv.addon.groups.command.invite.error.already_joined")
+            .orElse(null) ?: run {
+                source.sendTranslatable("pv.addon.groups.error.player_not_found")
+                return
             }
 
-        source.sendTranslatable("pv.addon.groups.command.invite.success")
+        handler.groupManager.groupByPlayer[invitedPlayer.uuid]
+            ?.also { if (it.id == group.id) {
+                source.sendTranslatable("pv.addon.groups.command.invite.error.already_joined")
+                return
+            }}
+
+        source.sendTranslatable("pv.addon.groups.command.invite.success", invitedPlayer.name)
 
         invitedPlayer.printDivider()
         invitedPlayer.sendTranslatable("pv.addon.groups.format.invite", player.instance.name, group.inlineChatComponent())

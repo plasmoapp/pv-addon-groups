@@ -20,9 +20,15 @@ class LeaveCommand(handler: CommandHandler): SubCommand(handler) {
 
         if (source.checkAddonPermissionAndPrintError("leave")) return
 
-        val player = source.getVoicePlayer(handler.voiceServer) ?: return source.playerOnlyCommandError()
+        val player = source.getVoicePlayer(handler.voiceServer) ?: run {
+            source.playerOnlyCommandError()
+            return
+        }
 
-        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return source.notInGroupError()
+        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: run {
+            source.notInGroupError()
+            return
+        }
 
         handler.groupManager.leave(player)
 

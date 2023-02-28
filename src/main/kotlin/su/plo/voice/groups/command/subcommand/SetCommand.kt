@@ -79,25 +79,67 @@ class SetCommand(handler: CommandHandler): SubCommand(handler) {
 
         when(flagName) {
             "name" -> {
-                val min = handler.groupManager.config.minimumNameLength
-                val max = handler.groupManager.config.maximumNameLength
-                if (name.length !in min..max) {
-                    source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.error.name_length"))
+                if (group.name == flagValue) {
+                    source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
                     return
                 }
+
+                val min = handler.groupManager.config.minimumNameLength
+                val max = handler.groupManager.config.maximumNameLength
+
+                if (flagValue.length !in min..max) {
+                    source.sendTranslatable("pv.addon.groups.error.name_length")
+                    return
+                }
+
+                val oldName = group.name
                 group.name = flagValue
+                group.notifyPlayersTranslatable("pv.addon.groups.notifications.name_change", oldName, group.name)
             }
             "password" -> {
+                if (group.password == flagValue) {
+                    source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
+                    return
+                }
                 group.password = flagValue
+                group.notifyPlayersTranslatable("pv.addon.groups.notifications.password_changed")
             }
             "permissions" -> {
-                group.permissionsFilter = flagValue
+
+                val newValue = flagValue
                     .split(",")
                     .map { it.trim() }
                     .toHashSet()
+
+                if (group.permissionsFilter == newValue) {
+                    source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
+                    return
+                }
+
+                group.permissionsFilter = newValue
+
+                group.notifyPlayersTranslatable("pv.addon.groups.notifications.permissions_changed")
+
+                group.players
+                    .filter { !group.hasPermission(it.instance) }
+                    .forEach {
+                        handler.groupManager.leave(it)
+                        it.instance.sendTranslatable("pv.addon.groups.notifications.kicked")
+                        group.notifyPlayersTranslatable("pv.addon.groups.notifications.player_kicked", it.instance.name)
+                    }
             }
             "persistent" -> {
-                group.persistent = flagValue.toBooleanStrictOrNull() ?: false
+                val newValue = flagValue.toBooleanStrictOrNull() ?: false
+
+                if (group.persistent == newValue) {
+                    source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
+                    return
+                }
+
+                group.persistent = newValue
+
+                if (group.persistent) group.notifyPlayersTranslatable("pv.addon.groups.notifications.persistent_true")
+                else group.notifyPlayersTranslatable("pv.addon.groups.notifications.persistent_false")
             }
             else -> {
                 source.sendTranslatable("pv.addon.groups.error.unknown")

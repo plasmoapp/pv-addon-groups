@@ -5,18 +5,15 @@ import su.plo.lib.api.chat.MinecraftTextComponent
 import su.plo.lib.api.chat.MinecraftTextHoverEvent
 import su.plo.lib.api.server.command.MinecraftCommandSource
 import su.plo.lib.api.server.permission.PermissionDefault
-import su.plo.lib.api.server.player.MinecraftServerPlayer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
-import su.plo.voice.groups.group.Group
 import su.plo.voice.groups.utils.extend.*
-import java.util.*
 
 class BrowseCommand(handler: CommandHandler): SubCommand(handler) {
 
     override val name = "browse"
 
-    val perPage = 3
+    private val perPage = 3
 
     override val permissions = listOf(
         "browse" to PermissionDefault.TRUE,

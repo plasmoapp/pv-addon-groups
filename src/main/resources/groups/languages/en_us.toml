@@ -25,6 +25,7 @@ next = "&e>"
 leave = "&c← Leave"
 prev = "&e<"
 join = "&e→ Join"
+invite = "&e✉ Invite"
 
 [server.pv.addon.groups.arg]
 groups_uuid = "<group uuid>"
@@ -35,6 +36,13 @@ new_owner = "%s is the new owner of the group"
 player_left = "%s left the group"
 player_join = "%s joined the group"
 group_deleted = "Group was deleted"
+name_change = "Group name was changed from '%1$s' to '%2$s'"
+password_changed = "Grpup password changed"
+permissions_changed = "Group permissions changed"
+kicked = "&cYou've been kicked out of the group"
+player_kicked = "%s was kicked out of the group"
+persistent_true = "The group is persistent now"
+persistent_false = "The group is no longer persistent"
 
 [client.pv.activation]
 radio = "Groups"
@@ -46,8 +54,36 @@ group_not_found = "&cGroup not found"
 not_in_group = "&cYou need to be in the group to execute this command"
 unknown = "&cUnknown error"
 name_length = "&cGroup name name should be betweeen %1$s and %2$s characters long"
-
+unknown_subcommand = "&cUnknown command. Available commands: %s"
+player_not_found = "&cNo player with such a name"
 
 [server.pv.addon.groups.command.set.error]
 usage = "&cUsage: /groups set <flag> <value>"
-unknown_flag = "&cUnknown flag: '%1$s'. Available flags: %2$s"
+unknown_flag = "&cUnknown flag: \"%1$s\". Available flags: %2$s"
+identical_value = "&cThe value is identical to current value"
+
+[server.pv.addon.groups.command.browse.error]
+page_not_found = "&cPage not found"
+no_groups = "&cNo groups. Create groups using \"/groups create\""
+
+[server.pv.addon.groups.command.invite.error]
+usage = "&cUsage: /groups invite <player>"
+invite_self = "&cYou can't invite yourself"
+already_joined = "&cPlayer already joined the group"
+
+[server.pv.addon.groups.command.join.error]
+usage = "&cUsage: /groups join <group uuid> [password]"
+already_joined = "&cYou already joined this group"
+
+[server.pv.addon.groups.command.transfer.error]
+usage = "&cUsage: /groups transfer <player>"
+already_owner = "&cYou are already the owner of the group"
+
+[server.pv.addon.groups.command.create]
+success = "&aThe group was created:"
+
+[server.pv.addon.groups.command.invite]
+success = "&aInvitation sent to %s"
+
+[server.pv.addon.groups.command.leave]
+success = "&aYou left the group"

@@ -58,7 +58,10 @@ class CommandHandler(
             return
         }
 
-        source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.usage"))
+        source.sendTranslatable(
+            "pv.addon.groups.error.unknown_subcommand",
+            subCommands.keys.joinToString(", ")
+        )
     }
 
     override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
@@ -67,7 +70,7 @@ class CommandHandler(
             .filter { command -> source.hasPermission(command) }
             .collect(Collectors.toList())
 
-        val subCommand = arguments[0]
+        val subCommand = arguments.getOrNull(0) ?: return listOf()
 
         if (arguments.size == 1) return subCommands
             .filter { it.key.startsWith(subCommand) && it.value.checkCanExecute(source) }

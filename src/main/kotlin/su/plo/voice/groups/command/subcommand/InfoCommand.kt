@@ -20,9 +20,15 @@ class InfoCommand(handler: CommandHandler): SubCommand(handler) {
 
     override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
 
-        val player = source.getVoicePlayer(handler.voiceServer) ?: return source.playerOnlyCommandError()
+        val player = source.getVoicePlayer(handler.voiceServer) ?: run {
+            source.playerOnlyCommandError()
+            return
+        }
 
-        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return source.notInGroupError()
+        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: run {
+            source.notInGroupError()
+            return
+        }
 
         val isOwner = group.owner == player
 

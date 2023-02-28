@@ -112,15 +112,15 @@ class GroupsAddon {
         event.commandManager.register(
             "groups",
             CommandHandler(event.voiceServer, this)
-                .addSubCommand(::CreateCommand)
-                .addSubCommand(::DeleteCommand)
                 .addSubCommand(::BrowseCommand)
-                .addSubCommand(::LeaveCommand)
+                .addSubCommand(::CreateCommand)
                 .addSubCommand(::JoinCommand)
-                .addSubCommand(::TransferCommand)
-                .addSubCommand(::InfoCommand)
+                .addSubCommand(::LeaveCommand)
                 .addSubCommand(::InviteCommand)
+                .addSubCommand(::InfoCommand)
                 .addSubCommand(::SetCommand)
+                .addSubCommand(::DeleteCommand)
+                .addSubCommand(::TransferCommand)
         )
     }
 

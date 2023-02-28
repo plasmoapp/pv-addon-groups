@@ -145,6 +145,9 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         }
 
         source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.create.success", group.name))
+        source.printDivider()
+        source.sendMessage(group.asTextComponents(handler, source))
+        source.printDivider()
     }
 
     override fun checkCanExecute(source: MinecraftCommandSource): Boolean = source.hasAddonPermission("create")

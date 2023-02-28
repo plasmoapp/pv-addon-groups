@@ -48,14 +48,20 @@ class JoinCommand(handler: CommandHandler): SubCommand(handler) {
 
         if (source.checkAddonPermissionAndPrintError("join")) return
 
-        val player = source.getVoicePlayer(handler.voiceServer) ?: return source.playerOnlyCommandError()
+        val player = source.getVoicePlayer(handler.voiceServer) ?: run {
+            source.playerOnlyCommandError()
+            return
+        }
 
         val uuidArg = arguments.getOrNull(1) ?: return
             source.sendTranslatable("pv.addon.groups.command.join.error.usage")
 
         val group = source.parseUuidOrPrintError(uuidArg)
             .let { it ?: return }
-            .let { handler.groupManager.groups[it] ?: return source.groupNotFoundError() }
+            .let { handler.groupManager.groups[it] ?: run {
+                source.groupNotFoundError()
+                return
+            }}
 
         handler.groupManager.groupByPlayer[player.instance.uuid]
             ?.also { if (group.id == it.id) {
