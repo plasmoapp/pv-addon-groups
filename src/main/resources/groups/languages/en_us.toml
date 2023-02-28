@@ -15,11 +15,6 @@ page = "&7Page &r%s/%s"
 [server.pv.addon.groups.icons]
 password_protected = "&6⛨"
 
-[server.pv.addon.groups.command.create.arg]
-password = "<password>"
-permissions = "<list of comma separated permissions>"
-name = "<name>"
-
 [server.pv.addon.groups.button]
 next = "&e>"
 leave = "&c← Leave"
@@ -28,8 +23,11 @@ join = "&e→ Join"
 invite = "&e✉ Invite"
 
 [server.pv.addon.groups.arg]
+permissions = "<list of comma separated permissions>"
+name = "<name>"
 groups_uuid = "<group uuid>"
 password = "<password>"
+page = "[page]"
 
 [server.pv.addon.groups.notifications]
 new_owner = "%s is the new owner of the group"
@@ -43,6 +41,8 @@ kicked = "&cYou've been kicked out of the group"
 player_kicked = "%s was kicked out of the group"
 persistent_true = "The group is persistent now"
 persistent_false = "The group is no longer persistent"
+password_unset = "Password protection was removed"
+permissions_unset = "Permissions protection was removed"
 
 [client.pv.activation]
 radio = "Groups"
@@ -61,6 +61,12 @@ player_not_found = "&cNo player with such a name"
 usage = "&cUsage: /groups set <flag> <value>"
 unknown_flag = "&cUnknown flag: \"%1$s\". Available flags: %2$s"
 identical_value = "&cThe value is identical to current value"
+
+[server.pv.addon.groups.command.unset.error]
+usage = "&cUsage: /groups unset <flag>"
+unknown_flag = "&cCan't unset flag \"%1$s\". Available flags: %2$s"
+password_not_set = "&cGroup is already not protected with password"
+permissions_not_set = "&cPermissions filter is already empty"
 
 [server.pv.addon.groups.command.browse.error]
 page_not_found = "&cPage not found"

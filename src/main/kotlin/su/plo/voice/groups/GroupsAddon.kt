@@ -119,6 +119,7 @@ class GroupsAddon {
                 .addSubCommand(::InviteCommand)
                 .addSubCommand(::InfoCommand)
                 .addSubCommand(::SetCommand)
+                .addSubCommand(::UnsetCommand)
                 .addSubCommand(::DeleteCommand)
                 .addSubCommand(::TransferCommand)
         )

@@ -22,6 +22,11 @@ class BrowseCommand(handler: CommandHandler): SubCommand(handler) {
     )
 
     override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
+
+        if (arguments.size == 2) {
+            return listOf(handler.getTranslationByKey("pv.addon.groups.arg.page", source))
+        }
+
         return listOf()
     }
 

@@ -88,7 +88,7 @@ class CommandHandler(
                 source.hasPermission("pv.addon.groups.$it")
             }
 
-    private fun registerPermissions(permissions: List<Pair<String, PermissionDefault>>) {
+    fun registerPermissions(permissions: List<Pair<String, PermissionDefault>>) {
         permissions.forEach { voiceServer.minecraftServer.permissionsManager.register("pv.addon.groups.${it.first}", it.second) }
     }
 }

@@ -23,11 +23,14 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
 
         val arg = arguments.getOrNull(1) ?: return listOf()
 
-        val player = source.getVoicePlayer(handler.voiceServer)
+        val player = source.getVoicePlayer(handler.voiceServer) ?: return listOf()
 
-        return handler.voiceServer.minecraftServer.players
-            .map { it.name }
-            .filter { it.startsWith(arg) && (it != player?.instance?.name) }
+        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return listOf()
+
+        return handler.voiceServer.playerManager.players
+            .filter { group.players.contains(it) && (it != player) }
+            .map { it.instance.name }
+            .filter { it.startsWith(arg) }
     }
 
     override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {

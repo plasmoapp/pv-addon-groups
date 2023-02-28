@@ -82,9 +82,9 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         if (!source.hasFlagPermission(flagName)) return listOf()
 
         return when (flagName) {
-            "name" -> listOf(handler.getTranslationByKey("pv.addon.groups.command.create.arg.name", source))
-            "password" -> listOf(handler.getTranslationByKey("pv.addon.groups.command.create.arg.password", source))
-            "permissions" -> listOf(handler.getTranslationByKey("pv.addon.groups.command.create.arg.permissions", source))
+            "name" -> listOf(handler.getTranslationByKey("pv.addon.groups.arg.name", source))
+            "password" -> listOf(handler.getTranslationByKey("pv.addon.groups.arg.password", source))
+            "permissions" -> listOf(handler.getTranslationByKey("pv.addon.groups.arg.permissions", source))
             "persistent" -> listOf("true", "false")
             else -> listOf()
         }
