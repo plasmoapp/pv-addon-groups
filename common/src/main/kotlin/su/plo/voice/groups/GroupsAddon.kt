@@ -1,12 +1,10 @@
 package su.plo.voice.groups
 
-import com.google.inject.Inject
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
-import su.plo.lib.api.server.command.MinecraftCommand
-import su.plo.lib.api.server.command.MinecraftCommandManager
+import su.plo.lib.api.server.permission.PermissionDefault
 import su.plo.voice.api.PlasmoVoice
 import su.plo.voice.api.server.PlasmoCommonVoiceServer
 import su.plo.voice.groups.command.CommandHandler
@@ -61,6 +59,11 @@ open class GroupsAddon {
             .setStereoSupported(false)
             .build()
 
+        // register activation's permissions
+        activation.permissions.forEach {
+            server.minecraftServer.permissionsManager.register(it, PermissionDefault.TRUE)
+        }
+
         val sourceLine = server.sourceLineManager.registerPlayers(
             this,
             activationName,
@@ -69,7 +72,7 @@ open class GroupsAddon {
             config.sourceLineWeight
         )
 
-        val groupManager = GroupsManager(config, server.sourceManager, this, activation, sourceLine).also {
+        val groupManager = GroupsManager(config, server, this, activation, sourceLine).also {
             this.groupManager = it
         }
 
@@ -79,17 +82,16 @@ open class GroupsAddon {
             ?.runCatching { Json.decodeFromString<GroupsManager.Data>(this) }
             ?.getOrNull()
             ?.also { fe -> fe.groups.forEach { group ->
-                group.data.apply {
+                group.apply {
                     groupManager.groups[id] = Group(
                         sourceLine.createBroadcastSet(),
                         id,
                         name,
                         password,
-                        persistent
-                    ).apply {
-                        owner = group.owner
-//                            ?.let { server.minecraftServer.getGameProfile(it).orElse(null) } // how
-                    }
+                        persistent,
+                        playersIds,
+                        owner
+                    )
                 }
             } }
             ?.also { fe -> fe.groupByPlayer.mapNotNull {

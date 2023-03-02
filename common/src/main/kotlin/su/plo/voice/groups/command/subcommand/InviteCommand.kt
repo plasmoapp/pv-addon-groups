@@ -27,7 +27,7 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
         val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return listOf()
 
         return handler.voiceServer.playerManager.players
-            .filter { !group.players.contains(it) && (it != player) }
+            .filter { !group.onlinePlayers.contains(it) && (it != player) }
             .map { it.instance.name }
             .filter { it.startsWith(arg, true) }
     }

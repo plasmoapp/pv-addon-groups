@@ -45,7 +45,7 @@ password_unset = "Password protection was removed"
 permissions_unset = "Permissions protection was removed"
 
 [client.pv.activation]
-radio = "Groups"
+groups = "Groups"
 
 [server.pv.addon.groups.error]
 uuid_parse = "&cUuid parse error. '%s' is not a Uuid"
@@ -77,6 +77,9 @@ usage = "&cUsage: /groups invite <player>"
 invite_self = "&cYou can't invite yourself"
 already_joined = "&cPlayer already joined the group"
 
+
+[server.pv.addon.groups.command.join]
+success = "&aYou joined the group"
 [server.pv.addon.groups.command.join.error]
 usage = "&cUsage: /groups join <group uuid> [password]"
 already_joined = "&cYou already joined this group"
