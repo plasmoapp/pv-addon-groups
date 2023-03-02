@@ -119,7 +119,8 @@ class SetCommand(handler: CommandHandler): SubCommand(handler) {
 
                 group.notifyPlayersTranslatable("pv.addon.groups.notifications.permissions_changed")
 
-                group.players
+                // todo: will not work with offline players, because it's just impossible without LP
+                group.onlinePlayers
                     .filter { !group.hasPermission(it.instance) }
                     .forEach {
                         handler.groupManager.leave(it)

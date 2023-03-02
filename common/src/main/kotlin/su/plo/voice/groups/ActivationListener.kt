@@ -29,14 +29,6 @@ class ActivationListener(
     private val selfActivationInfo = SelfActivationInfo(voiceServer.udpConnectionManager)
 
     @EventSubscribe(priority = EventPriority.HIGHEST)
-    fun onActivationRegister(event: ServerActivationRegisterEvent) {
-        if (activation != event.activation) return
-        activation.permissions.forEach {
-            voiceServer.minecraftServer.permissionsManager.register(it, defaultPermission)
-        }
-    }
-
-    @EventSubscribe(priority = EventPriority.HIGHEST)
     fun onActivationUnregister(event: ServerActivationUnregisterEvent) {
         if (activation != event.activation) return
         activation.permissions.forEach(voiceServer.minecraftServer.permissionsManager::unregister)
