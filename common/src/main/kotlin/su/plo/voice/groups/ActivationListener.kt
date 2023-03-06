@@ -19,19 +19,12 @@ import su.plo.voice.proto.packets.udp.clientbound.SourceAudioPacket
 import su.plo.voice.proto.packets.udp.serverbound.PlayerAudioPacket
 
 class ActivationListener(
-    private val voiceServer: PlasmoBaseVoiceServer,
+    voiceServer: PlasmoBaseVoiceServer,
     private val groupManager: GroupsManager,
     private val activation: ServerActivation
 ) {
 
-    private val defaultPermission = PermissionDefault.TRUE
     private val selfActivationInfo = SelfActivationInfo(voiceServer.udpConnectionManager)
-
-    @EventSubscribe(priority = EventPriority.HIGHEST)
-    fun onActivationUnregister(event: ServerActivationUnregisterEvent) {
-        if (activation != event.activation) return
-        activation.permissions.forEach(voiceServer.minecraftServer.permissionsManager::unregister)
-    }
 
     @EventSubscribe(priority = EventPriority.HIGHEST)
     fun onPlayerSpeak(event: PlayerSpeakEvent) {

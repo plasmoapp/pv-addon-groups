@@ -57,6 +57,7 @@ open class GroupsAddon {
             .setProximity(false)
             .setTransitive(true)
             .setStereoSupported(false)
+            .setDefaultPermission(PermissionDefault.TRUE)
             .build()
 
         // register activation's permissions
