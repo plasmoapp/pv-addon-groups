@@ -6,7 +6,7 @@ import su.plo.voice.api.event.EventSubscribe
 import su.plo.voice.api.proxy.event.VoiceProxyShutdownEvent
 import su.plo.voice.api.proxy.event.command.CommandsRegisterEvent
 import su.plo.voice.api.proxy.event.config.VoiceProxyConfigLoadedEvent
-import su.plo.voice.api.server.PlasmoCommonVoiceServer
+import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.groups.GroupsAddon
 import su.plo.voice.groups.proxy.command.ProxyCommandHandler
 
@@ -31,7 +31,7 @@ class ProxyGroupsAddon : GroupsAddon() {
         )
     }
 
-    override fun createCommandHandler(voiceServer: PlasmoCommonVoiceServer): ProxyCommandHandler {
+    override fun createCommandHandler(voiceServer: PlasmoBaseVoiceServer): ProxyCommandHandler {
         return ProxyCommandHandler(voiceServer, this)
     }
 }

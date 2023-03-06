@@ -6,7 +6,7 @@ import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
 import su.plo.lib.api.server.permission.PermissionDefault
 import su.plo.voice.api.PlasmoVoice
-import su.plo.voice.api.server.PlasmoCommonVoiceServer
+import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.subcommand.*
 import su.plo.voice.groups.group.Group
@@ -24,7 +24,7 @@ open class GroupsAddon {
 
     private val activationName = "groups"
 
-    protected fun onConfigLoaded(server: PlasmoCommonVoiceServer) {
+    protected fun onConfigLoaded(server: PlasmoBaseVoiceServer) {
 
         val addonFolder = getAddonFolder(server).also { it.mkdirs() }
 
@@ -64,12 +64,13 @@ open class GroupsAddon {
             server.minecraftServer.permissionsManager.register(it, PermissionDefault.TRUE)
         }
 
-        val sourceLine = server.sourceLineManager.registerPlayers(
+        val sourceLine = server.sourceLineManager.register(
             this,
             activationName,
             "pv.activation.groups",
             "plasmovoice:textures/icons/speaker_group.png",
-            config.sourceLineWeight
+            config.sourceLineWeight,
+            true
         )
 
         val groupManager = GroupsManager(config, server, this, activation, sourceLine).also {
@@ -84,7 +85,7 @@ open class GroupsAddon {
             ?.also { fe -> fe.groups.forEach { group ->
                 group.apply {
                     groupManager.groups[id] = Group(
-                        sourceLine.createBroadcastSet(),
+                        sourceLine.playersSets!!.createBroadcastSet(),
                         id,
                         name,
                         password,
@@ -107,7 +108,7 @@ open class GroupsAddon {
     }
 
     // todo: waytoodank (refactor?)
-    protected open fun createCommandHandler(voiceServer: PlasmoCommonVoiceServer) : CommandHandler =
+    protected open fun createCommandHandler(voiceServer: PlasmoBaseVoiceServer) : CommandHandler =
         CommandHandler(voiceServer, this)
 
     protected fun addSubcommandsToCommandHandler(commandHandler: CommandHandler) {

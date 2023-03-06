@@ -4,9 +4,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import su.plo.voice.api.event.EventSubscribe
-import su.plo.voice.api.server.PlasmoCommonVoiceServer
+import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.api.server.audio.capture.ServerActivation
-import su.plo.voice.api.server.audio.line.ServerPlayersSourceLine
+import su.plo.voice.api.server.audio.line.BaseServerSourceLine
 import su.plo.voice.api.server.audio.source.ServerDirectSource
 import su.plo.voice.api.server.event.connection.UdpClientConnectedEvent
 import su.plo.voice.api.server.event.connection.UdpClientDisconnectedEvent
@@ -20,10 +20,10 @@ import java.util.concurrent.ConcurrentHashMap
 
 class GroupsManager(
     val config: Config,
-    private val voiceServer: PlasmoCommonVoiceServer,
+    private val voiceServer: PlasmoBaseVoiceServer,
     private val addon: GroupsAddon,
     val activation: ServerActivation,
-    val sourceLine: ServerPlayersSourceLine,
+    val sourceLine: BaseServerSourceLine,
 ) {
     val groupByPlayer: MutableMap<UUID, Group> = ConcurrentHashMap()
     val groups: MutableMap<UUID, Group> = ConcurrentHashMap()
@@ -37,11 +37,11 @@ class GroupsManager(
         groupByPlayer[player.instance.uuid] = group
 
         group.addPlayer(player)
-        sourceLine.setPlayersSet(player, group.playersSet) // todo: DRY
+        sourceLine.playersSets?.setPlayersSet(player, group.playersSet) // todo: DRY
     }
 
     private fun initSource(player: VoicePlayer, group: Group) {
-        val source = voiceServer.sourceManager.createDirectSource(addon, sourceLine, "opus", false)
+        val source = sourceLine.createDirectSource()
         source.setPlayers(group::onlinePlayers)
         source.addFilter { it.instance != player.instance }
         source.setSender(player)
@@ -53,7 +53,7 @@ class GroupsManager(
 
     fun leave(playerUuid: UUID): Boolean {
         sourceByPlayer.remove(playerUuid)
-            ?.let { voiceServer.sourceManager.remove(it) }
+            ?.let { sourceLine.removeSource(it) }
 
         val group = groupByPlayer.remove(playerUuid)
         val didLeft = group?.removePlayer(playerUuid).also {
@@ -61,7 +61,7 @@ class GroupsManager(
                 .getPlayerById(playerUuid)
                 .orElse(null)
                 ?.let {
-                    sourceLine.setPlayersSet(it, null)
+                    sourceLine.playersSets?.setPlayersSet(it, null)
                 }
         }
 
@@ -93,7 +93,7 @@ class GroupsManager(
             }
 
             group.onPlayerJoin(player)
-            sourceLine.setPlayersSet(player, group.playersSet)
+            sourceLine.playersSets?.setPlayersSet(player, group.playersSet)
             initSource(player, group)
         }
     }
@@ -102,14 +102,14 @@ class GroupsManager(
     fun onPlayerLeave(event: UdpClientDisconnectedEvent) {
         val playerId = event.connection.player.instance.uuid
 
-        sourceByPlayer.remove(playerId)?.let { voiceServer.sourceManager.remove(it) }
+        sourceByPlayer.remove(playerId)?.let { sourceLine.removeSource(it) }
         groupByPlayer[playerId]?.let {
             it.onPlayerQuit(playerId)
             if (it.onlinePlayers.isEmpty() && !it.persistent) deleteGroup(it)
         }
     }
 
-    fun onVoiceServerShutdown(server: PlasmoCommonVoiceServer) {
+    fun onVoiceServerShutdown(server: PlasmoBaseVoiceServer) {
         val groups = groups.values
             .filter { it.persistent }
 

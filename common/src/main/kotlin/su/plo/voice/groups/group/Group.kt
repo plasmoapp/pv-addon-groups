@@ -41,7 +41,7 @@ class Group(
     var permissionsFilter: HashSet<String> = HashSet()
 
     val onlinePlayers: Collection<VoicePlayer>
-        get() = playersSet.players
+        get() = playersSet.getPlayers()
 
     val playerCount: Int
         get() = playersIds.size

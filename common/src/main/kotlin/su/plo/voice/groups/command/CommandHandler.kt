@@ -3,15 +3,13 @@ package su.plo.voice.groups.command
 import su.plo.lib.api.server.command.MinecraftCommand
 import su.plo.lib.api.server.command.MinecraftCommandSource
 import su.plo.lib.api.server.permission.PermissionDefault
-import su.plo.voice.api.server.PlasmoCommonVoiceServer
+import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.groups.GroupsAddon
-import su.plo.voice.groups.utils.extend.hasAddonPermission
 import su.plo.voice.groups.utils.extend.sendTranslatable
 import java.util.concurrent.ConcurrentHashMap
-import java.util.stream.Collectors
 
 open class CommandHandler(
-    val voiceServer: PlasmoCommonVoiceServer,
+    val voiceServer: PlasmoBaseVoiceServer,
     val addon: GroupsAddon,
 ): MinecraftCommand {
 
