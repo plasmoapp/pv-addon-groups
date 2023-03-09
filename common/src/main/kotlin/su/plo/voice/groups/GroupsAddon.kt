@@ -60,11 +60,6 @@ open class GroupsAddon {
             .setPermissionDefault(PermissionDefault.TRUE)
             .build()
 
-        // register activation's permissions
-        activation.permissions.forEach {
-            server.minecraftServer.permissionsManager.register(it, PermissionDefault.TRUE)
-        }
-
         val sourceLine = server.sourceLineManager.createBuilder(
             this,
             activationName,
