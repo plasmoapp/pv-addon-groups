@@ -65,14 +65,15 @@ open class GroupsAddon {
             server.minecraftServer.permissionsManager.register(it, PermissionDefault.TRUE)
         }
 
-        val sourceLine = server.sourceLineManager.register(
+        val sourceLine = server.sourceLineManager.createBuilder(
             this,
             activationName,
             "pv.activation.groups",
             "plasmovoice:textures/icons/speaker_group.png",
-            config.sourceLineWeight,
-            true
-        )
+            config.sourceLineWeight
+        ).apply {
+            withPlayers(true)
+        }.build()
 
         val groupManager = GroupsManager(config, server, this, activation, sourceLine).also {
             this.groupManager = it
