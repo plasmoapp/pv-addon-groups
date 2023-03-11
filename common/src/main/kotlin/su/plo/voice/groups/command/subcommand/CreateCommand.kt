@@ -125,7 +125,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
             } ?: false
 
         val group = Group(
-            handler.groupManager.sourceLine.createBroadcastSet(),
+            handler.groupManager.sourceLine.playersSets!!.createBroadcastSet(),
             UUID.randomUUID(),
             name,
             password,

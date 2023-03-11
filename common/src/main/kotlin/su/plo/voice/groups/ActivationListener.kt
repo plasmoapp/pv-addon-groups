@@ -3,11 +3,10 @@ package su.plo.voice.groups
 import su.plo.lib.api.server.permission.PermissionDefault
 import su.plo.voice.api.event.EventPriority
 import su.plo.voice.api.event.EventSubscribe
-import su.plo.voice.api.server.PlasmoCommonVoiceServer
+import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.api.server.audio.capture.SelfActivationInfo
 import su.plo.voice.api.server.audio.capture.ServerActivation
 import su.plo.voice.api.server.audio.source.ServerDirectSource
-import su.plo.voice.api.server.event.audio.capture.ServerActivationRegisterEvent
 import su.plo.voice.api.server.event.audio.capture.ServerActivationUnregisterEvent
 import su.plo.voice.api.server.event.audio.source.PlayerSpeakEndEvent
 import su.plo.voice.api.server.event.audio.source.PlayerSpeakEvent
@@ -20,19 +19,12 @@ import su.plo.voice.proto.packets.udp.clientbound.SourceAudioPacket
 import su.plo.voice.proto.packets.udp.serverbound.PlayerAudioPacket
 
 class ActivationListener(
-    private val voiceServer: PlasmoCommonVoiceServer,
+    voiceServer: PlasmoBaseVoiceServer,
     private val groupManager: GroupsManager,
     private val activation: ServerActivation
 ) {
 
-    private val defaultPermission = PermissionDefault.TRUE
     private val selfActivationInfo = SelfActivationInfo(voiceServer.udpConnectionManager)
-
-    @EventSubscribe(priority = EventPriority.HIGHEST)
-    fun onActivationUnregister(event: ServerActivationUnregisterEvent) {
-        if (activation != event.activation) return
-        activation.permissions.forEach(voiceServer.minecraftServer.permissionsManager::unregister)
-    }
 
     @EventSubscribe(priority = EventPriority.HIGHEST)
     fun onPlayerSpeak(event: PlayerSpeakEvent) {

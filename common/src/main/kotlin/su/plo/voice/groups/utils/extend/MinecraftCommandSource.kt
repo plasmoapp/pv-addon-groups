@@ -3,10 +3,10 @@ package su.plo.voice.groups.utils.extend
 import su.plo.lib.api.chat.MinecraftTextComponent
 import su.plo.lib.api.server.command.MinecraftCommandSource
 import su.plo.lib.api.server.player.MinecraftServerPlayer
-import su.plo.voice.api.server.PlasmoCommonVoiceServer
+import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import java.util.*
 
-fun MinecraftCommandSource.getVoicePlayer(server: PlasmoCommonVoiceServer) = if (this is MinecraftServerPlayer) {
+fun MinecraftCommandSource.getVoicePlayer(server: PlasmoBaseVoiceServer) = if (this is MinecraftServerPlayer) {
     server.playerManager.getPlayerById(this.uuid).orElse(null)
 } else null
 
