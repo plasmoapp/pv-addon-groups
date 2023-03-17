@@ -31,6 +31,8 @@ open class GroupsAddon {
         val config = try {
 
             server.languages.register(
+                "plasmo-voice-addons",
+                "server/groups.toml",
                 { resourcePath: String -> getLanguageResource(resourcePath)
                     ?: throw Exception("Can't load language resource")
                 },

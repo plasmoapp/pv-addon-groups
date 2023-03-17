@@ -1,5 +1,9 @@
 val plasmoVoiceVersion: String by rootProject
 
+plugins {
+    id("su.plo.crowdin.plugin") version("1.0.0")
+}
+
 dependencies {
     compileOnly("su.plo.voice.api:server:$plasmoVoiceVersion")
     compileOnly("su.plo.voice.api:proxy:$plasmoVoiceVersion")
@@ -22,5 +26,18 @@ sourceSets {
         resources {
             srcDir(platforms.map { it.sourceSets.main.get().resources.srcDirs }.flatten())
         }
+    }
+}
+
+plasmoCrowdin {
+    projectId = "plasmo-voice-addons"
+    sourceFileName = "server/groups.toml"
+    resourceDir = "groups/languages"
+    createList = true
+}
+
+tasks {
+    processResources {
+        dependsOn(plasmoCrowdinDownload)
     }
 }
