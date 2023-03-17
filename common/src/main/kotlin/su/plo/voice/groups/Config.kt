@@ -26,7 +26,7 @@ class Config {
     val minimumNameLength = 3
 
     @ConfigField(path = "maximum_name_length")
-    val maximumNameLength = 16
+    val maximumNameLength = 32
 
 
 //
