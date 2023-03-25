@@ -16,6 +16,8 @@ val platforms = setOf(
     project(":server")
 )
 
+platforms.forEach { evaluationDependsOn(":${it.name}") }
+
 sourceSets {
     main {
         java {
