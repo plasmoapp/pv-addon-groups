@@ -1,22 +1,25 @@
 package su.plo.voice.groups.command
 
+import su.plo.lib.api.server.MinecraftCommonServerLib
 import su.plo.lib.api.server.command.MinecraftCommand
 import su.plo.lib.api.server.command.MinecraftCommandSource
 import su.plo.lib.api.server.permission.PermissionDefault
-import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.groups.GroupsAddon
 import su.plo.voice.groups.utils.extend.sendTranslatable
 import java.util.concurrent.ConcurrentHashMap
 
 open class CommandHandler(
-    val voiceServer: PlasmoBaseVoiceServer,
     val addon: GroupsAddon,
+    val minecraftServer: MinecraftCommonServerLib,
 ): MinecraftCommand {
 
     private val subCommands: MutableMap<String, SubCommand> = ConcurrentHashMap()
 
     val groupManager
-        get() = addon.groupManager!!
+        get() = addon.groupManager
+
+    val voiceServer
+        get() = addon.voiceServer
 
     fun getTranslationByKey(key: String, source: MinecraftCommandSource): String {
         return voiceServer.languages.getServerLanguage(source)[key] ?: key
@@ -85,6 +88,6 @@ open class CommandHandler(
             }
 
     fun registerPermissions(permissions: List<Pair<String, PermissionDefault>>) {
-        permissions.forEach { voiceServer.minecraftServer.permissionsManager.register("pv.addon.groups.${it.first}", it.second) }
+        permissions.forEach { minecraftServer.permissionsManager.register("pv.addon.groups.${it.first}", it.second) }
     }
 }

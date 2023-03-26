@@ -1,11 +1,14 @@
 package su.plo.voice.groups
 
+import com.google.inject.Inject
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
+import su.plo.lib.api.server.MinecraftCommonServerLib
 import su.plo.lib.api.server.permission.PermissionDefault
 import su.plo.voice.api.PlasmoVoice
+import su.plo.voice.api.addon.AddonInitializer
 import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.subcommand.*
@@ -15,22 +18,31 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.*
 
-open class GroupsAddon {
+abstract class GroupsAddon : AddonInitializer {
 
-    var groupManager: GroupsManager? = null
+    @Inject
+    lateinit var voiceServer: PlasmoBaseVoiceServer
+
+    lateinit var groupManager: GroupsManager
 
     fun getAddonFolder(server: PlasmoVoice): File =
-        File(server.configFolder, "addons/groups")
+        File(server.configsFolder, "pv-addon-groups")
 
     private val activationName = "groups"
 
-    protected fun onConfigLoaded(server: PlasmoBaseVoiceServer) {
+    override fun onAddonInitialize() {
+        onConfigLoaded()
+    }
 
-        val addonFolder = getAddonFolder(server).also { it.mkdirs() }
+    protected fun onConfigLoaded() {
+
+        val addonFolder = getAddonFolder(voiceServer).also { it.mkdirs() }
 
         val config = try {
 
-            server.languages.register(
+            voiceServer.languages.register(
+                "plasmo-voice-addons",
+                "server/groups.toml",
                 { resourcePath: String -> getLanguageResource(resourcePath)
                     ?: throw Exception("Can't load language resource")
                 },
@@ -46,7 +58,7 @@ open class GroupsAddon {
             throw IllegalStateException("Failed to load config", e)
         }
 
-        val activation = server.activationManager.createBuilder(
+        val activation = voiceServer.activationManager.createBuilder(
             this,
             activationName,
             "pv.activation.groups",
@@ -60,7 +72,7 @@ open class GroupsAddon {
             .setPermissionDefault(PermissionDefault.TRUE)
             .build()
 
-        val sourceLine = server.sourceLineManager.createBuilder(
+        val sourceLine = voiceServer.sourceLineManager.createBuilder(
             this,
             activationName,
             "pv.activation.groups",
@@ -70,9 +82,7 @@ open class GroupsAddon {
             withPlayers(true)
         }.build()
 
-        val groupManager = GroupsManager(config, server, this, activation, sourceLine).also {
-            this.groupManager = it
-        }
+        groupManager = GroupsManager(config, voiceServer, this, activation, sourceLine)
 
         File(addonFolder, "groups.json")
             .takeIf { it.isFile }
@@ -97,16 +107,16 @@ open class GroupsAddon {
                 groupManager.groupByPlayer[it.key] = group
             } }
 
-        server.eventBus.register(this, ActivationListener(
-            server, groupManager, activation
+        voiceServer.eventBus.register(this, ActivationListener(
+            voiceServer, groupManager, activation
         ))
 
-        server.eventBus.register(this, groupManager)
+        voiceServer.eventBus.register(this, groupManager)
     }
 
     // todo: waytoodank (refactor?)
-    protected open fun createCommandHandler(voiceServer: PlasmoBaseVoiceServer) : CommandHandler =
-        CommandHandler(voiceServer, this)
+    protected open fun createCommandHandler(minecraftServer: MinecraftCommonServerLib) : CommandHandler =
+        CommandHandler(this, minecraftServer)
 
     protected fun addSubcommandsToCommandHandler(commandHandler: CommandHandler) {
         commandHandler
@@ -121,6 +131,7 @@ open class GroupsAddon {
             .addSubCommand(::DeleteCommand)
             .addSubCommand(::TransferCommand)
     }
+
     @Throws(IOException::class)
     private fun getLanguageResource(resourcePath: String): InputStream? {
         return javaClass.classLoader.getResourceAsStream(String.format("groups/%s", resourcePath))

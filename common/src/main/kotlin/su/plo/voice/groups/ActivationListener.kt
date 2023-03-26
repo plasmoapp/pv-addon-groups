@@ -1,15 +1,11 @@
 package su.plo.voice.groups
 
-import su.plo.lib.api.server.permission.PermissionDefault
 import su.plo.voice.api.event.EventPriority
 import su.plo.voice.api.event.EventSubscribe
 import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.api.server.audio.capture.SelfActivationInfo
 import su.plo.voice.api.server.audio.capture.ServerActivation
 import su.plo.voice.api.server.audio.source.ServerDirectSource
-import su.plo.voice.api.server.event.audio.capture.ServerActivationUnregisterEvent
-import su.plo.voice.api.server.event.audio.source.PlayerSpeakEndEvent
-import su.plo.voice.api.server.event.audio.source.PlayerSpeakEvent
 import su.plo.voice.api.server.event.audio.source.ServerSourcePacketEvent
 import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.proto.packets.tcp.clientbound.SourceAudioEndPacket
@@ -21,37 +17,34 @@ import su.plo.voice.proto.packets.udp.serverbound.PlayerAudioPacket
 class ActivationListener(
     voiceServer: PlasmoBaseVoiceServer,
     private val groupManager: GroupsManager,
-    private val activation: ServerActivation
+    activation: ServerActivation
 ) {
+
+    init {
+        activation.onPlayerActivation(this::onActivation)
+        activation.onPlayerActivationEnd(this::onActivationEnd)
+    }
 
     private val selfActivationInfo = SelfActivationInfo(voiceServer.udpConnectionManager)
 
-    @EventSubscribe(priority = EventPriority.HIGHEST)
-    fun onPlayerSpeak(event: PlayerSpeakEvent) {
-        if (activation.id != event.packet.activationId) return
-
-        val player = event.player
-        val packet = event.packet
-
-        if (!activation.checkPermissions(player)) return
-
+    private fun onActivation(player: VoicePlayer, packet: PlayerAudioPacket): ServerActivation.Result {
         groupManager.sourceByPlayer[player.instance.uuid]?.let {
-            sendAudioPacket(player, it, packet)
+            if (sendAudioPacket(player, it, packet)) {
+                return ServerActivation.Result.HANDLED
+            }
         }
+
+        return ServerActivation.Result.IGNORED
     }
 
-    @EventSubscribe(priority = EventPriority.HIGHEST)
-    fun onPlayerSpeakEnd(event: PlayerSpeakEndEvent) {
-        if (activation.id != event.packet.activationId) return
-
-        val player = event.player
-        val packet = event.packet
-
-        if (!activation.checkPermissions(player)) return
-
+    fun onActivationEnd(player: VoicePlayer, packet: PlayerAudioEndPacket): ServerActivation.Result {
         groupManager.sourceByPlayer[player.instance.uuid]?.let {
-            sendAudioEndPacket(it, packet)
+            if (sendAudioEndPacket(it, packet)) {
+                return ServerActivation.Result.HANDLED
+            }
         }
+
+        return ServerActivation.Result.IGNORED
     }
 
     @EventSubscribe(priority = EventPriority.HIGHEST)

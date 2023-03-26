@@ -107,7 +107,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         val max = handler.groupManager.config.maximumNameLength
 
         if (name.length !in min..max) {
-            source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.error.name_length"))
+            source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.error.name_length", min, max))
             return
         }
 
