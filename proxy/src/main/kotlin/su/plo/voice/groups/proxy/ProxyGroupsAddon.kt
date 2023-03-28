@@ -1,7 +1,7 @@
 package su.plo.voice.groups.proxy
 
 import su.plo.lib.api.server.MinecraftCommonServerLib
-import su.plo.lib.api.server.event.command.ProxyCommandsRegisterEvent
+import su.plo.lib.api.proxy.event.command.ProxyCommandsRegisterEvent
 import su.plo.voice.api.addon.AddonLoaderScope
 import su.plo.voice.api.addon.annotation.Addon
 import su.plo.voice.api.event.EventSubscribe
