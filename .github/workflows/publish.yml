@@ -37,8 +37,6 @@ jobs:
         loaders: |
           fabric
           forge
-          quilt
-          bukkit
           paper
           spigot
           velocity
