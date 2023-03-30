@@ -31,7 +31,7 @@ jobs:
     - name: Publish to Modrinth/CurseForge
       uses: Apehum/mc-publish@v1.1
       with:
-        modrinth-id: ZI9h3Y7k
+        modrinth-id: g2HFPeCl
         modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
 
         loaders: |
