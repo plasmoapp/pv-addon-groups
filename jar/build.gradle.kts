@@ -6,6 +6,9 @@ plugins {
 }
 
 dependencies {
+    compileOnly(project(":proxy"))
+    compileOnly(project(":server"))
+
     compileOnly("su.plo.voice.api:server:$plasmoVoiceVersion")
     compileOnly("su.plo.voice.api:proxy:$plasmoVoiceVersion")
 }
