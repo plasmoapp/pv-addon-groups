@@ -1,0 +1,1 @@
+- disabled config reload support to fix an exception when using /vreload
