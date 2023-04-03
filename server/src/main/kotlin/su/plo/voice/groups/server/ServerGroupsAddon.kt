@@ -8,7 +8,7 @@ import su.plo.voice.api.event.EventSubscribe
 import su.plo.voice.api.server.event.config.VoiceServerConfigReloadedEvent
 import su.plo.voice.groups.GroupsAddon
 
-@Addon(id = "pv-addon-groups", scope = AddonLoaderScope.SERVER, version = "1.0.1", authors = ["KPidS"])
+@Addon(id = "pv-addon-groups", scope = AddonLoaderScope.SERVER, version = "1.0.2", authors = ["KPidS"])
 class ServerGroupsAddon : GroupsAddon() {
 
     init {
