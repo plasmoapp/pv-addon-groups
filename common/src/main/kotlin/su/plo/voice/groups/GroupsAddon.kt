@@ -34,6 +34,10 @@ abstract class GroupsAddon : AddonInitializer {
         onConfigLoaded()
     }
 
+    override fun onAddonShutdown() {
+        groupManager.onVoiceServerShutdown(voiceServer)
+    }
+
     protected fun onConfigLoaded() {
 
         val addonFolder = getAddonFolder(voiceServer).also { it.mkdirs() }
