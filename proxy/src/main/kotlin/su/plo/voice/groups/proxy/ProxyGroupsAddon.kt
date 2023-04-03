@@ -29,10 +29,6 @@ class ProxyGroupsAddon : GroupsAddon() {
         LogManager.getLogger("pv-addon-groups").warn("/vreload not supported")
     }
 
-    @EventSubscribe
-    fun onServerShutdown(event: VoiceProxyShutdownEvent) =
-        groupManager.onVoiceServerShutdown(event.proxy)
-
     override fun createCommandHandler(minecraftServer: MinecraftCommonServerLib): ProxyCommandHandler {
         return ProxyCommandHandler(this, minecraftServer)
     }

@@ -1,1 +1,1 @@
-- disabled config reload support to fix an exception when using /vreload
+- fixed an exception on paper shutdown 

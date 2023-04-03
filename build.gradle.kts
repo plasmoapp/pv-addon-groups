@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "su.plo"
-version = "1.0.1"
+version = "1.0.2"
 
 allprojects {
     repositories {

@@ -5,7 +5,6 @@ import su.plo.lib.api.server.event.command.ServerCommandsRegisterEvent
 import su.plo.voice.api.addon.AddonLoaderScope
 import su.plo.voice.api.addon.annotation.Addon
 import su.plo.voice.api.event.EventSubscribe
-import su.plo.voice.api.server.event.VoiceServerShutdownEvent
 import su.plo.voice.api.server.event.config.VoiceServerConfigReloadedEvent
 import su.plo.voice.groups.GroupsAddon
 
@@ -26,8 +25,4 @@ class ServerGroupsAddon : GroupsAddon() {
     fun onConfigReloaded(event: VoiceServerConfigReloadedEvent) {
         LogManager.getLogger("pv-addon-groups").warn("/vreload not supported")
     }
-
-    @EventSubscribe
-    fun onServerShutdown(event: VoiceServerShutdownEvent) =
-        groupManager.onVoiceServerShutdown(event.server)
 }
