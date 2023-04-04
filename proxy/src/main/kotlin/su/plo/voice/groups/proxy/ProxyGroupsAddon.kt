@@ -1,12 +1,10 @@
 package su.plo.voice.groups.proxy
 
-import org.apache.logging.log4j.LogManager
-import su.plo.lib.api.server.MinecraftCommonServerLib
 import su.plo.lib.api.proxy.event.command.ProxyCommandsRegisterEvent
+import su.plo.lib.api.server.MinecraftCommonServerLib
 import su.plo.voice.api.addon.AddonLoaderScope
 import su.plo.voice.api.addon.annotation.Addon
 import su.plo.voice.api.event.EventSubscribe
-import su.plo.voice.api.proxy.event.VoiceProxyShutdownEvent
 import su.plo.voice.api.proxy.event.config.VoiceProxyConfigReloadedEvent
 import su.plo.voice.groups.GroupsAddon
 import su.plo.voice.groups.proxy.command.ProxyCommandHandler
@@ -26,7 +24,7 @@ class ProxyGroupsAddon : GroupsAddon() {
 
     @EventSubscribe
     fun onConfigReloaded(event: VoiceProxyConfigReloadedEvent) {
-        LogManager.getLogger("pv-addon-groups").warn("/vreload not supported")
+        logger.warn("/vreload not supported")
     }
 
     override fun createCommandHandler(minecraftServer: MinecraftCommonServerLib): ProxyCommandHandler {

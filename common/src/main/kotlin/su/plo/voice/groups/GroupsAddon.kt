@@ -3,6 +3,7 @@ package su.plo.voice.groups
 import com.google.inject.Inject
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import org.slf4j.LoggerFactory
 import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
 import su.plo.lib.api.server.MinecraftCommonServerLib
@@ -142,6 +143,9 @@ abstract class GroupsAddon : AddonInitializer {
     }
 
     companion object {
+
+        val logger = LoggerFactory.getLogger("pv-addon-groups")
+
         private val toml = ConfigurationProvider.getProvider<ConfigurationProvider>(
             TomlConfiguration::class.java
         )
