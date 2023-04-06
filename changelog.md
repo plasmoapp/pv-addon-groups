@@ -1,1 +1,1 @@
-- fixed an exception on paper shutdown 
+- relocate kotlin to support Plasmo Voice 2.0.3

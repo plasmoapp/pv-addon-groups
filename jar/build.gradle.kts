@@ -2,7 +2,7 @@ val plasmoVoiceVersion: String by rootProject
 
 plugins {
     id("su.plo.crowdin.plugin") version("1.0.0")
-    id("su.plo.voice.plugin") version("1.0.0")
+    id("su.plo.voice.plugin") version("1.0.1")
 }
 
 dependencies {
@@ -38,4 +38,27 @@ plasmoCrowdin {
     sourceFileName = "server/groups.toml"
     resourceDir = "groups/languages"
     createList = true
+}
+
+tasks {
+    jar {
+        archiveClassifier.set("dev")
+    }
+
+    shadowJar {
+        configurations = listOf(project.configurations.shadow.get())
+
+        archiveBaseName.set("${rootProject.name}-${rootProject.version}")
+        archiveClassifier.set("")
+        archiveAppendix.set("")
+    }
+
+    build {
+        dependsOn(shadowJar)
+
+        doLast {
+            shadowJar.get().archiveFile.get().asFile
+                .copyTo(rootProject.buildDir.resolve("libs/${shadowJar.get().archiveFile.get().asFile.name}"), true)
+        }
+    }
 }

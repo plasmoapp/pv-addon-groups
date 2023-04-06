@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "su.plo"
-version = "1.0.2"
+version = "1.0.3"
 
 allprojects {
     repositories {
@@ -21,7 +21,7 @@ subprojects {
 
     dependencies {
         compileOnly("su.plo.config:config:1.0.0")
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+        compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     }
 
     tasks {
@@ -36,8 +36,6 @@ subprojects {
 
 tasks {
     jar {
-        dependsOn(project(":jar").tasks.build)
-
-        from(project(":jar").sourceSets.main.get().output)
+        enabled = false
     }
 }

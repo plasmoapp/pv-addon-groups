@@ -9,7 +9,7 @@ import su.plo.voice.api.proxy.event.config.VoiceProxyConfigReloadedEvent
 import su.plo.voice.groups.GroupsAddon
 import su.plo.voice.groups.proxy.command.ProxyCommandHandler
 
-@Addon(id = "pv-addon-groups", scope = AddonLoaderScope.PROXY, version = "1.0.2", authors = ["KPidS"])
+@Addon(id = "pv-addon-groups", scope = AddonLoaderScope.PROXY, version = "1.0.3", authors = ["KPidS"])
 class ProxyGroupsAddon : GroupsAddon() {
 
     init {
