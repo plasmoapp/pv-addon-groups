@@ -1,0 +1,98 @@
+[server.pv.addon.groups]
+divider = "&8&m-----------------------------------------------------"
+
+[server.pv.addon.groups.tooltip]
+group_uuid = "UUID：%s"
+password_protected = "群组受密码保护"
+
+[server.pv.addon.groups.format]
+group_name = "&6[%s]"
+players_and_owner = "&7玩家：&r%1$s&7，&r所有者：%2$s"
+only_players = "&7玩家：&r%s"
+invite = "%1$s 邀请你加入语音群组 %2$s"
+page = "&7第&r %s &7页/共&r %s &7页"
+
+[server.pv.addon.groups.icons]
+password_protected = "&6⛨"
+
+[server.pv.addon.groups.button]
+next = "&e>"
+leave = "&c← 离开"
+prev = "&e<"
+join = "&e→ 加入"
+invite = "&e✉ 邀请"
+
+[server.pv.addon.groups.arg]
+permissions = "<被逗号分开的权限列表>"
+name = "<名称>"
+groups_uuid = "<群组 UUID>"
+password = "<密码>"
+page = "[页数]"
+
+[server.pv.addon.groups.notifications]
+new_owner = "%s 是此群组的新所有者"
+player_left = "%s 离开了群组"
+player_join = "%s 加入了群组"
+group_deleted = "群组被删除"
+name_change = "群组名称由“%1$s”更改为“%2$s”"
+password_changed = "群组密码被更改"
+permissions_changed = "群组权限被更改"
+kicked = "&c你被踢出此群组"
+player_kicked = "%s 被踢出此群组"
+persistent_true = "此群组被固定"
+persistent_false = "此群组不再被固定"
+password_unset = "密码保护被移除"
+permissions_unset = "权限保护被移除"
+
+[client.pv.activation]
+groups = "群组"
+
+[server.pv.addon.groups.error]
+uuid_parse = "&cUUID 解析错误。“%s”不是 UUID"
+no_permission = "&c没有权限：“%s”"
+group_not_found = "&c未找到群组"
+not_in_group = "&c你需要在群组中才能执行此命令"
+unknown = "&c未知错误"
+name_length = "&c群组名称长度应介于 %1$s 和 %2$s 个字符之间"
+unknown_subcommand = "&c未知命令。可用命令：%s"
+player_not_found = "&c未找到此玩家"
+
+[server.pv.addon.groups.command.set.error]
+usage = "&c用法：/groups set <标志> <值>"
+unknown_flag = "&c未知标志：“%1$s”。可用标志：%2$s"
+identical_value = "&c此值与当前值相同"
+
+[server.pv.addon.groups.command.unset.error]
+usage = "&c用法：/groups unset <标志>"
+unknown_flag = "&c无法设置标志“%1$s”。可用标志：%2$s"
+password_not_set = "&c群组已不受密码保护"
+permissions_not_set = "&c权限过滤器已为空"
+
+[server.pv.addon.groups.command.browse.error]
+page_not_found = "&c未找到页面"
+no_groups = "&c无群组。使用“/groups create”创建群组"
+
+[server.pv.addon.groups.command.invite.error]
+usage = "&c用法：/groups invite <玩家>"
+invite_self = "&c你不能邀请你自己"
+already_joined = "&c玩家已加入此群组"
+
+
+[server.pv.addon.groups.command.join]
+success = "&a你加入了群组"
+[server.pv.addon.groups.command.join.error]
+usage = "&c用法：/groups join <群组 UUID> [密码]"
+already_joined = "&c你已加入此群组"
+
+[server.pv.addon.groups.command.transfer.error]
+usage = "&c用法：/groups transfer <玩家>"
+already_owner = "&c你已是此群组的所有者"
+
+[server.pv.addon.groups.command.create]
+success = "&a群组已创建："
+
+[server.pv.addon.groups.command.invite]
+success = "&a邀请已发送至 %s"
+
+[server.pv.addon.groups.command.leave]
+success = "&a你离开了群组"
