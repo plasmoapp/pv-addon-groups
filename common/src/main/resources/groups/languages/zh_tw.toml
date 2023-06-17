@@ -64,7 +64,7 @@ identical_value = "&c此值與當前值相同"
 
 [server.pv.addon.groups.command.unset.error]
 usage = "&c用法：/groups unset <標誌>"
-unknown_flag = "&c無法設置標誌“%1$s”。可用標誌：%2$s"
+unknown_flag = "&c無法設定標誌“%1$s”。可用標誌：%2$s"
 password_not_set = "&c群組已不受密碼保護"
 permissions_not_set = "&c權限篩檢程式已為空"
 
