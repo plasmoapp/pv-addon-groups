@@ -27,9 +27,9 @@ class SetCommand(handler: CommandHandler): SubCommand(handler) {
         if (!source.hasFlagPermission(flagName)) return listOf()
 
         return when {
-            flagName == "name" -> listOf(handler.getTranslationByKey("pv.addon.groups.command.create.arg.name", source))
-            flagName == "password" && arguments.size == 3 -> listOf(handler.getTranslationByKey("pv.addon.groups.command.create.arg.password", source))
-            flagName == "permissions" -> listOf(handler.getTranslationByKey("pv.addon.groups.command.create.arg.permissions", source))
+            flagName == "name" -> listOf(handler.getTranslationByKey("pv.addon.groups.arg.name", source))
+            flagName == "password" && arguments.size == 3 -> listOf(handler.getTranslationByKey("pv.addon.groups.arg.password", source))
+            flagName == "permissions" -> listOf(handler.getTranslationByKey("pv.addon.groups.arg.permissions", source))
             flagName == "persistent" && arguments.size == 3 -> listOf("true", "false")
             else -> listOf()
         }
