@@ -4,7 +4,12 @@ import su.plo.slib.api.command.McCommandSource
 import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
-import su.plo.voice.groups.utils.extend.*
+import su.plo.voice.groups.utils.extend.getVoicePlayer
+import su.plo.voice.groups.utils.extend.hasAddonPermission
+import su.plo.voice.groups.utils.extend.noPermissionError
+import su.plo.voice.groups.utils.extend.notInGroupError
+import su.plo.voice.groups.utils.extend.playerOnlyCommandError
+import su.plo.voice.groups.utils.extend.sendTranslatable
 
 class TransferCommand(handler: CommandHandler): SubCommand(handler) {
 
@@ -24,7 +29,7 @@ class TransferCommand(handler: CommandHandler): SubCommand(handler) {
 
         val player = source.getVoicePlayer(handler.voiceServer)
 
-        return handler.voiceServer.playerManager.players
+        return handler.addon.getVisibleOnlinePlayers(player)
             .map { it.instance.name }
             .filter { it.startsWith(arg) && (it != player?.instance?.name) }
     }
@@ -65,9 +70,9 @@ class TransferCommand(handler: CommandHandler): SubCommand(handler) {
 //                source.sendTranslatable("pv.addon.groups.error.player_not_found")
 //                return
 //            }
-        val newOwner = handler.voiceServer.playerManager
-            .getPlayerByName(playerName)
-                    .orElse(null) ?: run {
+        val newOwner = handler.addon.getVisibleOnlinePlayers(player)
+            .firstOrNull { it.instance.name == playerName }
+            ?: run {
                 source.sendTranslatable("pv.addon.groups.error.player_not_found")
                 return
             }

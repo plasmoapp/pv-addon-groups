@@ -3,7 +3,6 @@ package su.plo.voice.groups.command.subcommand
 import su.plo.slib.api.command.McCommandSource
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.utils.extend.getVoicePlayer
-import su.plo.voice.groups.utils.extend.hasAddonPermission
 import su.plo.voice.groups.utils.extend.noPermissionError
 import su.plo.voice.groups.utils.extend.notInGroupError
 import su.plo.voice.groups.utils.extend.playerOnlyCommandError
@@ -21,7 +20,7 @@ class BanCommand(handler: CommandHandler): ManagementCommand(handler, "ban") {
 
         val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return emptyList()
 
-        return handler.voiceServer.playerManager.players
+        return handler.addon.getVisibleOnlinePlayers(player)
             .filter { !group.isBanned(it.instance.uuid) }
             .filter { it != player }
             .map { it.instance.name }
@@ -52,9 +51,9 @@ class BanCommand(handler: CommandHandler): ManagementCommand(handler, "ban") {
             return
         }
 
-        val target = handler.voiceServer.playerManager
-            .getPlayerByName(playerName)
-                    .orElse(null) ?: run {
+        val target = handler.addon.getVisibleOnlinePlayers(player)
+            .firstOrNull { it.instance.name == playerName }
+            ?: run {
                 source.sendTranslatable("pv.addon.groups.error.player_not_found")
                 return
             }

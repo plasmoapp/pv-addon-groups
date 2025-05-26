@@ -4,7 +4,13 @@ import su.plo.slib.api.command.McCommandSource
 import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
-import su.plo.voice.groups.utils.extend.*
+import su.plo.voice.groups.utils.extend.getVoicePlayer
+import su.plo.voice.groups.utils.extend.hasAddonPermission
+import su.plo.voice.groups.utils.extend.noPermissionError
+import su.plo.voice.groups.utils.extend.notInGroupError
+import su.plo.voice.groups.utils.extend.playerOnlyCommandError
+import su.plo.voice.groups.utils.extend.printDivider
+import su.plo.voice.groups.utils.extend.sendTranslatable
 
 class InviteCommand(handler: CommandHandler): SubCommand(handler) {
 
@@ -26,7 +32,7 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
 
         val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return listOf()
 
-        return handler.voiceServer.playerManager.players
+        return handler.addon.getVisibleOnlinePlayers(player)
             .filter { !group.onlinePlayers.contains(it) && (it != player) }
             .map { it.instance.name }
             .filter { it.startsWith(arg, true) }
@@ -64,10 +70,10 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
             return
         }
 
-        val invitedPlayer = handler.voiceServer
-            .playerManager
-            .getPlayerByName(playerName)
-            .orElse(null)?.instance ?: run {
+        val invitedPlayer = handler.addon.getVisibleOnlinePlayers(player)
+            .firstOrNull { it.instance.name == playerName }
+            ?.instance
+            ?: run {
                 source.sendTranslatable("pv.addon.groups.error.player_not_found")
                 return
             }

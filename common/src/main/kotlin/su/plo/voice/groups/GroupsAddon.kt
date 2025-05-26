@@ -9,6 +9,7 @@ import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.api.addon.AddonInitializer
 import su.plo.voice.api.addon.injectPlasmoVoice
 import su.plo.voice.api.server.PlasmoBaseVoiceServer
+import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.subcommand.*
 import su.plo.voice.groups.group.Group
@@ -37,6 +38,8 @@ abstract class GroupsAddon : AddonInitializer {
     override fun onAddonShutdown() {
         groupManager.onVoiceServerShutdown(voiceServer)
     }
+
+    abstract fun getVisibleOnlinePlayers(player: VoicePlayer? = null): Collection<VoicePlayer>
 
     protected fun onConfigLoaded() {
 
