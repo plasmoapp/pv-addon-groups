@@ -151,7 +151,8 @@ class Group(
 
     fun asTextComponents(
         handler: CommandHandler,
-        source: McCommandSource? = null
+        source: McCommandSource? = null,
+        sourcePlayer: VoicePlayer? = source?.getVoicePlayer(handler.voiceServer),
     ): List<McTextComponent> = listOf(
 
         if (password != null) {
@@ -176,7 +177,7 @@ class Group(
                 .clickEvent(McTextClickEvent.suggestCommand(id.toString()))
         ),
 
-        if (owner == null) {
+        if (owner == null || handler.addon.getVisibleOnlinePlayers(sourcePlayer).none { owner!!.id == it.instance.uuid }) {
             McTextComponent.translatable("pv.addon.groups.format.only_players", onlinePlayerCount)
         } else {
             McTextComponent.translatable(
@@ -186,7 +187,14 @@ class Group(
             )
         }.hoverEvent(
             McTextHoverEvent.showText(
-                McTextComponent.literal(sortedOnlinePlayers.joinToString(", ") { it.instance.name })
+                McTextComponent.literal(
+                    sortedOnlinePlayers
+                        .let {
+                            val visiblePlayers = handler.addon.getVisibleOnlinePlayers(sourcePlayer)
+                            sortedOnlinePlayers.filter { visiblePlayers.contains(it) }
+                        }
+                        .joinToString(", ") { it.instance.name }
+                )
             )
         ),
 
