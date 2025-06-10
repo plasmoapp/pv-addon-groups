@@ -88,6 +88,8 @@ success = "&aYou joined the group"
 usage = "&cUsage: /groups join <group uuid> [password]"
 already_joined = "&cYou already joined this group"
 banned = "&cYou've been banned in this group"
+password_arg_missing = "&cThis group requires a password to join"
+wrong_password = "&cIncorrect password"
 
 [server.pv.addon.groups.command.transfer.error]
 usage = "&cUsage: /groups transfer <player>"
