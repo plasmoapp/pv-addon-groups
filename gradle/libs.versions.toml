@@ -1,0 +1,22 @@
+[versions]
+kotlin = "1.8.22"
+kotlinx-json = "1.5.1"
+
+plasmovoice = "2.1.4"
+config = "1.0.0"
+
+plasmovoice-plugin = "1.0.2-SNAPSHOT"
+crowdin-plugin = "1.1.0-SNAPSHOT"
+
+[libraries]
+config = { module = "su.plo.config:config", version.ref = "config" }
+kotlinx-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-json" }
+
+plasmovoice-server = { module = "su.plo.voice.api:server", version.ref = "plasmovoice" }
+plasmovoice-proxy = { module = "su.plo.voice.api:proxy", version.ref = "plasmovoice" }
+plasmovoice-server-common = { module = "su.plo.voice.api:server-proxy-common", version.ref = "plasmovoice" }
+
+[plugins]
+plasmovoice = { id = "su.plo.voice.plugin.entrypoints", version.ref = "plasmovoice-plugin" }
+plasmovoice-java-templates = { id = "su.plo.voice.plugin.java-templates", version.ref = "plasmovoice-plugin" }
+crowdin = { id = "su.plo.crowdin.plugin", version.ref = "crowdin-plugin" }

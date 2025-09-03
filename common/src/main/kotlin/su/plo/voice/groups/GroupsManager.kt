@@ -3,16 +3,18 @@ package su.plo.voice.groups
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import su.plo.slib.api.entity.player.McGameProfile
 import su.plo.voice.api.event.EventSubscribe
 import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.api.server.audio.capture.ServerActivation
 import su.plo.voice.api.server.audio.line.BaseServerSourceLine
-import su.plo.voice.api.server.audio.source.ServerDirectSource
+import su.plo.voice.api.server.audio.source.ServerBroadcastSource
 import su.plo.voice.api.server.event.connection.UdpClientConnectedEvent
 import su.plo.voice.api.server.event.connection.UdpClientDisconnectedEvent
 import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.group.Group
 import su.plo.voice.groups.group.GroupData
+import su.plo.voice.groups.utils.extend.sendTranslatable
 import su.plo.voice.groups.utils.serializer.UUIDSerializer
 import java.io.File
 import java.util.*
@@ -27,7 +29,7 @@ class GroupsManager(
 ) {
     val groupByPlayer: MutableMap<UUID, Group> = ConcurrentHashMap()
     val groups: MutableMap<UUID, Group> = ConcurrentHashMap()
-    val sourceByPlayer: MutableMap<UUID, ServerDirectSource> = ConcurrentHashMap()
+    val sourceByPlayer: MutableMap<UUID, ServerBroadcastSource> = ConcurrentHashMap()
 
 //    val groupByPlayerCache: MutableMap<@Serializable(with = UUIDSerializer::class) UUID, UUID> = ConcurrentHashMap()
 
@@ -37,15 +39,37 @@ class GroupsManager(
         groupByPlayer[player.instance.uuid] = group
 
         group.addPlayer(player)
-        sourceLine.playersSets?.setPlayersSet(player, group.playersSet) // todo: DRY
+        sourceLine.playerSetManager?.setPlayerSet(player, group.playerSet) // todo: DRY
     }
 
     private fun initSource(player: VoicePlayer, group: Group) {
-        val source = sourceLine.createDirectSource()
-        source.setPlayers(group::onlinePlayers)
-        source.addFilter { it.instance != player.instance }
-        source.setSender(player)
+        val source = sourceLine.createBroadcastSource()
+        source.players = group.onlinePlayers
+        source.addFilter<VoicePlayer> { it.instance != player.instance }
+        source.sender = player
         sourceByPlayer[player.instance.uuid] = source
+    }
+
+    fun kick(group: Group, player: VoicePlayer) {
+        leave(player)
+        player.instance.sendTranslatable("pv.addon.groups.notifications.kicked")
+        group.notifyPlayersTranslatable("pv.addon.groups.notifications.player_kicked", player.instance.name)
+    }
+
+    fun ban(group: Group, player: VoicePlayer) {
+        val didLeft = leave(player)
+        group.banPlayer(player)
+
+        group.notifyPlayersTranslatable("pv.addon.groups.notifications.player_banned", player.instance.name)
+
+        if (didLeft) {
+            player.instance.sendTranslatable("pv.addon.groups.notifications.banned", group.inlineChatComponent())
+        }
+    }
+
+    fun unban(group: Group, player: McGameProfile) {
+        group.unbanPlayer(player)
+        group.notifyPlayersTranslatable("pv.addon.groups.notifications.player_unbanned", player.name)
     }
 
     fun leave(player: VoicePlayer): Boolean =
@@ -61,16 +85,18 @@ class GroupsManager(
                 .getPlayerById(playerUuid)
                 .orElse(null)
                 ?.let {
-                    sourceLine.playersSets?.setPlayersSet(it, null)
+                    sourceLine.playerSetManager?.setPlayerSet(it, null)
                 }
         }
 
-        if (didLeft == false) return false
+        if (didLeft != true) return false
 
         if (group?.persistent == false) {
-            if (group.owner?.id == playerUuid)
+            if (group.owner?.id == playerUuid) {
                 group.owner = group.onlinePlayers.randomOrNull()?.instance?.gameProfile
-            group.owner?.let { group.notifyPlayersTranslatable("pv.addon.groups.notifications.new_owner", it.name) }
+                group.owner?.let { group.notifyPlayersTranslatable("pv.addon.groups.notifications.new_owner", it.name) }
+            }
+
             if (group.onlinePlayers.isEmpty()) deleteGroup(group)
         }
 
@@ -93,7 +119,7 @@ class GroupsManager(
             }
 
             group.onPlayerJoin(player)
-            sourceLine.playersSets?.setPlayersSet(player, group.playersSet)
+            sourceLine.playerSetManager?.setPlayerSet(player, group.playerSet)
             initSource(player, group)
         }
     }
@@ -113,7 +139,7 @@ class GroupsManager(
         val groups = groups.values
             .filter { it.persistent }
 
-        File(addon.getAddonFolder(server), "groups.json")
+        File(addon.getAddonFolder(server.minecraftServer), "groups.json")
             .writeText(Json.encodeToString(Data(
                 groups,
                 groupByPlayer.map { it.key to it.value.id }.toMap(),

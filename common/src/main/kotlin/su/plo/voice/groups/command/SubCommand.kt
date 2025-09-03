@@ -1,7 +1,7 @@
 package su.plo.voice.groups.command
 
-import su.plo.lib.api.server.command.MinecraftCommandSource
-import su.plo.lib.api.server.permission.PermissionDefault
+import su.plo.slib.api.command.McCommandSource
+import su.plo.slib.api.permission.PermissionDefault
 
 abstract class SubCommand(val handler: CommandHandler) {
 
@@ -10,14 +10,14 @@ abstract class SubCommand(val handler: CommandHandler) {
     abstract val permissions: List<Pair<String, PermissionDefault>>
 
     abstract fun suggest(
-        source: MinecraftCommandSource,
-        arguments: Array<out String>,
+        source: McCommandSource,
+        arguments: Array<String>,
     ): List<String>
 
     abstract fun execute(
-        source: MinecraftCommandSource,
-        arguments: Array<out String>,
+        source: McCommandSource,
+        arguments: Array<String>,
     )
 
-    open fun checkCanExecute(source: MinecraftCommandSource): Boolean = true
+    open fun checkCanExecute(source: McCommandSource): Boolean = true
 }

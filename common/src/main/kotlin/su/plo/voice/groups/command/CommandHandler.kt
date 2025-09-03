@@ -1,17 +1,17 @@
 package su.plo.voice.groups.command
 
-import su.plo.lib.api.server.MinecraftCommonServerLib
-import su.plo.lib.api.server.command.MinecraftCommand
-import su.plo.lib.api.server.command.MinecraftCommandSource
-import su.plo.lib.api.server.permission.PermissionDefault
+import su.plo.slib.api.McLib
+import su.plo.slib.api.command.McCommand
+import su.plo.slib.api.command.McCommandSource
+import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.GroupsAddon
 import su.plo.voice.groups.utils.extend.sendTranslatable
 import java.util.concurrent.ConcurrentHashMap
 
 open class CommandHandler(
     val addon: GroupsAddon,
-    val minecraftServer: MinecraftCommonServerLib,
-): MinecraftCommand {
+    val minecraftServer: McLib,
+): McCommand {
 
     private val subCommands: MutableMap<String, SubCommand> = ConcurrentHashMap()
 
@@ -21,7 +21,7 @@ open class CommandHandler(
     val voiceServer
         get() = addon.voiceServer
 
-    fun getTranslationByKey(key: String, source: MinecraftCommandSource): String {
+    fun getTranslationByKey(key: String, source: McCommandSource): String {
         return voiceServer.languages.getServerLanguage(source)[key] ?: key
     }
 
@@ -44,7 +44,7 @@ open class CommandHandler(
             .also { registerPermissions(it) }
     }
 
-    override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
+    override fun execute(source: McCommandSource, arguments: Array<String>) {
 
         val subCommand = arguments.getOrNull(0) ?: run {
             subCommands["browse"]?.execute(source, arguments)
@@ -62,7 +62,7 @@ open class CommandHandler(
         )
     }
 
-    override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
+    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> {
 
         if (arguments.isEmpty()) return subCommands
             .filter { it.value.checkCanExecute(source) }
@@ -81,13 +81,13 @@ open class CommandHandler(
         return listOf()
     }
 
-    override fun hasPermission(source: MinecraftCommandSource, arguments: Array<out String?>?): Boolean =
+    override fun hasPermission(source: McCommandSource, arguments: Array<String>?): Boolean =
         source.hasPermission("pv.addon.groups.*") ||
             subCommands.keys.stream().anyMatch {
                 source.hasPermission("pv.addon.groups.$it")
             }
 
     fun registerPermissions(permissions: List<Pair<String, PermissionDefault>>) {
-        permissions.forEach { minecraftServer.permissionsManager.register("pv.addon.groups.${it.first}", it.second) }
+        permissions.forEach { minecraftServer.permissionManager.register("pv.addon.groups.${it.first}", it.second) }
     }
 }

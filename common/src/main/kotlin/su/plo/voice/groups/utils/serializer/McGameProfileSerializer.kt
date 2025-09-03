@@ -9,17 +9,17 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.encoding.encodeStructure
-import su.plo.voice.proto.data.player.MinecraftGameProfile
+import su.plo.slib.api.entity.player.McGameProfile
 import java.util.*
 
-object MinecraftGameProfileSerializer : KSerializer<MinecraftGameProfile> {
+object McGameProfileSerializer : KSerializer<McGameProfile> {
 
     override val descriptor = buildClassSerialDescriptor("MinecraftGameProfileSerializer") {
         element<String>("uuid")
         element<String>("name")
     }
 
-    override fun deserialize(decoder: Decoder): MinecraftGameProfile =
+    override fun deserialize(decoder: Decoder): McGameProfile =
         decoder.decodeStructure(descriptor) {
             var uuid: UUID? = null
             var name: String? = null
@@ -35,10 +35,10 @@ object MinecraftGameProfileSerializer : KSerializer<MinecraftGameProfile> {
                 }
             }
 
-            MinecraftGameProfile(requireNotNull(uuid), requireNotNull(name), Collections.emptyList())
+            McGameProfile(requireNotNull(uuid), requireNotNull(name), Collections.emptyList())
         }
 
-    override fun serialize(encoder: Encoder, value: MinecraftGameProfile) =
+    override fun serialize(encoder: Encoder, value: McGameProfile) =
         encoder.encodeStructure(descriptor) {
             encodeSerializableElement(descriptor, 0, UUIDSerializer, value.id)
             encodeStringElement(descriptor, 1, value.name)

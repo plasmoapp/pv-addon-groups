@@ -1,33 +1,33 @@
 package su.plo.voice.groups
 
-import com.google.inject.Inject
-import kotlinx.serialization.decodeFromString
+import com.google.common.collect.Sets
 import kotlinx.serialization.json.Json
-import org.slf4j.LoggerFactory
 import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
-import su.plo.lib.api.server.MinecraftCommonServerLib
-import su.plo.lib.api.server.permission.PermissionDefault
-import su.plo.voice.api.PlasmoVoice
+import su.plo.slib.api.McLib
+import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.api.addon.AddonInitializer
+import su.plo.voice.api.addon.injectPlasmoVoice
 import su.plo.voice.api.server.PlasmoBaseVoiceServer
+import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.subcommand.*
 import su.plo.voice.groups.group.Group
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.net.URI
 import java.util.*
+import java.util.concurrent.CopyOnWriteArrayList
 
 abstract class GroupsAddon : AddonInitializer {
 
-    @Inject
-    lateinit var voiceServer: PlasmoBaseVoiceServer
+    val voiceServer: PlasmoBaseVoiceServer by injectPlasmoVoice()
 
     lateinit var groupManager: GroupsManager
 
-    fun getAddonFolder(server: PlasmoVoice): File =
-        File(server.configsFolder, "pv-addon-groups")
+    fun getAddonFolder(minecraftServer: McLib): File =
+        File(minecraftServer.configsFolder, "pv-addon-groups")
 
     private val activationName = "groups"
 
@@ -39,17 +39,19 @@ abstract class GroupsAddon : AddonInitializer {
         groupManager.onVoiceServerShutdown(voiceServer)
     }
 
+    abstract fun getVisibleOnlinePlayers(player: VoicePlayer? = null): Collection<VoicePlayer>
+
     protected fun onConfigLoaded() {
 
-        val addonFolder = getAddonFolder(voiceServer).also { it.mkdirs() }
+        val addonFolder = getAddonFolder(voiceServer.minecraftServer).also { it.mkdirs() }
 
         val config = try {
 
             voiceServer.languages.register(
-                "plasmo-voice-addons",
+                URI.create("https://github.com/plasmoapp/plasmo-voice-crowdin/archive/refs/heads/addons.zip").toURL(),
                 "server/groups.toml",
-                { resourcePath: String -> getLanguageResource(resourcePath)
-                    ?: throw Exception("Can't load language resource")
+                { resourcePath ->
+                    getLanguageResource(resourcePath) ?: throw IOException("Can't load language resource")
                 },
                 File(addonFolder, "languages")
             )
@@ -97,12 +99,13 @@ abstract class GroupsAddon : AddonInitializer {
             ?.also { fe -> fe.groups.forEach { group ->
                 group.apply {
                     groupManager.groups[id] = Group(
-                        sourceLine.playersSets!!.createBroadcastSet(),
+                        sourceLine.playerSetManager!!.createBroadcastSet(),
                         id,
                         name,
                         password,
                         persistent,
-                        playersIds,
+                        Sets.newConcurrentHashSet(playersIds),
+                        CopyOnWriteArrayList(bannedPlayers),
                         owner
                     )
                 }
@@ -112,15 +115,13 @@ abstract class GroupsAddon : AddonInitializer {
                 groupManager.groupByPlayer[it.key] = group
             } }
 
-        voiceServer.eventBus.register(this, ActivationListener(
-            voiceServer, groupManager, activation
-        ))
+        voiceServer.eventBus.register(this, ActivationListener(groupManager, activation))
 
         voiceServer.eventBus.register(this, groupManager)
     }
 
     // todo: waytoodank (refactor?)
-    protected open fun createCommandHandler(minecraftServer: MinecraftCommonServerLib) : CommandHandler =
+    protected open fun createCommandHandler(minecraftServer: McLib) : CommandHandler =
         CommandHandler(this, minecraftServer)
 
     protected fun addSubcommandsToCommandHandler(commandHandler: CommandHandler) {
@@ -135,6 +136,9 @@ abstract class GroupsAddon : AddonInitializer {
             .addSubCommand(::UnsetCommand)
             .addSubCommand(::DeleteCommand)
             .addSubCommand(::TransferCommand)
+            .addSubCommand(::KickCommand)
+            .addSubCommand(::BanCommand)
+            .addSubCommand(::UnbanCommand)
     }
 
     @Throws(IOException::class)
@@ -143,8 +147,6 @@ abstract class GroupsAddon : AddonInitializer {
     }
 
     companion object {
-
-        val logger = LoggerFactory.getLogger("pv-addon-groups")
 
         private val toml = ConfigurationProvider.getProvider<ConfigurationProvider>(
             TomlConfiguration::class.java

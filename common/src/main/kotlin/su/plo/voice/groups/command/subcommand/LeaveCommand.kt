@@ -1,7 +1,7 @@
 package su.plo.voice.groups.command.subcommand
 
-import su.plo.lib.api.server.command.MinecraftCommandSource
-import su.plo.lib.api.server.permission.PermissionDefault
+import su.plo.slib.api.command.McCommandSource
+import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
 import su.plo.voice.groups.utils.extend.*
@@ -14,9 +14,9 @@ class LeaveCommand(handler: CommandHandler): SubCommand(handler) {
         "leave" to PermissionDefault.TRUE,
     )
 
-    override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> = listOf()
+    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> = listOf()
 
-    override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
+    override fun execute(source: McCommandSource, arguments: Array<String>) {
 
         if (source.checkAddonPermissionAndPrintError("leave")) return
 
@@ -37,7 +37,7 @@ class LeaveCommand(handler: CommandHandler): SubCommand(handler) {
         group.notifyPlayersTranslatable("pv.addon.groups.notifications.player_left", player.instance.name)
     }
 
-    override fun checkCanExecute(source: MinecraftCommandSource): Boolean =
+    override fun checkCanExecute(source: McCommandSource): Boolean =
         source.getVoicePlayer(handler.voiceServer)
             ?.let { handler.groupManager.groupByPlayer[it.instance.uuid] }
             ?.let { true } ?: false

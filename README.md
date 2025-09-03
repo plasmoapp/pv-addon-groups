@@ -90,6 +90,12 @@ You can set multiple permissions: `permissions: group.admin, group.moderator`
 
 `/groups transfer <player>` — Transfer the ownership of the group to a different player.
 
+`/groups kick <player>` — Kick a player from the group.
+
+`/groups ban <player>` — Ban a player from the group.
+
+`/groups unban <player>` — Unban a player from the group.
+
 ## Permissions
 
 | Permission                       | Description                                                         | Default |
@@ -113,4 +119,8 @@ You can set multiple permissions: `permissions: group.admin, group.moderator`
 | `pv.addon.groups.delete.all`     | Use `/groups delete` in any group                                   | OP      |
 | `pv.addon.groups.transfer.owner` | Use `/groups transfer` if owner                                     | True    |
 | `pv.addon.groups.transfer.all`   | Use `/groups transfer` in any group                                 | OP      |
+| `pv.addon.groups.kick.owner`     | Use `/groups kick` if owner                                         | True    |
+| `pv.addon.groups.kick.all`       | Use `/groups kick` in any group                                     | OP      |
+| `pv.addon.groups.ban.owner`      | Use `/groups ban/unban` if owner                                    | True    |
+| `pv.addon.groups.ban.all`        | Use `/groups ban/unban` in any group                                | OP      |
 

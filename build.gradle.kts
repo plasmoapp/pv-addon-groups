@@ -1,17 +1,17 @@
 plugins {
-    kotlin("jvm") version "1.6.10"
-    kotlin("plugin.serialization") version "1.6.10"
+    kotlin("jvm") version libs.versions.kotlin.get()
+    kotlin("plugin.serialization") version libs.versions.kotlin.get()
+    alias(libs.plugins.plasmovoice) apply false
+    alias(libs.plugins.plasmovoice.java.templates)
 }
-
-group = "su.plo"
-version = "1.0.3"
 
 allprojects {
     repositories {
         mavenCentral()
         mavenLocal()
 
-        maven("https://repo.plo.su")
+        maven("https://repo.plasmoverse.com/snapshots")
+        maven("https://repo.plasmoverse.com/releases")
     }
 }
 
@@ -20,8 +20,8 @@ subprojects {
     apply(plugin = "kotlinx-serialization")
 
     dependencies {
-        compileOnly("su.plo.config:config:1.0.0")
-        compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+        compileOnly(rootProject.libs.config)
+        compileOnly(rootProject.libs.kotlinx.json)
     }
 
     tasks {
@@ -30,6 +30,10 @@ subprojects {
                 val key = "-Xjvm-default="
                 freeCompilerArgs = freeCompilerArgs.filterNot { it.startsWith(key) } + listOf(key + "all")
             }
+        }
+
+        java {
+            toolchain.languageVersion.set(JavaLanguageVersion.of(8))
         }
     }
 }

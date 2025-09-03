@@ -1,5 +1,7 @@
-val plasmoVoiceVersion: String by rootProject
+plugins {
+    id("su.plo.voice.plugin.java-templates")
+}
 
 dependencies {
-    compileOnly("su.plo.voice.api:server-common:$plasmoVoiceVersion")
+    compileOnly(libs.plasmovoice.server.common)
 }

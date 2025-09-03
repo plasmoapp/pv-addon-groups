@@ -1,10 +1,10 @@
 package su.plo.voice.groups.command.subcommand
 
-import su.plo.lib.api.chat.MinecraftTextClickEvent
-import su.plo.lib.api.chat.MinecraftTextComponent
-import su.plo.lib.api.chat.MinecraftTextHoverEvent
-import su.plo.lib.api.server.command.MinecraftCommandSource
-import su.plo.lib.api.server.permission.PermissionDefault
+import su.plo.slib.api.chat.component.McTextComponent
+import su.plo.slib.api.chat.style.McTextClickEvent
+import su.plo.slib.api.chat.style.McTextHoverEvent
+import su.plo.slib.api.command.McCommandSource
+import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
 import su.plo.voice.groups.utils.extend.*
@@ -21,7 +21,7 @@ class BrowseCommand(handler: CommandHandler): SubCommand(handler) {
         "browse.*" to PermissionDefault.OP,
     )
 
-    override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
+    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> {
 
         if (arguments.size == 2) {
             return listOf(handler.getTranslationByKey("pv.addon.groups.arg.page", source))
@@ -30,7 +30,7 @@ class BrowseCommand(handler: CommandHandler): SubCommand(handler) {
         return listOf()
     }
 
-    override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
+    override fun execute(source: McCommandSource, arguments: Array<String>) {
 
         if (source.checkAddonPermissionAndPrintError("browse")) return
 
@@ -71,28 +71,28 @@ class BrowseCommand(handler: CommandHandler): SubCommand(handler) {
     private fun getPagesInfo(
         page: Int,
         chunksSize: Int
-    ): MinecraftTextComponent {
+    ): McTextComponent {
 
         val prevButton = if (page > 1) {
             val command = "/groups browse ${page - 1}"
-            MinecraftTextComponent.translatable("pv.addon.groups.button.prev")
-                .append(MinecraftTextComponent.literal(" "))
-                .hoverEvent(MinecraftTextHoverEvent.showText(MinecraftTextComponent.literal(command)))
-                .clickEvent(MinecraftTextClickEvent.runCommand(command))
+            McTextComponent.translatable("pv.addon.groups.button.prev")
+                .append(McTextComponent.literal(" "))
+                .hoverEvent(McTextHoverEvent.showText(McTextComponent.literal(command)))
+                .clickEvent(McTextClickEvent.runCommand(command))
         } else {
-            MinecraftTextComponent.empty()
+            McTextComponent.empty()
         }
 
-        val pageInfo = MinecraftTextComponent.translatable("pv.addon.groups.format.page", page, chunksSize)
+        val pageInfo = McTextComponent.translatable("pv.addon.groups.format.page", page, chunksSize)
 
         val nextButton = if (page < chunksSize) {
             val command = "/groups browse ${page + 1}"
-            MinecraftTextComponent.literal(" ")
-                .append(MinecraftTextComponent.translatable("pv.addon.groups.button.next"))
-                .hoverEvent(MinecraftTextHoverEvent.showText(MinecraftTextComponent.literal(command)))
-                .clickEvent(MinecraftTextClickEvent.runCommand(command))
+            McTextComponent.literal(" ")
+                .append(McTextComponent.translatable("pv.addon.groups.button.next"))
+                .hoverEvent(McTextHoverEvent.showText(McTextComponent.literal(command)))
+                .clickEvent(McTextClickEvent.runCommand(command))
         } else {
-            MinecraftTextComponent.empty()
+            McTextComponent.empty()
         }
 
         return prevButton
@@ -100,5 +100,5 @@ class BrowseCommand(handler: CommandHandler): SubCommand(handler) {
             .append(nextButton)
     }
 
-    override fun checkCanExecute(source: MinecraftCommandSource): Boolean = source.hasAddonPermission("browse")
+    override fun checkCanExecute(source: McCommandSource): Boolean = source.hasAddonPermission("browse")
 }

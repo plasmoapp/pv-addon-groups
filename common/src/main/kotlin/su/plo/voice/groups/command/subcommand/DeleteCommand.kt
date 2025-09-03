@@ -1,7 +1,7 @@
 package su.plo.voice.groups.command.subcommand
 
-import su.plo.lib.api.server.command.MinecraftCommandSource
-import su.plo.lib.api.server.permission.PermissionDefault
+import su.plo.slib.api.command.McCommandSource
+import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
 import su.plo.voice.groups.utils.extend.*
@@ -16,7 +16,7 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
         "delete.*" to PermissionDefault.OP,
     )
 
-    override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
+    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> {
 
 //        if (arguments.size != 2) return listOf("")
 //
@@ -39,13 +39,13 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
         return listOf()
     }
 
-    override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
+    override fun execute(source: McCommandSource, arguments: Array<String>) {
 
 //        val groupUuid = arguments.getOrNull(1)
 //            ?.runCatching { UUID.fromString(this) }
 //            ?.getOrNull()
 //            ?: run {
-//                source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.delete.usage"))
+//                source.sendMessage(McTextComponent.translatable("pv.addon.groups.command.delete.usage"))
 //                return
 //            }
 
@@ -59,7 +59,7 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
             return
         }
 
-        val isOwner = group.owner?.id == player.instance.uuid
+        val isOwner = group.isOwner(player)
 
         when {
             source.hasAddonPermission("delete.all") || source.hasAddonPermission("delete.*") -> Unit
@@ -76,12 +76,12 @@ class DeleteCommand(handler: CommandHandler): SubCommand(handler) {
 //        source.sendTranslatable("pv.addon.groups.command.delete.success")
     }
 
-    override fun checkCanExecute(source: MinecraftCommandSource): Boolean {
+    override fun checkCanExecute(source: McCommandSource): Boolean {
 
         val player = source.getVoicePlayer(handler.voiceServer) ?: return false
         val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return false
 
-        val isOwner = group.owner?.id == player.instance.uuid
+        val isOwner = group.isOwner(player)
 
         return when {
             source.hasAddonPermission("delete.owner") && isOwner -> true

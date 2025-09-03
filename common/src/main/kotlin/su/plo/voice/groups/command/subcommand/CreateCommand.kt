@@ -1,8 +1,8 @@
 package su.plo.voice.groups.command.subcommand
 
-import su.plo.lib.api.chat.MinecraftTextComponent
-import su.plo.lib.api.server.command.MinecraftCommandSource
-import su.plo.lib.api.server.permission.PermissionDefault
+import su.plo.slib.api.chat.component.McTextComponent
+import su.plo.slib.api.command.McCommandSource
+import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
 import su.plo.voice.groups.group.Group
@@ -31,7 +31,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         )
     }
 
-    private fun parseArguments(arguments: Array<out String>): Arguments = arguments
+    private fun parseArguments(arguments: Array<String>): Arguments = arguments
         .mapIndexed { index, value -> if (value.contains(":")) index else null }
         .filterNotNull()
         .let { flagIndexes -> flagIndexes.mapIndexed { index, flagIndex ->
@@ -45,7 +45,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         }
 //        }.also { args ->
 //            args.keys.find { !handler.flags.keys.contains(it) }?.let {
-//                return source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.create.error.name_length"))
+//                return source.sendMessage(McTextComponent.translatable("pv.addon.groups.command.create.error.name_length"))
 //            }
 //        }
         .let { args -> Arguments(
@@ -57,7 +57,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
     }
 
 
-    override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
+    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> {
 
         val insideFlag = arguments.getOrNull(arguments.size.minus(2))
             ?.let {
@@ -89,7 +89,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         }
     }
 
-    override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
+    override fun execute(source: McCommandSource, arguments: Array<String>) {
 
         if (source.checkAddonPermissionAndPrintError("create")) return
 
@@ -107,7 +107,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
         val max = handler.groupManager.config.maximumNameLength
 
         if (name.length !in min..max) {
-            source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.error.name_length", min, max))
+            source.sendMessage(McTextComponent.translatable("pv.addon.groups.error.name_length", min, max))
             return
         }
 
@@ -125,7 +125,7 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
             } ?: false
 
         val group = Group(
-            handler.groupManager.sourceLine.playersSets!!.createBroadcastSet(),
+            handler.groupManager.sourceLine.playerSetManager!!.createBroadcastSet(),
             UUID.randomUUID(),
             name,
             password,
@@ -143,11 +143,11 @@ class CreateCommand(handler: CommandHandler): SubCommand(handler) {
             handler.groupManager.join(player, group)
         }
 
-        source.sendMessage(MinecraftTextComponent.translatable("pv.addon.groups.command.create.success", group.name))
+        source.sendMessage(McTextComponent.translatable("pv.addon.groups.command.create.success", group.name))
         source.printDivider()
         source.sendMessage(group.asTextComponents(handler, source))
         source.printDivider()
     }
 
-    override fun checkCanExecute(source: MinecraftCommandSource): Boolean = source.hasAddonPermission("create")
+    override fun checkCanExecute(source: McCommandSource): Boolean = source.hasAddonPermission("create")
 }

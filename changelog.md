@@ -1,1 +1,3 @@
-- relocate kotlin to support Plasmo Voice 2.0.3
+- Fixed suggestion translation keys in `/groups set`.
+- Added missing translation key for password error.
+- Added vanish support for commands.

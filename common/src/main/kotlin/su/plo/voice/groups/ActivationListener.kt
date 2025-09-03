@@ -1,21 +1,15 @@
 package su.plo.voice.groups
 
-import su.plo.voice.api.event.EventPriority
-import su.plo.voice.api.event.EventSubscribe
-import su.plo.voice.api.server.PlasmoBaseVoiceServer
-import su.plo.voice.api.server.audio.capture.SelfActivationInfo
+import su.plo.voice.api.server.audio.capture.PlayerActivationInfo
 import su.plo.voice.api.server.audio.capture.ServerActivation
-import su.plo.voice.api.server.audio.source.ServerDirectSource
-import su.plo.voice.api.server.event.audio.source.ServerSourcePacketEvent
+import su.plo.voice.api.server.audio.source.ServerBroadcastSource
 import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.proto.packets.tcp.clientbound.SourceAudioEndPacket
-import su.plo.voice.proto.packets.tcp.clientbound.SourceInfoPacket
 import su.plo.voice.proto.packets.tcp.serverbound.PlayerAudioEndPacket
 import su.plo.voice.proto.packets.udp.clientbound.SourceAudioPacket
 import su.plo.voice.proto.packets.udp.serverbound.PlayerAudioPacket
 
 class ActivationListener(
-    voiceServer: PlasmoBaseVoiceServer,
     private val groupManager: GroupsManager,
     activation: ServerActivation
 ) {
@@ -24,8 +18,6 @@ class ActivationListener(
         activation.onPlayerActivation(this::onActivation)
         activation.onPlayerActivationEnd(this::onActivationEnd)
     }
-
-    private val selfActivationInfo = SelfActivationInfo(voiceServer.udpConnectionManager)
 
     private fun onActivation(player: VoicePlayer, packet: PlayerAudioPacket): ServerActivation.Result {
         groupManager.sourceByPlayer[player.instance.uuid]?.let {
@@ -47,31 +39,9 @@ class ActivationListener(
         return ServerActivation.Result.IGNORED
     }
 
-    @EventSubscribe(priority = EventPriority.HIGHEST)
-    fun onSourceSendPacket(event: ServerSourcePacketEvent) {
-        val source = event.source as? ServerDirectSource ?: return
-        val sender = source.sender.orElse(null) ?: return
-
-        if (!selfActivationInfo.lastPlayerActivationIds
-                .containsKey(sender.instance.uuid)
-        ) {
-            return
-        }
-
-        if (event.packet is SourceInfoPacket) {
-            selfActivationInfo.updateSelfSourceInfo(
-                sender,
-                source,
-                (event.packet as SourceInfoPacket).sourceInfo
-            )
-        } else if (event.packet is SourceAudioEndPacket) {
-            sender.sendPacket(event.packet)
-        }
-    }
-
     private fun sendAudioPacket(
         player: VoicePlayer,
-        source: ServerDirectSource,
+        source: ServerBroadcastSource,
         packet: PlayerAudioPacket
     ): Boolean {
         val sourcePacket = SourceAudioPacket(
@@ -79,15 +49,12 @@ class ActivationListener(
             packet.data,
             source.id, 0.toShort()
         )
-        if (source.sendAudioPacket(sourcePacket, packet.activationId)) {
-            selfActivationInfo.sendAudioInfo(player, source, packet.activationId, sourcePacket)
-            return true
-        }
-        return false
+
+        return source.sendAudioPacket(sourcePacket, PlayerActivationInfo(player, packet))
     }
 
     private fun sendAudioEndPacket(
-        source: ServerDirectSource,
+        source: ServerBroadcastSource,
         packet: PlayerAudioEndPacket
     ): Boolean {
         val sourcePacket = SourceAudioEndPacket(source.id, packet.sequenceNumber)

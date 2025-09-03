@@ -1,10 +1,16 @@
 package su.plo.voice.groups.command.subcommand
 
-import su.plo.lib.api.server.command.MinecraftCommandSource
-import su.plo.lib.api.server.permission.PermissionDefault
+import su.plo.slib.api.command.McCommandSource
+import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
-import su.plo.voice.groups.utils.extend.*
+import su.plo.voice.groups.utils.extend.getVoicePlayer
+import su.plo.voice.groups.utils.extend.hasAddonPermission
+import su.plo.voice.groups.utils.extend.noPermissionError
+import su.plo.voice.groups.utils.extend.notInGroupError
+import su.plo.voice.groups.utils.extend.playerOnlyCommandError
+import su.plo.voice.groups.utils.extend.printDivider
+import su.plo.voice.groups.utils.extend.sendTranslatable
 
 class InviteCommand(handler: CommandHandler): SubCommand(handler) {
 
@@ -16,7 +22,7 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
         "invite.*" to PermissionDefault.OP,
     )
 
-    override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
+    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> {
 
         if (arguments.size != 2) return listOf()
 
@@ -26,13 +32,13 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
 
         val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return listOf()
 
-        return handler.voiceServer.playerManager.players
+        return handler.addon.getVisibleOnlinePlayers(player)
             .filter { !group.onlinePlayers.contains(it) && (it != player) }
             .map { it.instance.name }
             .filter { it.startsWith(arg, true) }
     }
 
-    override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
+    override fun execute(source: McCommandSource, arguments: Array<String>) {
 
         val player = source.getVoicePlayer(handler.voiceServer) ?: run {
             source.playerOnlyCommandError()
@@ -44,7 +50,7 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
             return
         }
 
-        val isOwner = group.owner == player
+        val isOwner = group.isOwner(player)
 
         when {
             source.hasAddonPermission("invite.*") -> Unit
@@ -64,10 +70,10 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
             return
         }
 
-        val invitedPlayer = handler.voiceServer
-            .playerManager
-            .getPlayerByName(playerName)
-            .orElse(null)?.instance ?: run {
+        val invitedPlayer = handler.addon.getVisibleOnlinePlayers(player)
+            .firstOrNull { it.instance.name == playerName }
+            ?.instance
+            ?: run {
                 source.sendTranslatable("pv.addon.groups.error.player_not_found")
                 return
             }
@@ -78,6 +84,11 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
                 return
             }}
 
+        if (group.isBanned(invitedPlayer.uuid)) {
+            source.sendTranslatable("pv.addon.groups.command.invite.error.banned")
+            return
+        }
+
         source.sendTranslatable("pv.addon.groups.command.invite.success", invitedPlayer.name)
 
         invitedPlayer.printDivider()
@@ -86,12 +97,12 @@ class InviteCommand(handler: CommandHandler): SubCommand(handler) {
         invitedPlayer.printDivider()
     }
 
-    override fun checkCanExecute(source: MinecraftCommandSource): Boolean {
+    override fun checkCanExecute(source: McCommandSource): Boolean {
 
         val player = source.getVoicePlayer(handler.voiceServer) ?: return false
         val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return false
 
-        val isOwner = group.owner?.id == player.instance.uuid
+        val isOwner = group.isOwner(player)
 
         return when {
             source.hasAddonPermission("invite.owner") && isOwner -> true

@@ -39,6 +39,9 @@ password_changed = "Group password changed"
 permissions_changed = "Group permissions changed"
 kicked = "&cYou've been kicked out of the group"
 player_kicked = "%s was kicked out of the group"
+banned = "&cYou've been banned in the group"
+player_banned = "%s was banned in the group"
+player_unbanned = "%s was unbanned in the group"
 persistent_true = "The group is persistent now"
 persistent_false = "The group is no longer persistent"
 password_unset = "Password protection was removed"
@@ -76,6 +79,7 @@ no_groups = "&cNo groups. Create groups using \"/groups create\""
 usage = "&cUsage: /groups invite <player>"
 invite_self = "&cYou can't invite yourself"
 already_joined = "&cPlayer already joined the group"
+banned = "&cPlayer is banned in this group"
 
 
 [server.pv.addon.groups.command.join]
@@ -83,10 +87,25 @@ success = "&aYou joined the group"
 [server.pv.addon.groups.command.join.error]
 usage = "&cUsage: /groups join <group uuid> [password]"
 already_joined = "&cYou already joined this group"
+banned = "&cYou've been banned in this group"
+password_arg_missing = "&cThis group requires a password to join"
+wrong_password = "&cIncorrect password"
 
 [server.pv.addon.groups.command.transfer.error]
 usage = "&cUsage: /groups transfer <player>"
 already_owner = "&cYou are already the owner of the group"
+
+[server.pv.addon.groups.command.kick.error]
+usage = "&cUsage: /groups kick <player>"
+not_in_group = "&cPlayer is not in the group"
+
+[server.pv.addon.groups.command.ban.error]
+usage = "&cUsage: /groups ban <player>"
+already_banned = "&cPlayer is already banned in the group"
+
+[server.pv.addon.groups.command.unban.error]
+usage = "&cUsage: /groups unban <player>"
+not_banned = "&cPlayer is not banned in the group"
 
 [server.pv.addon.groups.command.create]
 success = "&aThe group was created:"

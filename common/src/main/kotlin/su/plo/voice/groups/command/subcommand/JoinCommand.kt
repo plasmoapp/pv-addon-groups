@@ -1,7 +1,7 @@
 package su.plo.voice.groups.command.subcommand
 
-import su.plo.lib.api.server.command.MinecraftCommandSource
-import su.plo.lib.api.server.permission.PermissionDefault
+import su.plo.slib.api.command.McCommandSource
+import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
@@ -18,7 +18,7 @@ class JoinCommand(handler: CommandHandler): SubCommand(handler) {
         "join.*" to PermissionDefault.OP,
     )
 
-    override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
+    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> {
         if (!handler.hasPermission(source, permissions.map { it.first }.toTypedArray())) return listOf()
 
         if (arguments.size == 2) {
@@ -41,7 +41,7 @@ class JoinCommand(handler: CommandHandler): SubCommand(handler) {
         return listOf()
     }
 
-    override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
+    override fun execute(source: McCommandSource, arguments: Array<String>) {
 
         if (source.checkAddonPermissionAndPrintError("join")) return
 
@@ -81,13 +81,13 @@ class JoinCommand(handler: CommandHandler): SubCommand(handler) {
         source.sendTranslatable("pv.addon.groups.command.join.success", group.name)
     }
 
-    override fun checkCanExecute(source: MinecraftCommandSource): Boolean = source.hasAddonPermission("join")
+    override fun checkCanExecute(source: McCommandSource): Boolean = source.hasAddonPermission("join")
 
     private fun checkCantJoin(
         group: Group,
         player: VoicePlayer,
-        source: MinecraftCommandSource,
-        arguments: Array<out String>
+        source: McCommandSource,
+        arguments: Array<String>
     ): Boolean {
 
         if (source.hasAddonPermission("join.add") || source.hasAddonPermission("join.*")) {

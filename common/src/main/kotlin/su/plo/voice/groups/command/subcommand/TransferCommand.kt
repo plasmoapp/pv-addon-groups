@@ -1,10 +1,15 @@
 package su.plo.voice.groups.command.subcommand
 
-import su.plo.lib.api.server.command.MinecraftCommandSource
-import su.plo.lib.api.server.permission.PermissionDefault
+import su.plo.slib.api.command.McCommandSource
+import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
-import su.plo.voice.groups.utils.extend.*
+import su.plo.voice.groups.utils.extend.getVoicePlayer
+import su.plo.voice.groups.utils.extend.hasAddonPermission
+import su.plo.voice.groups.utils.extend.noPermissionError
+import su.plo.voice.groups.utils.extend.notInGroupError
+import su.plo.voice.groups.utils.extend.playerOnlyCommandError
+import su.plo.voice.groups.utils.extend.sendTranslatable
 
 class TransferCommand(handler: CommandHandler): SubCommand(handler) {
 
@@ -16,7 +21,7 @@ class TransferCommand(handler: CommandHandler): SubCommand(handler) {
         "transfer.*" to PermissionDefault.OP,
     )
 
-    override fun suggest(source: MinecraftCommandSource, arguments: Array<out String>): List<String> {
+    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> {
 
         if (arguments.size != 2) return listOf()
 
@@ -24,12 +29,12 @@ class TransferCommand(handler: CommandHandler): SubCommand(handler) {
 
         val player = source.getVoicePlayer(handler.voiceServer)
 
-        return handler.voiceServer.playerManager.players
+        return handler.addon.getVisibleOnlinePlayers(player)
             .map { it.instance.name }
             .filter { it.startsWith(arg) && (it != player?.instance?.name) }
     }
 
-    override fun execute(source: MinecraftCommandSource, arguments: Array<out String>) {
+    override fun execute(source: McCommandSource, arguments: Array<String>) {
 
         val player = source.getVoicePlayer(handler.voiceServer) ?: run {
             source.playerOnlyCommandError()
@@ -41,7 +46,7 @@ class TransferCommand(handler: CommandHandler): SubCommand(handler) {
             return
         }
 
-        val isOwner = group.owner?.id == player.instance.uuid
+        val isOwner = group.isOwner(player)
 
         when {
             source.hasAddonPermission("transfer.all") -> Unit
@@ -65,9 +70,9 @@ class TransferCommand(handler: CommandHandler): SubCommand(handler) {
 //                source.sendTranslatable("pv.addon.groups.error.player_not_found")
 //                return
 //            }
-        val newOwner = handler.voiceServer.playerManager
-            .getPlayerByName(playerName)
-                    .orElse(null) ?: run {
+        val newOwner = handler.addon.getVisibleOnlinePlayers(player)
+            .firstOrNull { it.instance.name == playerName }
+            ?: run {
                 source.sendTranslatable("pv.addon.groups.error.player_not_found")
                 return
             }
@@ -78,17 +83,17 @@ class TransferCommand(handler: CommandHandler): SubCommand(handler) {
         }
 
         group.owner = newOwner.instance.gameProfile
-        group.owner?.let { group.notifyPlayersTranslatable("server.pv.addon.groups.notifications.new_owner", it.name) }
+        group.owner?.let { group.notifyPlayersTranslatable("pv.addon.groups.notifications.new_owner", it.name) }
 
 //        source.sendTranslatable("pv.addon.groups.command.leave.success", group.name)
     }
 
-    override fun checkCanExecute(source: MinecraftCommandSource): Boolean {
+    override fun checkCanExecute(source: McCommandSource): Boolean {
 
         val player = source.getVoicePlayer(handler.voiceServer) ?: return false
         val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return false
 
-        val isOwner = group.owner?.id == player.instance.uuid
+        val isOwner = group.isOwner(player)
 
         return when {
             source.hasAddonPermission("transfer.owner") && isOwner -> true

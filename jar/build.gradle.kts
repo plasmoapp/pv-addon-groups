@@ -1,16 +1,16 @@
-val plasmoVoiceVersion: String by rootProject
+import java.net.URI
 
 plugins {
-    id("su.plo.crowdin.plugin") version("1.0.0")
-    id("su.plo.voice.plugin") version("1.0.1")
+    alias(libs.plugins.crowdin)
+    id("su.plo.voice.plugin.entrypoints")
 }
 
 dependencies {
     compileOnly(project(":proxy"))
     compileOnly(project(":server"))
 
-    compileOnly("su.plo.voice.api:server:$plasmoVoiceVersion")
-    compileOnly("su.plo.voice.api:proxy:$plasmoVoiceVersion")
+    compileOnly(libs.plasmovoice.server)
+    compileOnly(libs.plasmovoice.proxy)
 }
 
 val platforms = setOf(
@@ -33,8 +33,8 @@ sourceSets {
     }
 }
 
-plasmoCrowdin {
-    projectId = "plasmo-voice-addons"
+crowdin {
+    url = URI.create("https://github.com/plasmoapp/plasmo-voice-crowdin/archive/refs/heads/addons.zip").toURL()
     sourceFileName = "server/groups.toml"
     resourceDir = "groups/languages"
     createList = true
@@ -48,7 +48,7 @@ tasks {
     shadowJar {
         configurations = listOf(project.configurations.shadow.get())
 
-        archiveBaseName.set("${rootProject.name}-${rootProject.version}")
+        archiveBaseName.set(rootProject.name)
         archiveClassifier.set("")
         archiveAppendix.set("")
     }
