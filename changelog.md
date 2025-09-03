@@ -1,1 +1,3 @@
 - Fixed suggestion translation keys in `/groups set`.
+- Added missing translation key for password error.
+- Added vanish support for commands.
