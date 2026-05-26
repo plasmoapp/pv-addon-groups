@@ -1,12 +1,14 @@
 [versions]
-kotlin = "1.8.22"
-kotlinx-json = "1.5.1"
+kotlin = "2.3.0"
+kotlinx-json = "1.10.0"
 
-plasmovoice = "2.1.4"
-config = "1.0.0"
+plasmovoice = "2.1.9"
+config = "1.1.0"
 
-plasmovoice-plugin = "1.0.2-SNAPSHOT"
-crowdin-plugin = "1.1.0-SNAPSHOT"
+plasmovoice-plugin = "1.0.9"
+crowdin-plugin = "1.2.1"
+ktlint = "14.2.0"
+buildconfig = "6.0.9"
 
 [libraries]
 config = { module = "su.plo.config:config", version.ref = "config" }
@@ -18,5 +20,6 @@ plasmovoice-server-common = { module = "su.plo.voice.api:server-proxy-common", v
 
 [plugins]
 plasmovoice = { id = "su.plo.voice.plugin.entrypoints", version.ref = "plasmovoice-plugin" }
-plasmovoice-java-templates = { id = "su.plo.voice.plugin.java-templates", version.ref = "plasmovoice-plugin" }
 crowdin = { id = "su.plo.crowdin.plugin", version.ref = "crowdin-plugin" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }

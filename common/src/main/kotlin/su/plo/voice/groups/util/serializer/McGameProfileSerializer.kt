@@ -1,4 +1,4 @@
-package su.plo.voice.groups.utils.serializer
+package su.plo.voice.groups.util.serializer
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -10,14 +10,15 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.encoding.encodeStructure
 import su.plo.slib.api.entity.player.McGameProfile
-import java.util.*
+import java.util.Collections
+import java.util.UUID
 
 object McGameProfileSerializer : KSerializer<McGameProfile> {
-
-    override val descriptor = buildClassSerialDescriptor("MinecraftGameProfileSerializer") {
-        element<String>("uuid")
-        element<String>("name")
-    }
+    override val descriptor =
+        buildClassSerialDescriptor("MinecraftGameProfileSerializer") {
+            element<String>("uuid")
+            element<String>("name")
+        }
 
     override fun deserialize(decoder: Decoder): McGameProfile =
         decoder.decodeStructure(descriptor) {
@@ -27,10 +28,8 @@ object McGameProfileSerializer : KSerializer<McGameProfile> {
             loop@ while (true) {
                 when (val index = decodeElementIndex(descriptor)) {
                     DECODE_DONE -> break@loop
-
                     0 -> uuid = decodeSerializableElement(descriptor, 0, UUIDSerializer)
                     1 -> name = decodeStringElement(descriptor, 1)
-
                     else -> throw SerializationException("Unexpected index $index")
                 }
             }
@@ -38,9 +37,11 @@ object McGameProfileSerializer : KSerializer<McGameProfile> {
             McGameProfile(requireNotNull(uuid), requireNotNull(name), Collections.emptyList())
         }
 
-    override fun serialize(encoder: Encoder, value: McGameProfile) =
-        encoder.encodeStructure(descriptor) {
-            encodeSerializableElement(descriptor, 0, UUIDSerializer, value.id)
-            encodeStringElement(descriptor, 1, value.name)
-        }
+    override fun serialize(
+        encoder: Encoder,
+        value: McGameProfile,
+    ) = encoder.encodeStructure(descriptor) {
+        encodeSerializableElement(descriptor, 0, UUIDSerializer, value.id)
+        encodeStringElement(descriptor, 1, value.name)
+    }
 }

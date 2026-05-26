@@ -1,128 +1,61 @@
 package su.plo.voice.groups
 
 import com.google.common.collect.Sets
-import kotlinx.serialization.json.Json
 import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
-import su.plo.slib.api.McLib
 import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.api.addon.AddonInitializer
-import su.plo.voice.api.addon.injectPlasmoVoice
+import su.plo.voice.api.addon.InjectPlasmoVoice
 import su.plo.voice.api.server.PlasmoBaseVoiceServer
-import su.plo.voice.api.server.player.VoicePlayer
+import su.plo.voice.api.server.audio.line.BaseServerSourceLine
 import su.plo.voice.groups.command.CommandHandler
-import su.plo.voice.groups.command.subcommand.*
-import su.plo.voice.groups.group.Group
-import java.io.File
+import su.plo.voice.groups.command.subcommand.BanCommand
+import su.plo.voice.groups.command.subcommand.BrowseCommand
+import su.plo.voice.groups.command.subcommand.CreateCommand
+import su.plo.voice.groups.command.subcommand.DeleteCommand
+import su.plo.voice.groups.command.subcommand.InfoCommand
+import su.plo.voice.groups.command.subcommand.InviteCommand
+import su.plo.voice.groups.command.subcommand.JoinCommand
+import su.plo.voice.groups.command.subcommand.KickCommand
+import su.plo.voice.groups.command.subcommand.LeaveCommand
+import su.plo.voice.groups.command.subcommand.SetCommand
+import su.plo.voice.groups.command.subcommand.TransferCommand
+import su.plo.voice.groups.command.subcommand.UnbanCommand
+import su.plo.voice.groups.command.subcommand.UnsetCommand
+import su.plo.voice.groups.group.GroupImpl
+import su.plo.voice.groups.group.GroupsManager
+import su.plo.voice.groups.listener.ActivationListener
+import su.plo.voice.groups.listener.GroupsConnectionListener
+import su.plo.voice.groups.listener.GroupsNotificationListener
+import su.plo.voice.groups.repository.JsonGroupRepository
 import java.io.IOException
 import java.io.InputStream
 import java.net.URI
-import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 
-abstract class GroupsAddon : AddonInitializer {
-
-    val voiceServer: PlasmoBaseVoiceServer by injectPlasmoVoice()
+open class GroupsAddon : AddonInitializer {
+    @InjectPlasmoVoice
+    lateinit var voiceServer: PlasmoBaseVoiceServer
 
     lateinit var groupManager: GroupsManager
+    private lateinit var repository: JsonGroupRepository
 
-    fun getAddonFolder(minecraftServer: McLib): File =
-        File(minecraftServer.configsFolder, "pv-addon-groups")
-
-    private val activationName = "groups"
+    private var connectionListener: GroupsConnectionListener? = null
 
     override fun onAddonInitialize() {
         onConfigLoaded()
+        GroupsNotificationListener.register()
     }
 
     override fun onAddonShutdown() {
-        groupManager.onVoiceServerShutdown(voiceServer)
-    }
-
-    abstract fun getVisibleOnlinePlayers(player: VoicePlayer? = null): Collection<VoicePlayer>
-
-    protected fun onConfigLoaded() {
-
-        val addonFolder = getAddonFolder(voiceServer.minecraftServer).also { it.mkdirs() }
-
-        val config = try {
-
-            voiceServer.languages.register(
-                URI.create("https://github.com/plasmoapp/plasmo-voice-crowdin/archive/refs/heads/addons.zip").toURL(),
-                "server/groups.toml",
-                { resourcePath ->
-                    getLanguageResource(resourcePath) ?: throw IOException("Can't load language resource")
-                },
-                File(addonFolder, "languages")
-            )
-
-            val configFile = File(addonFolder, "groups.toml")
-
-            toml.load<Config>(Config::class.java, configFile, false)
-                .also { toml.save(Config::class.java, it, configFile) }
-
-        } catch (e: IOException) {
-            throw IllegalStateException("Failed to load config", e)
-        }
-
-        val activation = voiceServer.activationManager.createBuilder(
-            this,
-            activationName,
-            "pv.activation.groups",
-            "plasmovoice:textures/icons/microphone_group.png",
-            "pv.activation.groups",
-            config.activationWeight
+        val persistent = groupManager.groupsById.values.filter { it.persistent }
+        repository.save(
+            JsonGroupRepository.Snapshot(
+                groups = persistent,
+                groupByPlayer = groupManager.groupByPlayer.map { it.key to it.value.id }.toMap(),
+            ),
         )
-            .setProximity(false)
-            .setTransitive(true)
-            .setStereoSupported(false)
-            .setPermissionDefault(PermissionDefault.TRUE)
-            .build()
-
-        val sourceLine = voiceServer.sourceLineManager.createBuilder(
-            this,
-            activationName,
-            "pv.activation.groups",
-            "plasmovoice:textures/icons/speaker_group.png",
-            config.sourceLineWeight
-        ).apply {
-            withPlayers(true)
-        }.build()
-
-        groupManager = GroupsManager(config, voiceServer, this, activation, sourceLine)
-
-        File(addonFolder, "groups.json")
-            .takeIf { it.isFile }
-            ?.readText()
-            ?.runCatching { Json.decodeFromString<GroupsManager.Data>(this) }
-            ?.getOrNull()
-            ?.also { fe -> fe.groups.forEach { group ->
-                group.apply {
-                    groupManager.groups[id] = Group(
-                        sourceLine.playerSetManager!!.createBroadcastSet(),
-                        id,
-                        name,
-                        password,
-                        persistent,
-                        Sets.newConcurrentHashSet(playersIds),
-                        CopyOnWriteArrayList(bannedPlayers),
-                        owner
-                    )
-                }
-            } }
-            ?.also { fe -> fe.groupByPlayer.mapNotNull {
-                val group = groupManager.groups[it.value] ?: return@mapNotNull null
-                groupManager.groupByPlayer[it.key] = group
-            } }
-
-        voiceServer.eventBus.register(this, ActivationListener(groupManager, activation))
-
-        voiceServer.eventBus.register(this, groupManager)
     }
-
-    // todo: waytoodank (refactor?)
-    protected open fun createCommandHandler(minecraftServer: McLib) : CommandHandler =
-        CommandHandler(this, minecraftServer)
 
     protected fun addSubcommandsToCommandHandler(commandHandler: CommandHandler) {
         commandHandler
@@ -141,15 +74,107 @@ abstract class GroupsAddon : AddonInitializer {
             .addSubCommand(::UnbanCommand)
     }
 
-    @Throws(IOException::class)
-    private fun getLanguageResource(resourcePath: String): InputStream? {
-        return javaClass.classLoader.getResourceAsStream(String.format("groups/%s", resourcePath))
+    private fun onConfigLoaded() {
+        val addonFolder =
+            voiceServer.minecraftServer.configsFolder
+                .resolve("pv-addon-groups")
+                .also { it.mkdirs() }
+
+        val config =
+            try {
+                voiceServer.languages.register(
+                    URI.create("https://github.com/plasmoapp/plasmo-voice-crowdin/archive/refs/heads/addons.zip").toURL(),
+                    "server/groups.toml",
+                    { resourcePath ->
+                        getLanguageResource(resourcePath) ?: throw IOException("Can't load language resource")
+                    },
+                    addonFolder.resolve("languages"),
+                )
+
+                val configFile = addonFolder.resolve("groups.toml")
+
+                toml
+                    .load(GroupsConfig::class.java, configFile, false)
+                    .also { toml.save(it, configFile) }
+            } catch (e: IOException) {
+                throw IllegalStateException("Failed to load config", e)
+            }
+
+        val activation =
+            voiceServer.activationManager
+                .createBuilder(
+                    this,
+                    ACTIVATION_NAME,
+                    "pv.activation.groups",
+                    "plasmovoice:textures/icons/microphone_group.png",
+                    "pv.activation.groups",
+                    config.activationWeight,
+                ).setProximity(false)
+                .setTransitive(true)
+                .setStereoSupported(false)
+                .setPermissionDefault(PermissionDefault.TRUE)
+                .build()
+
+        val sourceLine =
+            voiceServer.sourceLineManager
+                .createBuilder(
+                    this,
+                    ACTIVATION_NAME,
+                    "pv.activation.groups",
+                    "plasmovoice:textures/icons/speaker_group.png",
+                    config.sourceLineWeight,
+                ).apply {
+                    withPlayers(true)
+                }.build()
+
+        repository = JsonGroupRepository(addonFolder.resolve("groups.json"))
+        groupManager = GroupsManager(config, voiceServer, sourceLine)
+        loadGroups(sourceLine)
+
+        ActivationListener(groupManager, activation)
+        registerConnectionListener()
     }
 
-    companion object {
+    private fun registerConnectionListener() {
+        val eventBus = voiceServer.eventBus
+        connectionListener?.let { eventBus.unregister(this, it) }
+        connectionListener = GroupsConnectionListener(groupManager).also { eventBus.register(this, it) }
+    }
 
-        private val toml = ConfigurationProvider.getProvider<ConfigurationProvider>(
-            TomlConfiguration::class.java
-        )
+    private fun loadGroups(sourceLine: BaseServerSourceLine) {
+        val snapshot = repository.load() ?: return
+
+        snapshot.groups.forEach { group ->
+            groupManager.groupsById[group.id] =
+                GroupImpl(
+                    groupManager,
+                    sourceLine.playerSetManager!!.createBroadcastSet(),
+                    group.id,
+                    group.name,
+                    group.password,
+                    group.persistent,
+                    Sets.newConcurrentHashSet(group.playersIds),
+                    CopyOnWriteArrayList(group.bannedPlayers),
+                    group.owner,
+                )
+        }
+
+        snapshot.groupByPlayer.forEach { (playerId, groupId) ->
+            val group = groupManager.groupsById[groupId] ?: return@forEach
+            groupManager.groupByPlayer[playerId] = group
+        }
+    }
+
+    @Throws(IOException::class)
+    private fun getLanguageResource(resourcePath: String): InputStream? =
+        javaClass.classLoader.getResourceAsStream(String.format("groups/%s", resourcePath))
+
+    companion object {
+        private val toml =
+            ConfigurationProvider.getProvider<ConfigurationProvider>(
+                TomlConfiguration::class.java,
+            )
+
+        private const val ACTIVATION_NAME = "groups"
     }
 }

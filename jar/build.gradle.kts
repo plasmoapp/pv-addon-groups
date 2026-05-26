@@ -13,22 +13,38 @@ dependencies {
     compileOnly(libs.plasmovoice.proxy)
 }
 
-val platforms = setOf(
-    project(":common"),
-    project(":proxy"),
-    project(":server")
-)
+val platforms =
+    setOf(
+        project(":api"),
+        project(":common"),
+        project(":proxy"),
+        project(":server"),
+    )
 
 platforms.forEach { evaluationDependsOn(":${it.name}") }
 
 sourceSets {
     main {
         java {
-            srcDir(platforms.map { it.sourceSets.main.get().allJava.srcDirs }.flatten())
+            srcDir(
+                platforms
+                    .map {
+                        it.sourceSets.main
+                            .get()
+                            .allJava.srcDirs
+                    }.flatten(),
+            )
         }
 
         resources {
-            srcDir(platforms.map { it.sourceSets.main.get().resources.srcDirs }.flatten())
+            srcDir(
+                platforms
+                    .map {
+                        it.sourceSets.main
+                            .get()
+                            .resources.srcDirs
+                    }.flatten(),
+            )
         }
     }
 }
@@ -57,7 +73,11 @@ tasks {
         dependsOn(shadowJar)
 
         doLast {
-            shadowJar.get().archiveFile.get().asFile
+            shadowJar
+                .get()
+                .archiveFile
+                .get()
+                .asFile
                 .copyTo(rootProject.buildDir.resolve("libs/${shadowJar.get().archiveFile.get().asFile.name}"), true)
         }
     }

@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version libs.versions.kotlin.get()
     kotlin("plugin.serialization") version libs.versions.kotlin.get()
     alias(libs.plugins.plasmovoice) apply false
-    alias(libs.plugins.plasmovoice.java.templates)
+    alias(libs.plugins.ktlint)
 }
 
 allprojects {
@@ -12,6 +12,25 @@ allprojects {
 
         maven("https://repo.plasmoverse.com/snapshots")
         maven("https://repo.plasmoverse.com/releases")
+    }
+
+    if (this != project(":jar")) {
+        apply(plugin = "org.jlleitschuh.gradle.ktlint")
+
+        ktlint {
+            version.set("1.8.0")
+            android.set(false)
+            ignoreFailures.set(false)
+            filter {
+                exclude { element ->
+                    element.file.path.contains("/build/generated/")
+                }
+            }
+            reporters {
+                reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+                reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
+            }
+        }
     }
 }
 
@@ -26,9 +45,9 @@ subprojects {
 
     tasks {
         compileKotlin {
-            kotlinOptions {
+            compilerOptions {
                 val key = "-Xjvm-default="
-                freeCompilerArgs = freeCompilerArgs.filterNot { it.startsWith(key) } + listOf(key + "all")
+                freeCompilerArgs = freeCompilerArgs.get().filterNot { it.startsWith(key) } + listOf(key + "all")
             }
         }
 

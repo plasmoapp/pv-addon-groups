@@ -4,31 +4,47 @@ import su.plo.slib.api.command.McCommandSource
 import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
-import su.plo.voice.groups.utils.extend.*
+import su.plo.voice.groups.util.extend.asTextComponents
+import su.plo.voice.groups.util.extend.getVoicePlayer
+import su.plo.voice.groups.util.extend.hasAddonPermission
+import su.plo.voice.groups.util.extend.noPermissionError
+import su.plo.voice.groups.util.extend.notInGroupError
+import su.plo.voice.groups.util.extend.playerOnlyCommandError
+import su.plo.voice.groups.util.extend.printDivider
+import su.plo.voice.groups.util.extend.sendMessage
 
-class InfoCommand(handler: CommandHandler): SubCommand(handler) {
-
+class InfoCommand(
+    handler: CommandHandler,
+) : SubCommand(handler) {
     override val name = "info"
 
-    override val permissions = listOf(
-        "info.owner" to PermissionDefault.TRUE,
-        "info.member" to PermissionDefault.TRUE,
-        "info.*" to PermissionDefault.OP,
-    )
+    override val permissions =
+        listOf(
+            "info.owner" to PermissionDefault.TRUE,
+            "info.member" to PermissionDefault.TRUE,
+            "info.*" to PermissionDefault.OP,
+        )
 
-    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> = listOf()
+    override fun suggest(
+        source: McCommandSource,
+        arguments: Array<String>,
+    ): List<String> = listOf()
 
-    override fun execute(source: McCommandSource, arguments: Array<String>) {
+    override fun execute(
+        source: McCommandSource,
+        arguments: Array<String>,
+    ) {
+        val player =
+            source.getVoicePlayer(handler.voiceServer) ?: run {
+                source.playerOnlyCommandError()
+                return
+            }
 
-        val player = source.getVoicePlayer(handler.voiceServer) ?: run {
-            source.playerOnlyCommandError()
-            return
-        }
-
-        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: run {
-            source.notInGroupError()
-            return
-        }
+        val group =
+            handler.groupManager.getPlayerGroup(player.instance.uuid) ?: run {
+                source.notInGroupError()
+                return
+            }
 
         val isOwner = group.isOwner(player)
 
@@ -43,13 +59,11 @@ class InfoCommand(handler: CommandHandler): SubCommand(handler) {
         source.printDivider()
         source.sendMessage(group.asTextComponents(handler, source))
         source.printDivider()
-
     }
 
     override fun checkCanExecute(source: McCommandSource): Boolean {
-
         val player = source.getVoicePlayer(handler.voiceServer) ?: return false
-        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return false
+        val group = handler.groupManager.getPlayerGroup(player.instance.uuid) ?: return false
 
         val isOwner = group.isOwner(player)
 
@@ -60,5 +74,4 @@ class InfoCommand(handler: CommandHandler): SubCommand(handler) {
             else -> false
         }
     }
-
 }

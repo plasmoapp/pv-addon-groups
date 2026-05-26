@@ -5,14 +5,15 @@ import su.plo.slib.api.command.McCommand
 import su.plo.slib.api.command.McCommandSource
 import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.groups.GroupsAddon
-import su.plo.voice.groups.utils.extend.sendTranslatable
+import su.plo.voice.groups.util.PlayerCollector
+import su.plo.voice.groups.util.extend.sendTranslatable
 import java.util.concurrent.ConcurrentHashMap
 
 open class CommandHandler(
     val addon: GroupsAddon,
     val minecraftServer: McLib,
-): McCommand {
-
+    val playerCollector: PlayerCollector,
+) : McCommand {
     private val subCommands: MutableMap<String, SubCommand> = ConcurrentHashMap()
 
     val groupManager
@@ -21,9 +22,10 @@ open class CommandHandler(
     val voiceServer
         get() = addon.voiceServer
 
-    fun getTranslationByKey(key: String, source: McCommandSource): String {
-        return voiceServer.languages.getServerLanguage(source)[key] ?: key
-    }
+    fun getTranslationByKey(
+        key: String,
+        source: McCommandSource,
+    ): String = voiceServer.languages.getServerLanguage(source)[key] ?: key
 
     fun <T : SubCommand> addSubCommand(subCommand: (handler: CommandHandler) -> T): CommandHandler {
         subCommand(this)
@@ -32,24 +34,29 @@ open class CommandHandler(
         return this
     }
 
-    val flags = listOf(
-        "name" to PermissionDefault.TRUE,
-        "password" to PermissionDefault.TRUE,
-        "permissions" to PermissionDefault.OP,
-        "persistent" to PermissionDefault.OP,
-    ).toMap()
+    val flags =
+        listOf(
+            "name" to PermissionDefault.TRUE,
+            "password" to PermissionDefault.TRUE,
+            "permissions" to PermissionDefault.OP,
+            "persistent" to PermissionDefault.OP,
+        ).toMap()
 
     init {
-        flags.map { "flag.${it.key}" to it.value }
+        flags
+            .map { "flag.${it.key}" to it.value }
             .also { registerPermissions(it) }
     }
 
-    override fun execute(source: McCommandSource, arguments: Array<String>) {
-
-        val subCommand = arguments.getOrNull(0) ?: run {
-            subCommands["browse"]?.execute(source, arguments)
-            return
-        }
+    override fun execute(
+        source: McCommandSource,
+        arguments: Array<String>,
+    ) {
+        val subCommand =
+            arguments.getOrNull(0) ?: run {
+                subCommands["browse"]?.execute(source, arguments)
+                return
+            }
 
         subCommands[subCommand]?.let {
             it.execute(source, arguments)
@@ -58,30 +65,39 @@ open class CommandHandler(
 
         source.sendTranslatable(
             "pv.addon.groups.error.unknown_subcommand",
-            subCommands.keys.joinToString(", ")
+            subCommands.keys.joinToString(", "),
         )
     }
 
-    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> {
-
-        if (arguments.isEmpty()) return subCommands
-            .filter { it.value.checkCanExecute(source) }
-            .keys
-            .toList()
+    override fun suggest(
+        source: McCommandSource,
+        arguments: Array<String>,
+    ): List<String> {
+        if (arguments.isEmpty()) {
+            return subCommands
+                .filter { it.value.checkCanExecute(source) }
+                .keys
+                .toList()
+        }
 
         val subCommand = arguments.getOrNull(0) ?: return listOf()
 
-        if (arguments.size == 1) return subCommands
-            .filter { it.key.startsWith(subCommand) && it.value.checkCanExecute(source) }
-            .keys
-            .toList()
+        if (arguments.size == 1) {
+            return subCommands
+                .filter { it.key.startsWith(subCommand) && it.value.checkCanExecute(source) }
+                .keys
+                .toList()
+        }
 
         subCommands[subCommand]?.let { return it.suggest(source, arguments) }
 
         return listOf()
     }
 
-    override fun hasPermission(source: McCommandSource, arguments: Array<String>?): Boolean =
+    override fun hasPermission(
+        source: McCommandSource,
+        arguments: Array<String>?,
+    ): Boolean =
         source.hasPermission("pv.addon.groups.*") ||
             subCommands.keys.stream().anyMatch {
                 source.hasPermission("pv.addon.groups.$it")

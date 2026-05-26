@@ -3,7 +3,6 @@ pluginManagement {
         mavenLocal()
         mavenCentral()
         gradlePluginPortal()
-        maven("https://repo.plasmoverse.com/snapshots")
         maven("https://repo.plasmoverse.com/releases")
         maven("https://jitpack.io/")
     }
@@ -11,4 +10,4 @@ pluginManagement {
 
 rootProject.name = "pv-addon-groups"
 
-include("common", "server", "proxy", "jar")
+include("api", "common", "server", "proxy", "jar")

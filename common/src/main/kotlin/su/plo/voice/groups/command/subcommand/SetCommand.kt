@@ -2,22 +2,36 @@ package su.plo.voice.groups.command.subcommand
 
 import su.plo.slib.api.command.McCommandSource
 import su.plo.slib.api.permission.PermissionDefault
+import su.plo.voice.groups.api.result.SetNameResult
+import su.plo.voice.groups.api.result.SetPasswordResult
+import su.plo.voice.groups.api.result.SetPermissionsResult
+import su.plo.voice.groups.api.result.SetPersistentResult
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
-import su.plo.voice.groups.utils.extend.*
+import su.plo.voice.groups.util.extend.getVoicePlayer
+import su.plo.voice.groups.util.extend.hasAddonPermission
+import su.plo.voice.groups.util.extend.hasFlagPermission
+import su.plo.voice.groups.util.extend.noPermissionError
+import su.plo.voice.groups.util.extend.notInGroupError
+import su.plo.voice.groups.util.extend.playerOnlyCommandError
+import su.plo.voice.groups.util.extend.sendTranslatable
 
-class SetCommand(handler: CommandHandler): SubCommand(handler) {
-
+class SetCommand(
+    handler: CommandHandler,
+) : SubCommand(handler) {
     override val name = "set"
 
-    override val permissions = listOf(
-        "set.owner" to PermissionDefault.TRUE,
-        "set.*" to PermissionDefault.OP,
-        "set.all" to PermissionDefault.OP,
-    )
+    override val permissions =
+        listOf(
+            "set.owner" to PermissionDefault.TRUE,
+            "set.*" to PermissionDefault.OP,
+            "set.all" to PermissionDefault.OP,
+        )
 
-    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> {
-
+    override fun suggest(
+        source: McCommandSource,
+        arguments: Array<String>,
+    ): List<String> {
         val flagName = arguments.getOrNull(1) ?: return listOf()
 
         if (arguments.size == 2) {
@@ -35,31 +49,46 @@ class SetCommand(handler: CommandHandler): SubCommand(handler) {
         }
     }
 
-    override fun execute(source: McCommandSource, arguments: Array<String>) {
-
+    override fun execute(
+        source: McCommandSource,
+        arguments: Array<String>,
+    ) {
         val player = source.getVoicePlayer(handler.voiceServer) ?: return source.playerOnlyCommandError()
-        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return source.notInGroupError()
+        val group = handler.groupManager.getPlayerGroup(player.instance.uuid) ?: return source.notInGroupError()
         val isOwner = group.isOwner(player)
 
         when {
-            source.hasAddonPermission("set.all") -> Unit
-            source.hasAddonPermission("set.*") -> Unit
-            source.hasAddonPermission("set.owner") && isOwner -> Unit
+            source.hasAddonPermission("set.all") -> {
+                Unit
+            }
+
+            source.hasAddonPermission("set.*") -> {
+                Unit
+            }
+
+            source.hasAddonPermission("set.owner") && isOwner -> {
+                Unit
+            }
+
             else -> {
                 source.noPermissionError(if (isOwner) "set.owner" else "set.all")
                 return
             }
         }
 
-        val flagName = arguments.getOrNull(1) ?: run {
-            source.sendTranslatable("pv.addon.groups.command.set.error.usage")
-            return
-        }
+        val flagName =
+            arguments.getOrNull(1) ?: run {
+                source.sendTranslatable("pv.addon.groups.command.set.error.usage")
+                return
+            }
 
         if (!handler.flags.keys.contains(flagName)) {
-            source.sendTranslatable("pv.addon.groups.command.set.error.unknown_flag",
+            source.sendTranslatable(
+                "pv.addon.groups.command.set.error.unknown_flag",
                 flagName,
-                handler.flags.keys.filter { source.hasFlagPermission(it) }.joinToString(", ")
+                handler.flags.keys
+                    .filter { source.hasFlagPermission(it) }
+                    .joinToString(", "),
             )
             return
         }
@@ -76,82 +105,62 @@ class SetCommand(handler: CommandHandler): SubCommand(handler) {
 
         val flagValue = arguments.drop(2).joinToString(" ")
 
-        when(flagName) {
+        when (flagName) {
             "name" -> {
-                if (group.name == flagValue) {
-                    source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
-                    return
-                }
+                when (group.setName(flagValue)) {
+                    is SetNameResult.Success -> {}
 
-                val min = handler.groupManager.config.minimumNameLength
-                val max = handler.groupManager.config.maximumNameLength
-
-                if (flagValue.length !in min..max) {
-                    source.sendTranslatable("pv.addon.groups.error.name_length")
-                    return
-                }
-
-                val oldName = group.name
-                group.name = flagValue
-                group.notifyPlayersTranslatable("pv.addon.groups.notifications.name_change", oldName, group.name)
-            }
-            "password" -> {
-                if (group.password == flagValue) {
-                    source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
-                    return
-                }
-                group.password = flagValue
-                group.notifyPlayersTranslatable("pv.addon.groups.notifications.password_changed")
-            }
-            "permissions" -> {
-
-                val newValue = flagValue
-                    .split(",")
-                    .map { it.trim() }
-                    .toHashSet()
-
-                if (group.permissionsFilter == newValue) {
-                    source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
-                    return
-                }
-
-                group.permissionsFilter = newValue
-
-                group.notifyPlayersTranslatable("pv.addon.groups.notifications.permissions_changed")
-
-                // todo: will not work with offline players, because it's just impossible without LP
-                group.onlinePlayers
-                    .filter { !group.hasPermission(it.instance) }
-                    .forEach {
-                        handler.groupManager.leave(it)
-                        it.instance.sendTranslatable("pv.addon.groups.notifications.kicked")
-                        group.notifyPlayersTranslatable("pv.addon.groups.notifications.player_kicked", it.instance.name)
+                    SetNameResult.IdenticalValue -> {
+                        source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
                     }
+
+                    is SetNameResult.NameLengthInvalid -> {
+                        source.sendTranslatable("pv.addon.groups.error.name_length")
+                    }
+                }
             }
+
+            "password" -> {
+                when (group.setPassword(flagValue)) {
+                    SetPasswordResult.Success -> {}
+
+                    SetPasswordResult.IdenticalValue -> {
+                        source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
+                    }
+                }
+            }
+
+            "permissions" -> {
+                val newPermissions = flagValue.split(",").map { it.trim() }.toHashSet()
+                when (group.setPermissions(newPermissions)) {
+                    is SetPermissionsResult.Success -> {}
+
+                    SetPermissionsResult.IdenticalValue -> {
+                        source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
+                    }
+                }
+            }
+
             "persistent" -> {
                 val newValue = flagValue.toBooleanStrictOrNull() ?: false
+                when (group.setPersistent(newValue)) {
+                    SetPersistentResult.Success -> {}
 
-                if (group.persistent == newValue) {
-                    source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
-                    return
+                    SetPersistentResult.IdenticalValue -> {
+                        source.sendTranslatable("pv.addon.groups.command.set.error.identical_value")
+                    }
                 }
-
-                group.persistent = newValue
-
-                if (group.persistent) group.notifyPlayersTranslatable("pv.addon.groups.notifications.persistent_true")
-                else group.notifyPlayersTranslatable("pv.addon.groups.notifications.persistent_false")
             }
+
             else -> {
                 source.sendTranslatable("pv.addon.groups.error.unknown")
-                return
             }
         }
     }
 
     override fun checkCanExecute(source: McCommandSource): Boolean {
-
         val player = source.getVoicePlayer(handler.voiceServer) ?: return false
-        val group = handler.groupManager.groupByPlayer[player.instance.uuid] ?: return false
+        val group = handler.groupManager.getPlayerGroup(player.instance.uuid) ?: return false
 
         val isOwner = group.isOwner(player)
 

@@ -2,23 +2,34 @@ package su.plo.voice.groups.command.subcommand
 
 import su.plo.slib.api.command.McCommandSource
 import su.plo.slib.api.permission.PermissionDefault
-import su.plo.voice.api.server.player.VoicePlayer
+import su.plo.voice.groups.api.result.JoinResult
 import su.plo.voice.groups.command.CommandHandler
 import su.plo.voice.groups.command.SubCommand
-import su.plo.voice.groups.group.Group
-import su.plo.voice.groups.utils.extend.*
+import su.plo.voice.groups.group.GroupImpl
+import su.plo.voice.groups.util.extend.checkAddonPermissionAndPrintError
+import su.plo.voice.groups.util.extend.getVoicePlayer
+import su.plo.voice.groups.util.extend.groupNotFoundError
+import su.plo.voice.groups.util.extend.hasAddonPermission
+import su.plo.voice.groups.util.extend.parseUuidOrPrintError
+import su.plo.voice.groups.util.extend.playerOnlyCommandError
+import su.plo.voice.groups.util.extend.sendTranslatable
 
-class JoinCommand(handler: CommandHandler): SubCommand(handler) {
-
+class JoinCommand(
+    handler: CommandHandler,
+) : SubCommand(handler) {
     override val name = "join"
 
-    override val permissions = listOf(
-        "join" to PermissionDefault.TRUE,
-        "join.all" to PermissionDefault.OP,
-        "join.*" to PermissionDefault.OP,
-    )
+    override val permissions =
+        listOf(
+            "join" to PermissionDefault.TRUE,
+            "join.all" to PermissionDefault.OP,
+            "join.*" to PermissionDefault.OP,
+        )
 
-    override fun suggest(source: McCommandSource, arguments: Array<String>): List<String> {
+    override fun suggest(
+        source: McCommandSource,
+        arguments: Array<String>,
+    ): List<String> {
         if (!handler.hasPermission(source, permissions.map { it.first }.toTypedArray())) return listOf()
 
         if (arguments.size == 2) {
@@ -26,14 +37,13 @@ class JoinCommand(handler: CommandHandler): SubCommand(handler) {
         }
 
         if (arguments.size == 3) {
-
-            val group = source.parseUuidOrPrintError(arguments[1])
-                .let { it ?: return listOf() }
-                .let { handler.groupManager.groups[it] ?: return listOf() }
+            val group =
+                source
+                    .parseUuidOrPrintError(arguments[1])
+                    .let { it ?: return listOf() }
+                    .let { handler.groupManager.getGroup(it) ?: return listOf() }
 
             if (group.password == null) return listOf()
-
-//            var passwordArg = arguments.getOrNull(2) ?: return listOf()
 
             return listOf(handler.getTranslationByKey("pv.addon.groups.arg.password", source))
         }
@@ -41,83 +51,50 @@ class JoinCommand(handler: CommandHandler): SubCommand(handler) {
         return listOf()
     }
 
-    override fun execute(source: McCommandSource, arguments: Array<String>) {
-
+    override fun execute(
+        source: McCommandSource,
+        arguments: Array<String>,
+    ) {
         if (source.checkAddonPermissionAndPrintError("join")) return
 
-        val player = source.getVoicePlayer(handler.voiceServer) ?: run {
-            source.playerOnlyCommandError()
-            return
-        }
-
-        val uuidArg = arguments.getOrNull(1) ?: kotlin.run {
-            source.sendTranslatable("pv.addon.groups.command.join.error.usage")
-            return
-        }
-
-        val group = source.parseUuidOrPrintError(uuidArg)
-            .let { it ?: return }
-            .let { handler.groupManager.groups[it] ?: run {
-                source.groupNotFoundError()
+        val player =
+            source.getVoicePlayer(handler.voiceServer) ?: run {
+                source.playerOnlyCommandError()
                 return
-            }}
-
-        handler.groupManager.groupByPlayer[player.instance.uuid]
-            ?.also { if (group.id == it.id) {
-                source.sendTranslatable("pv.addon.groups.command.join.error.already_joined")
-                return
-            }}
-            ?.let {
-                handler.groupManager.leave(player)
-                it.notifyPlayersTranslatable("pv.addon.groups.notifications.player_left", player.instance.name)
             }
 
-        if (checkCantJoin(group, player, source, arguments)) return
+        val uuidArg =
+            arguments.getOrNull(1) ?: kotlin.run {
+                source.sendTranslatable("pv.addon.groups.command.join.error.usage")
+                return
+            }
 
-        group.notifyPlayersTranslatable("pv.addon.groups.notifications.player_join", player.instance.name)
+        val group =
+            source
+                .parseUuidOrPrintError(uuidArg)
+                .let { it ?: return }
+                .let {
+                    handler.groupManager.getGroup(it) ?: run {
+                        source.groupNotFoundError()
+                        return
+                    }
+                }
 
-        handler.groupManager.join(player, group)
+        if (source.hasAddonPermission("join.*")) {
+            handler.groupManager.joinUnchecked(player, group as GroupImpl)
+            source.sendTranslatable("pv.addon.groups.command.join.success", group.name)
+            return
+        }
 
-        source.sendTranslatable("pv.addon.groups.command.join.success", group.name)
+        when (handler.groupManager.join(player, group, arguments.getOrNull(2))) {
+            is JoinResult.Success -> source.sendTranslatable("pv.addon.groups.command.join.success", group.name)
+            JoinResult.AlreadyInGroup -> source.sendTranslatable("pv.addon.groups.command.join.error.already_joined")
+            JoinResult.Banned -> source.sendTranslatable("pv.addon.groups.command.join.error.banned")
+            JoinResult.PasswordRequired -> source.sendTranslatable("pv.addon.groups.command.join.error.password_arg_missing")
+            JoinResult.WrongPassword -> source.sendTranslatable("pv.addon.groups.command.join.error.wrong_password")
+            JoinResult.NoPermission -> source.sendTranslatable("pv.addon.groups.command.join.error.no_permission")
+        }
     }
 
     override fun checkCanExecute(source: McCommandSource): Boolean = source.hasAddonPermission("join")
-
-    private fun checkCantJoin(
-        group: Group,
-        player: VoicePlayer,
-        source: McCommandSource,
-        arguments: Array<String>
-    ): Boolean {
-
-        if (source.hasAddonPermission("join.add") || source.hasAddonPermission("join.*")) {
-            return false
-        }
-
-        if (group.isBanned(player.instance.uuid)) {
-            source.sendTranslatable("pv.addon.groups.command.join.error.banned")
-            return true
-        }
-
-        if (!group.hasPermission(source)) {
-            source.sendTranslatable("pv.addon.groups.command.join.error.no_permission")
-            return true
-        }
-
-        if (group.password != null) {
-
-            var passwordArg = arguments.getOrNull(2) ?: run {
-                source.sendTranslatable("pv.addon.groups.command.join.error.password_arg_missing")
-                return true
-            }
-
-            if (group.password != passwordArg) {
-                source.sendTranslatable("pv.addon.groups.command.join.error.wrong_password")
-                return true
-            }
-
-        }
-
-        return false
-    }
 }

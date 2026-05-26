@@ -1,0 +1,374 @@
+public abstract interface class su/plo/voice/groups/api/Group {
+	public abstract fun ban (Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/result/BanResult;
+	public abstract fun getBannedPlayers ()Ljava/util/List;
+	public abstract fun getId ()Ljava/util/UUID;
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getOnlinePlayerCount ()I
+	public abstract fun getOnlinePlayers ()Ljava/util/Collection;
+	public abstract fun getOwner ()Lsu/plo/slib/api/entity/player/McGameProfile;
+	public abstract fun getPassword ()Ljava/lang/String;
+	public abstract fun getPermissionsFilter ()Ljava/util/Set;
+	public abstract fun getPersistent ()Z
+	public abstract fun getPlayerCount ()I
+	public abstract fun hasPermission (Lsu/plo/slib/api/command/McCommandSource;)Z
+	public abstract fun invite (Lsu/plo/voice/api/server/player/VoicePlayer;Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/result/InviteResult;
+	public abstract fun isBanned (Ljava/util/UUID;)Z
+	public abstract fun isDeleted ()Z
+	public abstract fun isOwner (Lsu/plo/voice/api/server/player/VoicePlayer;)Z
+	public abstract fun kick (Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/result/KickResult;
+	public abstract fun setName (Ljava/lang/String;)Lsu/plo/voice/groups/api/result/SetNameResult;
+	public abstract fun setPassword (Ljava/lang/String;)Lsu/plo/voice/groups/api/result/SetPasswordResult;
+	public abstract fun setPermissions (Ljava/util/Set;)Lsu/plo/voice/groups/api/result/SetPermissionsResult;
+	public abstract fun setPersistent (Z)Lsu/plo/voice/groups/api/result/SetPersistentResult;
+	public abstract fun transferOwnership (Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/result/TransferResult;
+	public abstract fun unban (Lsu/plo/slib/api/entity/player/McGameProfile;)Lsu/plo/voice/groups/api/result/UnbanResult;
+}
+
+public final class su/plo/voice/groups/api/GroupCreateBuilder {
+	public fun <init> (Ljava/util/function/Function;)V
+	public final fun create ()Lsu/plo/voice/groups/api/result/CreateResult;
+	public final fun creator (Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/GroupCreateBuilder;
+	public final fun getCreator ()Lsu/plo/voice/api/server/player/VoicePlayer;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPassword ()Ljava/lang/String;
+	public final fun getPermissions ()Ljava/util/Set;
+	public final fun getPersistent ()Z
+	public final fun name (Ljava/lang/String;)Lsu/plo/voice/groups/api/GroupCreateBuilder;
+	public final fun password (Ljava/lang/String;)Lsu/plo/voice/groups/api/GroupCreateBuilder;
+	public final fun permissions (Ljava/util/Set;)Lsu/plo/voice/groups/api/GroupCreateBuilder;
+	public final fun persistent (Z)Lsu/plo/voice/groups/api/GroupCreateBuilder;
+}
+
+public abstract interface class su/plo/voice/groups/api/GroupsApi {
+	public abstract fun createGroup ()Lsu/plo/voice/groups/api/GroupCreateBuilder;
+	public abstract fun deleteGroup (Lsu/plo/voice/groups/api/Group;)Lsu/plo/voice/groups/api/result/DeleteResult;
+	public abstract fun getGroup (Ljava/util/UUID;)Lsu/plo/voice/groups/api/Group;
+	public abstract fun getGroups ()Ljava/util/Collection;
+	public abstract fun getPlayerGroup (Ljava/util/UUID;)Lsu/plo/voice/groups/api/Group;
+	public abstract fun join (Lsu/plo/voice/api/server/player/VoicePlayer;Lsu/plo/voice/groups/api/Group;Ljava/lang/String;)Lsu/plo/voice/groups/api/result/JoinResult;
+	public abstract fun leave (Ljava/util/UUID;)Lsu/plo/voice/groups/api/result/LeaveResult;
+}
+
+public final class su/plo/voice/groups/api/event/GroupCreatedEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/GroupCreatedEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/GroupCreatedEvent$Callback {
+	public abstract fun onGroupCreated (Lsu/plo/voice/groups/api/Group;)V
+}
+
+public final class su/plo/voice/groups/api/event/GroupDeletedEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/GroupDeletedEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/GroupDeletedEvent$Callback {
+	public abstract fun onGroupDeleted (Lsu/plo/voice/groups/api/Group;)V
+}
+
+public final class su/plo/voice/groups/api/event/GroupInviteEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/GroupInviteEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/GroupInviteEvent$Callback {
+	public abstract fun onGroupInvite (Lsu/plo/voice/groups/api/Group;Lsu/plo/voice/api/server/player/VoicePlayer;Lsu/plo/voice/api/server/player/VoicePlayer;)V
+}
+
+public final class su/plo/voice/groups/api/event/GroupNameChangedEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/GroupNameChangedEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/GroupNameChangedEvent$Callback {
+	public abstract fun onGroupNameChanged (Lsu/plo/voice/groups/api/Group;Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class su/plo/voice/groups/api/event/GroupOwnerChangedEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/GroupOwnerChangedEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/GroupOwnerChangedEvent$Callback {
+	public abstract fun onGroupOwnerChanged (Lsu/plo/voice/groups/api/Group;Lsu/plo/slib/api/entity/player/McGameProfile;Lsu/plo/slib/api/entity/player/McGameProfile;)V
+}
+
+public final class su/plo/voice/groups/api/event/GroupPasswordChangedEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/GroupPasswordChangedEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/GroupPasswordChangedEvent$Callback {
+	public abstract fun onGroupPasswordChanged (Lsu/plo/voice/groups/api/Group;Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class su/plo/voice/groups/api/event/GroupPermissionsChangedEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/GroupPermissionsChangedEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/GroupPermissionsChangedEvent$Callback {
+	public abstract fun onGroupPermissionsChanged (Lsu/plo/voice/groups/api/Group;Ljava/util/Set;Ljava/util/Set;)V
+}
+
+public final class su/plo/voice/groups/api/event/GroupPersistentChangedEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/GroupPersistentChangedEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/GroupPersistentChangedEvent$Callback {
+	public abstract fun onGroupPersistentChanged (Lsu/plo/voice/groups/api/Group;Z)V
+}
+
+public final class su/plo/voice/groups/api/event/LeaveReason : java/lang/Enum {
+	public static final field BANNED Lsu/plo/voice/groups/api/event/LeaveReason;
+	public static final field GROUP_DELETED Lsu/plo/voice/groups/api/event/LeaveReason;
+	public static final field KICKED Lsu/plo/voice/groups/api/event/LeaveReason;
+	public static final field LEFT Lsu/plo/voice/groups/api/event/LeaveReason;
+	public static final field PERMISSIONS_REVOKED Lsu/plo/voice/groups/api/event/LeaveReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lsu/plo/voice/groups/api/event/LeaveReason;
+	public static fun values ()[Lsu/plo/voice/groups/api/event/LeaveReason;
+}
+
+public final class su/plo/voice/groups/api/event/PlayerBannedFromGroupEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/PlayerBannedFromGroupEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/PlayerBannedFromGroupEvent$Callback {
+	public abstract fun onPlayerBannedFromGroup (Lsu/plo/voice/groups/api/Group;Lsu/plo/voice/api/server/player/VoicePlayer;Z)V
+}
+
+public final class su/plo/voice/groups/api/event/PlayerJoinedGroupEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/PlayerJoinedGroupEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/PlayerJoinedGroupEvent$Callback {
+	public abstract fun onPlayerJoinedGroup (Lsu/plo/voice/groups/api/Group;Lsu/plo/voice/api/server/player/VoicePlayer;)V
+}
+
+public final class su/plo/voice/groups/api/event/PlayerLeftGroupEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/PlayerLeftGroupEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/PlayerLeftGroupEvent$Callback {
+	public abstract fun onPlayerLeftGroup (Lsu/plo/voice/groups/api/Group;Lsu/plo/voice/api/server/player/VoicePlayer;Lsu/plo/voice/groups/api/event/LeaveReason;)V
+}
+
+public final class su/plo/voice/groups/api/event/PlayerUnbannedFromGroupEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/PlayerUnbannedFromGroupEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/PlayerUnbannedFromGroupEvent$Callback {
+	public abstract fun onPlayerUnbannedFromGroup (Lsu/plo/voice/groups/api/Group;Lsu/plo/slib/api/entity/player/McGameProfile;)V
+}
+
+public abstract class su/plo/voice/groups/api/result/BanResult {
+}
+
+public final class su/plo/voice/groups/api/result/BanResult$Success : su/plo/voice/groups/api/result/BanResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/BanResult$Success;
+}
+
+public abstract class su/plo/voice/groups/api/result/CreateResult {
+}
+
+public final class su/plo/voice/groups/api/result/CreateResult$NameLengthInvalid : su/plo/voice/groups/api/result/CreateResult {
+	public fun <init> (II)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lsu/plo/voice/groups/api/result/CreateResult$NameLengthInvalid;
+	public static synthetic fun copy$default (Lsu/plo/voice/groups/api/result/CreateResult$NameLengthInvalid;IIILjava/lang/Object;)Lsu/plo/voice/groups/api/result/CreateResult$NameLengthInvalid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMax ()I
+	public final fun getMin ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class su/plo/voice/groups/api/result/CreateResult$Success : su/plo/voice/groups/api/result/CreateResult {
+	public fun <init> (Lsu/plo/voice/groups/api/Group;)V
+	public final fun component1 ()Lsu/plo/voice/groups/api/Group;
+	public final fun copy (Lsu/plo/voice/groups/api/Group;)Lsu/plo/voice/groups/api/result/CreateResult$Success;
+	public static synthetic fun copy$default (Lsu/plo/voice/groups/api/result/CreateResult$Success;Lsu/plo/voice/groups/api/Group;ILjava/lang/Object;)Lsu/plo/voice/groups/api/result/CreateResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGroup ()Lsu/plo/voice/groups/api/Group;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class su/plo/voice/groups/api/result/DeleteResult {
+}
+
+public final class su/plo/voice/groups/api/result/DeleteResult$Success : su/plo/voice/groups/api/result/DeleteResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/DeleteResult$Success;
+}
+
+public abstract class su/plo/voice/groups/api/result/InviteResult {
+}
+
+public final class su/plo/voice/groups/api/result/InviteResult$AlreadyInGroup : su/plo/voice/groups/api/result/InviteResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/InviteResult$AlreadyInGroup;
+}
+
+public final class su/plo/voice/groups/api/result/InviteResult$Banned : su/plo/voice/groups/api/result/InviteResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/InviteResult$Banned;
+}
+
+public final class su/plo/voice/groups/api/result/InviteResult$Self : su/plo/voice/groups/api/result/InviteResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/InviteResult$Self;
+}
+
+public final class su/plo/voice/groups/api/result/InviteResult$Success : su/plo/voice/groups/api/result/InviteResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/InviteResult$Success;
+}
+
+public abstract class su/plo/voice/groups/api/result/JoinResult {
+}
+
+public final class su/plo/voice/groups/api/result/JoinResult$AlreadyInGroup : su/plo/voice/groups/api/result/JoinResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/JoinResult$AlreadyInGroup;
+}
+
+public final class su/plo/voice/groups/api/result/JoinResult$Banned : su/plo/voice/groups/api/result/JoinResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/JoinResult$Banned;
+}
+
+public final class su/plo/voice/groups/api/result/JoinResult$NoPermission : su/plo/voice/groups/api/result/JoinResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/JoinResult$NoPermission;
+}
+
+public final class su/plo/voice/groups/api/result/JoinResult$PasswordRequired : su/plo/voice/groups/api/result/JoinResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/JoinResult$PasswordRequired;
+}
+
+public final class su/plo/voice/groups/api/result/JoinResult$Success : su/plo/voice/groups/api/result/JoinResult {
+	public fun <init> (Lsu/plo/voice/groups/api/Group;)V
+	public final fun component1 ()Lsu/plo/voice/groups/api/Group;
+	public final fun copy (Lsu/plo/voice/groups/api/Group;)Lsu/plo/voice/groups/api/result/JoinResult$Success;
+	public static synthetic fun copy$default (Lsu/plo/voice/groups/api/result/JoinResult$Success;Lsu/plo/voice/groups/api/Group;ILjava/lang/Object;)Lsu/plo/voice/groups/api/result/JoinResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGroup ()Lsu/plo/voice/groups/api/Group;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class su/plo/voice/groups/api/result/JoinResult$WrongPassword : su/plo/voice/groups/api/result/JoinResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/JoinResult$WrongPassword;
+}
+
+public abstract class su/plo/voice/groups/api/result/KickResult {
+}
+
+public final class su/plo/voice/groups/api/result/KickResult$NotInGroup : su/plo/voice/groups/api/result/KickResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/KickResult$NotInGroup;
+}
+
+public final class su/plo/voice/groups/api/result/KickResult$Success : su/plo/voice/groups/api/result/KickResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/KickResult$Success;
+}
+
+public abstract class su/plo/voice/groups/api/result/LeaveResult {
+}
+
+public final class su/plo/voice/groups/api/result/LeaveResult$NotInGroup : su/plo/voice/groups/api/result/LeaveResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/LeaveResult$NotInGroup;
+}
+
+public final class su/plo/voice/groups/api/result/LeaveResult$Success : su/plo/voice/groups/api/result/LeaveResult {
+	public fun <init> (Lsu/plo/voice/groups/api/Group;)V
+	public final fun component1 ()Lsu/plo/voice/groups/api/Group;
+	public final fun copy (Lsu/plo/voice/groups/api/Group;)Lsu/plo/voice/groups/api/result/LeaveResult$Success;
+	public static synthetic fun copy$default (Lsu/plo/voice/groups/api/result/LeaveResult$Success;Lsu/plo/voice/groups/api/Group;ILjava/lang/Object;)Lsu/plo/voice/groups/api/result/LeaveResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGroup ()Lsu/plo/voice/groups/api/Group;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class su/plo/voice/groups/api/result/SetNameResult {
+}
+
+public final class su/plo/voice/groups/api/result/SetNameResult$IdenticalValue : su/plo/voice/groups/api/result/SetNameResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/SetNameResult$IdenticalValue;
+}
+
+public final class su/plo/voice/groups/api/result/SetNameResult$NameLengthInvalid : su/plo/voice/groups/api/result/SetNameResult {
+	public fun <init> (II)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lsu/plo/voice/groups/api/result/SetNameResult$NameLengthInvalid;
+	public static synthetic fun copy$default (Lsu/plo/voice/groups/api/result/SetNameResult$NameLengthInvalid;IIILjava/lang/Object;)Lsu/plo/voice/groups/api/result/SetNameResult$NameLengthInvalid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMax ()I
+	public final fun getMin ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class su/plo/voice/groups/api/result/SetNameResult$Success : su/plo/voice/groups/api/result/SetNameResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lsu/plo/voice/groups/api/result/SetNameResult$Success;
+	public static synthetic fun copy$default (Lsu/plo/voice/groups/api/result/SetNameResult$Success;Ljava/lang/String;ILjava/lang/Object;)Lsu/plo/voice/groups/api/result/SetNameResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOldName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class su/plo/voice/groups/api/result/SetPasswordResult {
+}
+
+public final class su/plo/voice/groups/api/result/SetPasswordResult$IdenticalValue : su/plo/voice/groups/api/result/SetPasswordResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/SetPasswordResult$IdenticalValue;
+}
+
+public final class su/plo/voice/groups/api/result/SetPasswordResult$Success : su/plo/voice/groups/api/result/SetPasswordResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/SetPasswordResult$Success;
+}
+
+public abstract class su/plo/voice/groups/api/result/SetPermissionsResult {
+}
+
+public final class su/plo/voice/groups/api/result/SetPermissionsResult$IdenticalValue : su/plo/voice/groups/api/result/SetPermissionsResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/SetPermissionsResult$IdenticalValue;
+}
+
+public final class su/plo/voice/groups/api/result/SetPermissionsResult$Success : su/plo/voice/groups/api/result/SetPermissionsResult {
+	public fun <init> (Ljava/util/Collection;)V
+	public final fun component1 ()Ljava/util/Collection;
+	public final fun copy (Ljava/util/Collection;)Lsu/plo/voice/groups/api/result/SetPermissionsResult$Success;
+	public static synthetic fun copy$default (Lsu/plo/voice/groups/api/result/SetPermissionsResult$Success;Ljava/util/Collection;ILjava/lang/Object;)Lsu/plo/voice/groups/api/result/SetPermissionsResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRemovedPlayers ()Ljava/util/Collection;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class su/plo/voice/groups/api/result/SetPersistentResult {
+}
+
+public final class su/plo/voice/groups/api/result/SetPersistentResult$IdenticalValue : su/plo/voice/groups/api/result/SetPersistentResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/SetPersistentResult$IdenticalValue;
+}
+
+public final class su/plo/voice/groups/api/result/SetPersistentResult$Success : su/plo/voice/groups/api/result/SetPersistentResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/SetPersistentResult$Success;
+}
+
+public abstract class su/plo/voice/groups/api/result/TransferResult {
+}
+
+public final class su/plo/voice/groups/api/result/TransferResult$NotInGroup : su/plo/voice/groups/api/result/TransferResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/TransferResult$NotInGroup;
+}
+
+public final class su/plo/voice/groups/api/result/TransferResult$Success : su/plo/voice/groups/api/result/TransferResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/TransferResult$Success;
+}
+
+public abstract class su/plo/voice/groups/api/result/UnbanResult {
+}
+
+public final class su/plo/voice/groups/api/result/UnbanResult$NotBanned : su/plo/voice/groups/api/result/UnbanResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/UnbanResult$NotBanned;
+}
+
+public final class su/plo/voice/groups/api/result/UnbanResult$Success : su/plo/voice/groups/api/result/UnbanResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/UnbanResult$Success;
+}
+
