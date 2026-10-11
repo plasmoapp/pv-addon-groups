@@ -31,6 +31,13 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
 
+    - name: Publish API to Maven Central
+      run: ./gradlew :api:publish
+      env:
+        ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+        ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_CENTRAL_GPG }}
+
     - name: Publish to Modrinth/CurseForge
       uses: Apehum/mc-publish@v1.1
       with:
