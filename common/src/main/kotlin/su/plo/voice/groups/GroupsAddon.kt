@@ -4,6 +4,7 @@ import com.google.common.collect.Sets
 import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
 import su.plo.slib.api.event.permission.McPermissionsRegisterEvent
+import su.plo.slib.api.logging.McLoggerFactory
 import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.api.addon.AddonInitializer
 import su.plo.voice.api.addon.InjectPlasmoVoice
@@ -52,7 +53,7 @@ open class GroupsAddon : AddonInitializer {
     private fun onConfigLoaded() {
         val addonFolder =
             voiceServer.minecraftServer.configsFolder
-                .resolve("pv-addon-groups")
+                .resolve(BuildConstants.ADDON_ID)
                 .also { it.mkdirs() }
 
         val config =

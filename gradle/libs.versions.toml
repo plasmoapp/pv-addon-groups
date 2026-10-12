@@ -1,6 +1,8 @@
 [versions]
 kotlin = "2.3.0"
-kotlinx-json = "1.10.0"
+kotlinx-json = "1.11.0"
+kotlinx-coroutines = "1.11.0"
+msgpack = "0.6.0"
 
 plasmovoice = "2.2.0-beta.1"
 mcdsl = "2.3.0"
@@ -12,10 +14,13 @@ ktlint = "14.2.0"
 buildconfig = "6.0.9"
 publish = "0.35.0"
 runpaper = "3.0.2"
+modstitch = "0.8.5"
 
 [libraries]
 config = { module = "su.plo.config:config", version.ref = "config" }
 kotlinx-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-json" }
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+msgpack = { module = "com.ensarsarajcic.kotlinx:serialization-msgpack", version.ref = "msgpack" }
 
 plasmovoice-server = { module = "su.plo.voice.api:server", version.ref = "plasmovoice" }
 plasmovoice-proxy = { module = "su.plo.voice.api:proxy", version.ref = "plasmovoice" }
@@ -30,3 +35,4 @@ ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
 publish = { id = "com.vanniktech.maven.publish", version.ref = "publish" }
 runpaper = { id = "xyz.jpenilla.run-paper", version.ref = "runpaper" }
+modstitch = { id = "dev.isxander.modstitch.base", version.ref = "modstitch" }

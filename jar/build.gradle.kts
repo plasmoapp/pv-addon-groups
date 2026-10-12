@@ -1,8 +1,6 @@
 import xyz.jpenilla.runpaper.task.RunServer
-import java.net.URI
 
 plugins {
-    alias(libs.plugins.crowdin)
     alias(libs.plugins.runpaper)
     id("su.plo.voice.plugin.entrypoints")
 }
@@ -14,8 +12,15 @@ dependencies {
     compileOnly(libs.plasmovoice.server)
     compileOnly(libs.plasmovoice.proxy)
     compileOnly(libs.mcdsl.brigadier)
+    compileOnly(libs.kotlinx.coroutines)
+    compileOnly(libs.msgpack) {
+        isTransitive = false
+    }
 
     shadow(libs.mcdsl.brigadier) {
+        isTransitive = false
+    }
+    shadow(libs.msgpack) {
         isTransitive = false
     }
 }
@@ -63,16 +68,9 @@ sourceSets {
     }
 }
 
-crowdin {
-    url = URI.create("https://github.com/plasmoapp/plasmo-voice-crowdin/archive/refs/heads/addons.zip").toURL()
-    sourceFileName = "server/groups.toml"
-    resourceDir = "groups/languages"
-    createList = true
-}
-
 tasks {
     processResources {
-        dependsOn(crowdinDownload)
+        dependsOn(":common:crowdinDownload")
     }
 
     jar {
@@ -87,6 +85,7 @@ tasks {
         archiveAppendix.set("")
 
         relocate("dev.apehum.mcdsl", "su.plo.voice.groups.libs.mcdsl")
+        relocate("com.ensarsarajcic.kotlinx.serialization.msgpack", "su.plo.voice.groups.libs.msgpack")
     }
 
     build {

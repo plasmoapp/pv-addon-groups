@@ -1,11 +1,17 @@
 package su.plo.voice.groups.proxy
 
 import su.plo.slib.api.event.command.McBrigadierCommandsRegisterEvent
+import su.plo.slib.api.proxy.channel.McProxyChannelHandler
+import su.plo.slib.api.proxy.player.McProxyPlayer
 import su.plo.voice.api.addon.AddonLoaderScope
 import su.plo.voice.api.addon.annotation.Addon
+import su.plo.voice.api.proxy.PlasmoVoiceProxy
 import su.plo.voice.groups.BuildConstants
 import su.plo.voice.groups.GroupsAddon
+import su.plo.voice.groups.channel.ChannelServer
+import su.plo.voice.groups.channel.registerGroupsHandlers
 import su.plo.voice.groups.command.GroupsCommands
+import su.plo.voice.groups.protocol.CHANNEL_KEY
 import su.plo.voice.groups.util.PlayerCollector
 
 @Addon(
@@ -19,11 +25,42 @@ class ProxyGroupsAddon : GroupsAddon() {
         voiceServer.playerManager.players
     }
 
+    private val minecraftProxy
+        get() = (voiceServer as PlasmoVoiceProxy).minecraftServer
+
+    private var channelServer: ChannelServer? = null
+    private var channelHandler: McProxyChannelHandler? = null
+
     init {
         val commands = GroupsCommands(this, playerCollector, ProxyTargetArgument { voiceServer })
 
         McBrigadierCommandsRegisterEvent.registerListener { registry ->
             registry.register(commands.build())
         }
+    }
+
+    override fun onAddonInitialize() {
+        super.onAddonInitialize()
+
+        val channelServer = ChannelServer(CHANNEL_KEY).also { it.registerGroupsHandlers() }
+        val channelHandler =
+            McProxyChannelHandler { source, _, data ->
+                val player = source as? McProxyPlayer ?: return@McProxyChannelHandler false
+                channelServer.receive(player, data)
+                true
+            }
+        minecraftProxy.channelManager.registerChannelHandler(CHANNEL_KEY, channelHandler)
+
+        this.channelServer = channelServer
+        this.channelHandler = channelHandler
+    }
+
+    override fun onAddonShutdown() {
+        super.onAddonShutdown()
+
+        channelHandler?.let { minecraftProxy.channelManager.unregisterChannelHandler(CHANNEL_KEY, it) }
+        channelServer?.shutdown()
+        channelHandler = null
+        channelServer = null
     }
 }

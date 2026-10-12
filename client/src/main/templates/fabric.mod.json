@@ -1,0 +1,31 @@
+{
+    "schemaVersion": 1,
+    "id": "${mod_id}",
+    "name": "${mod_name}",
+    "version": "${mod_version}",
+    "description": "${mod_description}",
+    "license": "${mod_license}",
+    "authors": [
+        "KPidS",
+        "Apehum"
+    ],
+    "contact": {
+        "homepage": "https://github.com/plasmoapp/pv-addon-groups",
+        "sources": "https://github.com/plasmoapp/pv-addon-groups",
+        "issues": "https://github.com/plasmoapp/pv-addon-groups/issues"
+    },
+    "environment": "client",
+    "entrypoints": {
+        "client": [
+            "su.plo.voice.groups.client.entrypoint.FabricGroupsLoader"
+        ],
+        "main": [
+            "su.plo.voice.groups.client.entrypoint.FabricGroupsLoader"
+        ]
+    },
+    "depends": {
+        "fabricloader": "*",
+        "minecraft": "${minecraft_range}",
+        "plasmovoice": ">=${plasmovoice_version}"
+    }
+}

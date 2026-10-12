@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version libs.versions.kotlin.get()
     kotlin("plugin.serialization") version libs.versions.kotlin.get()
     alias(libs.plugins.plasmovoice) apply false
+    alias(libs.plugins.modstitch) apply false
     alias(libs.plugins.ktlint)
 }
 
@@ -35,6 +36,8 @@ allprojects {
 }
 
 subprojects {
+    if (path == ":client") return@subprojects
+
     apply(plugin = "kotlin")
     apply(plugin = "kotlinx-serialization")
 
