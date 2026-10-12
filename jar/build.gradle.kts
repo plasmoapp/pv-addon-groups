@@ -1,7 +1,9 @@
+import xyz.jpenilla.runpaper.task.RunServer
 import java.net.URI
 
 plugins {
     alias(libs.plugins.crowdin)
+    alias(libs.plugins.runpaper)
     id("su.plo.voice.plugin.entrypoints")
 }
 
@@ -69,6 +71,10 @@ crowdin {
 }
 
 tasks {
+    processResources {
+        dependsOn(crowdinDownload)
+    }
+
     jar {
         archiveClassifier.set("dev")
     }
@@ -95,4 +101,23 @@ tasks {
                 .copyTo(rootProject.buildDir.resolve("libs/${shadowJar.get().archiveFile.get().asFile.name}"), true)
         }
     }
+
+    withType<RunServer>().configureEach {
+        minecraftVersion("26.3")
+
+        javaLauncher =
+            project.javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(25)
+            }
+
+        downloadPlugins {
+            modrinth("plasmo-voice", "paper-${libs.versions.plasmovoice.asProvider().get()}")
+        }
+    }
+}
+
+runPaper.folia.registerTask {
+    minecraftVersion("26.2")
+
+    runDirectory = project.layout.projectDirectory.dir("run-folia")
 }

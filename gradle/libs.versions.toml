@@ -11,6 +11,7 @@ crowdin-plugin = "1.2.1"
 ktlint = "14.2.0"
 buildconfig = "6.0.9"
 publish = "0.35.0"
+runpaper = "3.0.2"
 
 [libraries]
 config = { module = "su.plo.config:config", version.ref = "config" }
@@ -28,3 +29,4 @@ crowdin = { id = "su.plo.crowdin.plugin", version.ref = "crowdin-plugin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
 publish = { id = "com.vanniktech.maven.publish", version.ref = "publish" }
+runpaper = { id = "xyz.jpenilla.run-paper", version.ref = "runpaper" }
