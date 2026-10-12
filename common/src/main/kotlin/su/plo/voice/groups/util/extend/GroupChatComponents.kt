@@ -6,7 +6,7 @@ import su.plo.slib.api.chat.style.McTextHoverEvent
 import su.plo.slib.api.command.McCommandSource
 import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.api.Group
-import su.plo.voice.groups.command.CommandHandler
+import su.plo.voice.groups.command.GroupsCommands
 
 fun Group.notifyPlayersTranslatable(
     key: String,
@@ -64,9 +64,9 @@ private fun inviteButton(): McTextComponent =
         .hoverEvent(McTextHoverEvent.showText(McTextComponent.literal("/groups invite")))
 
 fun Group.asTextComponents(
-    handler: CommandHandler,
+    commands: GroupsCommands,
     source: McCommandSource? = null,
-    sourcePlayer: VoicePlayer? = source?.getVoicePlayer(handler.voiceServer),
+    sourcePlayer: VoicePlayer? = source?.getVoicePlayer(commands.voiceServer),
 ): List<McTextComponent> =
     listOf(
         if (password != null) {
@@ -90,7 +90,7 @@ fun Group.asTextComponents(
                     ),
                 ).clickEvent(McTextClickEvent.suggestCommand(id.toString())),
         ),
-        if (owner == null || handler.playerCollector.getVisibleOnlinePlayers(sourcePlayer).none { owner!!.id == it.instance.uuid }) {
+        if (owner == null || commands.playerCollector.getVisibleOnlinePlayers(sourcePlayer).none { owner!!.id == it.instance.uuid }) {
             McTextComponent.translatable("pv.addon.groups.format.only_players", onlinePlayerCount)
         } else {
             McTextComponent.translatable(
@@ -101,16 +101,17 @@ fun Group.asTextComponents(
         }.hoverEvent(
             McTextHoverEvent.showText(
                 McTextComponent.literal(
-                    onlinePlayers.sortedBy { it.instance.name }
+                    onlinePlayers
+                        .sortedBy { it.instance.name }
                         .let { sortedPlayers ->
-                            val visiblePlayers = handler.playerCollector.getVisibleOnlinePlayers(sourcePlayer)
+                            val visiblePlayers = commands.playerCollector.getVisibleOnlinePlayers(sourcePlayer)
                             sortedPlayers.filter { visiblePlayers.contains(it) }
                         }.joinToString(", ") { it.instance.name },
                 ),
             ),
         ),
         source
-            ?.getVoicePlayer(handler.voiceServer)
-            ?.let { handler.groupManager.getPlayerGroup(it.instance.uuid) }
+            ?.getVoicePlayer(commands.voiceServer)
+            ?.let { commands.groupManager.getPlayerGroup(it.instance.uuid) }
             .let { if (id == it?.id) leaveButton() else joinButton() },
     )

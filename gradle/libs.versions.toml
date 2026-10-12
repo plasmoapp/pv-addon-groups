@@ -2,10 +2,11 @@
 kotlin = "2.3.0"
 kotlinx-json = "1.10.0"
 
-plasmovoice = "2.1.9"
+plasmovoice = "2.2.0-beta.1"
+mcdsl = "2.3.0"
 config = "1.1.0"
 
-plasmovoice-plugin = "1.0.9"
+plasmovoice-plugin = "1.2.0"
 crowdin-plugin = "1.2.1"
 ktlint = "14.2.0"
 buildconfig = "6.0.9"
@@ -18,6 +19,8 @@ kotlinx-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", ve
 plasmovoice-server = { module = "su.plo.voice.api:server", version.ref = "plasmovoice" }
 plasmovoice-proxy = { module = "su.plo.voice.api:proxy", version.ref = "plasmovoice" }
 plasmovoice-server-common = { module = "su.plo.voice.api:server-proxy-common", version.ref = "plasmovoice" }
+
+mcdsl-brigadier = { module = "dev.apehum.mcdsl:brigadier", version.ref = "mcdsl" }
 
 [plugins]
 plasmovoice = { id = "su.plo.voice.plugin.entrypoints", version.ref = "plasmovoice-plugin" }

@@ -6,6 +6,7 @@ dependencies {
     compileOnly(project(":api"))
 
     compileOnly(libs.plasmovoice.server.common)
+    compileOnly(libs.mcdsl.brigadier)
 }
 
 buildConfig {

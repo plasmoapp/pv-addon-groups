@@ -74,7 +74,7 @@ You can set multiple permissions: `permissions: group.admin, group.moderator`
 
 `/groups create [...flags]` — Create a group.
 
-`/groups invite <player>` — Invite a player to the group.
+`/groups invite <players>` — Invite players to the group.
 
 `/groups join <group UUID> [password]` — Join the group. Not recommended to use manually. Used from browse or invite. 
 
@@ -90,11 +90,14 @@ You can set multiple permissions: `permissions: group.admin, group.moderator`
 
 `/groups transfer <player>` — Transfer the ownership of the group to a different player.
 
-`/groups kick <player>` — Kick a player from the group.
+`/groups kick <players>` — Kick players from the group.
 
-`/groups ban <player>` — Ban a player from the group.
+`/groups ban <players>` — Ban players from the group.
 
 `/groups unban <player>` — Unban a player from the group.
+
+On the server, `<players>` and `<player>` (except for `unban`) accept player selectors, e.g. `/groups invite @a[distance=..10]`.
+On the proxy, `<players>` is a comma-separated list of names.
 
 ## Permissions
 

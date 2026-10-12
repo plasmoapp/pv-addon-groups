@@ -1,7 +1,6 @@
 package su.plo.voice.groups.server
 
-import su.plo.slib.api.server.McServerLib
-import su.plo.slib.api.server.event.command.McServerCommandsRegisterEvent
+import su.plo.slib.api.event.command.McBrigadierCommandsRegisterEvent
 import su.plo.voice.api.addon.AddonLoaderScope
 import su.plo.voice.api.addon.annotation.Addon
 import su.plo.voice.api.server.PlasmoVoiceServer
@@ -9,7 +8,7 @@ import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.api.server.player.VoiceServerPlayer
 import su.plo.voice.groups.BuildConstants
 import su.plo.voice.groups.GroupsAddon
-import su.plo.voice.groups.command.CommandHandler
+import su.plo.voice.groups.command.GroupsCommands
 import su.plo.voice.groups.util.PlayerCollector
 
 @Addon(
@@ -22,16 +21,12 @@ class ServerGroupsAddon : GroupsAddon() {
     private val playerCollector: PlayerCollector = ServerPlayerCollector()
 
     init {
-        McServerCommandsRegisterEvent.registerListener { commandManager, minecraftServer ->
-            commandManager.register(
-                "groups",
-                createCommandHandler(minecraftServer)
-                    .also { addSubcommandsToCommandHandler(it) },
-            )
+        val commands = GroupsCommands(this, playerCollector, ServerTargetArgument { voiceServer as PlasmoVoiceServer })
+
+        McBrigadierCommandsRegisterEvent.registerListener { registry ->
+            registry.register(commands.build())
         }
     }
-
-    private fun createCommandHandler(minecraftServer: McServerLib) = CommandHandler(this, minecraftServer, playerCollector)
 
     private inner class ServerPlayerCollector : PlayerCollector {
         override fun getVisibleOnlinePlayers(player: VoicePlayer?): Collection<VoicePlayer> {

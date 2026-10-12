@@ -3,25 +3,13 @@ package su.plo.voice.groups
 import com.google.common.collect.Sets
 import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
+import su.plo.slib.api.event.permission.McPermissionsRegisterEvent
 import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.api.addon.AddonInitializer
 import su.plo.voice.api.addon.InjectPlasmoVoice
 import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.api.server.audio.line.BaseServerSourceLine
-import su.plo.voice.groups.command.CommandHandler
-import su.plo.voice.groups.command.subcommand.BanCommand
-import su.plo.voice.groups.command.subcommand.BrowseCommand
-import su.plo.voice.groups.command.subcommand.CreateCommand
-import su.plo.voice.groups.command.subcommand.DeleteCommand
-import su.plo.voice.groups.command.subcommand.InfoCommand
-import su.plo.voice.groups.command.subcommand.InviteCommand
-import su.plo.voice.groups.command.subcommand.JoinCommand
-import su.plo.voice.groups.command.subcommand.KickCommand
-import su.plo.voice.groups.command.subcommand.LeaveCommand
-import su.plo.voice.groups.command.subcommand.SetCommand
-import su.plo.voice.groups.command.subcommand.TransferCommand
-import su.plo.voice.groups.command.subcommand.UnbanCommand
-import su.plo.voice.groups.command.subcommand.UnsetCommand
+import su.plo.voice.groups.command.GroupsPermissions
 import su.plo.voice.groups.group.GroupImpl
 import su.plo.voice.groups.group.GroupsManager
 import su.plo.voice.groups.listener.ActivationListener
@@ -42,6 +30,10 @@ open class GroupsAddon : AddonInitializer {
 
     private var connectionListener: GroupsConnectionListener? = null
 
+    init {
+        McPermissionsRegisterEvent.registerListener(GroupsPermissions::register)
+    }
+
     override fun onAddonInitialize() {
         onConfigLoaded()
         GroupsNotificationListener.register()
@@ -55,23 +47,6 @@ open class GroupsAddon : AddonInitializer {
                 groupByPlayer = groupManager.groupByPlayer.map { it.key to it.value.id }.toMap(),
             ),
         )
-    }
-
-    protected fun addSubcommandsToCommandHandler(commandHandler: CommandHandler) {
-        commandHandler
-            .addSubCommand(::BrowseCommand)
-            .addSubCommand(::CreateCommand)
-            .addSubCommand(::JoinCommand)
-            .addSubCommand(::LeaveCommand)
-            .addSubCommand(::InviteCommand)
-            .addSubCommand(::InfoCommand)
-            .addSubCommand(::SetCommand)
-            .addSubCommand(::UnsetCommand)
-            .addSubCommand(::DeleteCommand)
-            .addSubCommand(::TransferCommand)
-            .addSubCommand(::KickCommand)
-            .addSubCommand(::BanCommand)
-            .addSubCommand(::UnbanCommand)
     }
 
     private fun onConfigLoaded() {

@@ -11,6 +11,18 @@ dependencies {
 
     compileOnly(libs.plasmovoice.server)
     compileOnly(libs.plasmovoice.proxy)
+    compileOnly(libs.mcdsl.brigadier)
+
+    shadow(libs.mcdsl.brigadier) {
+        isTransitive = false
+    }
+}
+
+entrypoints {
+    minPlasmoVoiceVersion = "2.2.0"
+
+    paperPlugin = true
+    paperOpenClassloader = true
 }
 
 val platforms =
@@ -31,8 +43,8 @@ sourceSets {
                     .map {
                         it.sourceSets.main
                             .get()
-                            .allJava.srcDirs
-                    }.flatten(),
+                            .allJava.sourceDirectories
+                    },
             )
         }
 
@@ -42,8 +54,8 @@ sourceSets {
                     .map {
                         it.sourceSets.main
                             .get()
-                            .resources.srcDirs
-                    }.flatten(),
+                            .resources.sourceDirectories
+                    },
             )
         }
     }
@@ -67,6 +79,8 @@ tasks {
         archiveBaseName.set(rootProject.name)
         archiveClassifier.set("")
         archiveAppendix.set("")
+
+        relocate("dev.apehum.mcdsl", "su.plo.voice.groups.libs.mcdsl")
     }
 
     build {

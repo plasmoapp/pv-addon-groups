@@ -39,6 +39,7 @@ subprojects {
     apply(plugin = "kotlinx-serialization")
 
     dependencies {
+        compileOnly(kotlin("stdlib"))
         compileOnly(rootProject.libs.config)
         compileOnly(rootProject.libs.kotlinx.json)
     }
@@ -52,7 +53,7 @@ subprojects {
         }
 
         java {
-            toolchain.languageVersion.set(JavaLanguageVersion.of(8))
+            toolchain.languageVersion.set(JavaLanguageVersion.of(21))
         }
     }
 }

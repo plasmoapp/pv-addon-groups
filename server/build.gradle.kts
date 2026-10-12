@@ -3,4 +3,5 @@ dependencies {
     compileOnly(project(":common"))
 
     compileOnly(libs.plasmovoice.server)
+    compileOnly(libs.mcdsl.brigadier)
 }

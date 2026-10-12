@@ -1,13 +1,11 @@
 package su.plo.voice.groups.proxy
 
-import su.plo.slib.api.proxy.McProxyLib
-import su.plo.slib.api.proxy.command.McProxyCommand
-import su.plo.slib.api.proxy.event.command.McProxyCommandsRegisterEvent
+import su.plo.slib.api.event.command.McBrigadierCommandsRegisterEvent
 import su.plo.voice.api.addon.AddonLoaderScope
 import su.plo.voice.api.addon.annotation.Addon
 import su.plo.voice.groups.BuildConstants
 import su.plo.voice.groups.GroupsAddon
-import su.plo.voice.groups.command.CommandHandler
+import su.plo.voice.groups.command.GroupsCommands
 import su.plo.voice.groups.util.PlayerCollector
 
 @Addon(
@@ -22,17 +20,10 @@ class ProxyGroupsAddon : GroupsAddon() {
     }
 
     init {
-        McProxyCommandsRegisterEvent.registerListener { commandManager, minecraftProxy ->
-            commandManager.register(
-                "groups",
-                createCommandHandler(minecraftProxy)
-                    .also { addSubcommandsToCommandHandler(it) },
-            )
+        val commands = GroupsCommands(this, playerCollector, ProxyTargetArgument { voiceServer })
+
+        McBrigadierCommandsRegisterEvent.registerListener { registry ->
+            registry.register(commands.build())
         }
     }
-
-    private fun createCommandHandler(minecraftProxy: McProxyLib) =
-        object :
-            CommandHandler(this, minecraftProxy, playerCollector),
-            McProxyCommand {}
 }
