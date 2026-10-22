@@ -4,12 +4,14 @@ import com.google.common.collect.Sets
 import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
 import su.plo.slib.api.event.permission.McPermissionsRegisterEvent
+import su.plo.slib.api.event.player.McPlayerQuitEvent
 import su.plo.slib.api.logging.McLoggerFactory
 import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.api.addon.AddonInitializer
 import su.plo.voice.api.addon.InjectPlasmoVoice
 import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.api.server.audio.line.BaseServerSourceLine
+import su.plo.voice.groups.api.event.InviteRemoveReason
 import su.plo.voice.groups.command.GroupsPermissions
 import su.plo.voice.groups.group.GroupImpl
 import su.plo.voice.groups.group.GroupsManager
@@ -38,6 +40,9 @@ open class GroupsAddon : AddonInitializer {
     override fun onAddonInitialize() {
         onConfigLoaded()
         GroupsNotificationListener.register()
+        McPlayerQuitEvent.registerListener { player ->
+            groupManager.removePlayerInvites(player.uuid, InviteRemoveReason.PLAYER_QUIT)
+        }
     }
 
     override fun onAddonShutdown() {

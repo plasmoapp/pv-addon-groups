@@ -16,7 +16,7 @@ import su.plo.voice.groups.api.event.PlayerJoinedGroupEvent
 import su.plo.voice.groups.api.event.PlayerLeftGroupEvent
 import su.plo.voice.groups.api.event.PlayerUnbannedFromGroupEvent
 import su.plo.voice.groups.util.extend.inlineChatComponent
-import su.plo.voice.groups.util.extend.joinButtonWithPassword
+import su.plo.voice.groups.util.extend.inviteJoinButton
 import su.plo.voice.groups.util.extend.printDivider
 import su.plo.voice.groups.util.extend.sendTranslatable
 import java.util.UUID
@@ -157,7 +157,7 @@ object GroupsNotificationListener {
         val targetPlayer = target.instance
         targetPlayer.printDivider()
         targetPlayer.sendTranslatable("pv.addon.groups.format.invite", inviter.instance.name, group.inlineChatComponent())
-        targetPlayer.sendMessage(group.joinButtonWithPassword())
+        targetPlayer.sendMessage(group.inviteJoinButton())
         targetPlayer.printDivider()
     }
 

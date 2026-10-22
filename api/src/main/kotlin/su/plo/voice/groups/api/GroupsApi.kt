@@ -1,6 +1,9 @@
 package su.plo.voice.groups.api
 
 import su.plo.voice.api.server.player.VoicePlayer
+import su.plo.voice.groups.api.event.GroupInviteRemovedEvent
+import su.plo.voice.groups.api.event.InviteRemoveReason
+import su.plo.voice.groups.api.result.DeclineInviteResult
 import su.plo.voice.groups.api.result.DeleteResult
 import su.plo.voice.groups.api.result.JoinResult
 import su.plo.voice.groups.api.result.LeaveResult
@@ -27,6 +30,20 @@ interface GroupsApi {
      */
     fun getPlayerGroup(playerId: UUID): Group?
 
+    /**
+     * Returns the pending invites of the player.
+     *
+     * @param playerId the player UUID.
+     */
+    fun getPlayerInvites(playerId: UUID): Collection<GroupInvite>
+
+    /**
+     * Declines [invite]. Fires [GroupInviteRemovedEvent] with [InviteRemoveReason.DECLINED].
+     *
+     * @param invite the invite to decline.
+     */
+    fun declineInvite(invite: GroupInvite): DeclineInviteResult
+
     /** Returns a builder for a new group. */
     fun createGroup(): GroupCreateBuilder
 
@@ -43,7 +60,7 @@ interface GroupsApi {
      *
      * @param player the player to add.
      * @param group the group to join.
-     * @param password the password, or `null` if not provided.
+     * @param password the password, or `null` if not provided. Not checked if the player has a pending invite to [group].
      * @throws IllegalStateException if [group] is deleted.
      */
     fun join(

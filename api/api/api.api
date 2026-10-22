@@ -1,7 +1,9 @@
 public abstract interface class su/plo/voice/groups/api/Group {
 	public abstract fun ban (Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/result/BanResult;
+	public abstract fun cancelInvite (Ljava/util/UUID;)Lsu/plo/voice/groups/api/result/CancelInviteResult;
 	public abstract fun getBannedPlayers ()Ljava/util/List;
 	public abstract fun getId ()Ljava/util/UUID;
+	public abstract fun getInvites ()Ljava/util/Collection;
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getOnlinePlayerCount ()I
 	public abstract fun getOnlinePlayers ()Ljava/util/Collection;
@@ -39,12 +41,21 @@ public final class su/plo/voice/groups/api/GroupCreateBuilder {
 	public final fun persistent (Z)Lsu/plo/voice/groups/api/GroupCreateBuilder;
 }
 
+public abstract interface class su/plo/voice/groups/api/GroupInvite {
+	public abstract fun getGroupId ()Ljava/util/UUID;
+	public abstract fun getId ()Ljava/util/UUID;
+	public abstract fun getInviter ()Lsu/plo/slib/api/entity/player/McGameProfile;
+	public abstract fun getTarget ()Lsu/plo/slib/api/entity/player/McGameProfile;
+}
+
 public abstract interface class su/plo/voice/groups/api/GroupsApi {
 	public abstract fun createGroup ()Lsu/plo/voice/groups/api/GroupCreateBuilder;
+	public abstract fun declineInvite (Lsu/plo/voice/groups/api/GroupInvite;)Lsu/plo/voice/groups/api/result/DeclineInviteResult;
 	public abstract fun deleteGroup (Lsu/plo/voice/groups/api/Group;)Lsu/plo/voice/groups/api/result/DeleteResult;
 	public abstract fun getGroup (Ljava/util/UUID;)Lsu/plo/voice/groups/api/Group;
 	public abstract fun getGroups ()Ljava/util/Collection;
 	public abstract fun getPlayerGroup (Ljava/util/UUID;)Lsu/plo/voice/groups/api/Group;
+	public abstract fun getPlayerInvites (Ljava/util/UUID;)Ljava/util/Collection;
 	public abstract fun join (Lsu/plo/voice/api/server/player/VoicePlayer;Lsu/plo/voice/groups/api/Group;Ljava/lang/String;)Lsu/plo/voice/groups/api/result/JoinResult;
 	public abstract fun leave (Ljava/util/UUID;)Lsu/plo/voice/groups/api/result/LeaveResult;
 }
@@ -71,6 +82,14 @@ public final class su/plo/voice/groups/api/event/GroupInviteEvent : su/plo/slib/
 
 public abstract interface class su/plo/voice/groups/api/event/GroupInviteEvent$Callback {
 	public abstract fun onGroupInvite (Lsu/plo/voice/groups/api/Group;Lsu/plo/voice/api/server/player/VoicePlayer;Lsu/plo/voice/api/server/player/VoicePlayer;)V
+}
+
+public final class su/plo/voice/groups/api/event/GroupInviteRemovedEvent : su/plo/slib/api/event/GlobalEvent {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/event/GroupInviteRemovedEvent;
+}
+
+public abstract interface class su/plo/voice/groups/api/event/GroupInviteRemovedEvent$Callback {
+	public abstract fun onGroupInviteRemoved (Lsu/plo/voice/groups/api/Group;Lsu/plo/voice/groups/api/GroupInvite;Lsu/plo/voice/groups/api/event/InviteRemoveReason;)V
 }
 
 public final class su/plo/voice/groups/api/event/GroupNameChangedEvent : su/plo/slib/api/event/GlobalEvent {
@@ -111,6 +130,18 @@ public final class su/plo/voice/groups/api/event/GroupPersistentChangedEvent : s
 
 public abstract interface class su/plo/voice/groups/api/event/GroupPersistentChangedEvent$Callback {
 	public abstract fun onGroupPersistentChanged (Lsu/plo/voice/groups/api/Group;Z)V
+}
+
+public final class su/plo/voice/groups/api/event/InviteRemoveReason : java/lang/Enum {
+	public static final field ACCEPTED Lsu/plo/voice/groups/api/event/InviteRemoveReason;
+	public static final field BANNED Lsu/plo/voice/groups/api/event/InviteRemoveReason;
+	public static final field CANCELLED Lsu/plo/voice/groups/api/event/InviteRemoveReason;
+	public static final field DECLINED Lsu/plo/voice/groups/api/event/InviteRemoveReason;
+	public static final field GROUP_DELETED Lsu/plo/voice/groups/api/event/InviteRemoveReason;
+	public static final field PLAYER_QUIT Lsu/plo/voice/groups/api/event/InviteRemoveReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lsu/plo/voice/groups/api/event/InviteRemoveReason;
+	public static fun values ()[Lsu/plo/voice/groups/api/event/InviteRemoveReason;
 }
 
 public final class su/plo/voice/groups/api/event/LeaveReason : java/lang/Enum {
@@ -163,6 +194,17 @@ public final class su/plo/voice/groups/api/result/BanResult$Success : su/plo/voi
 	public static final field INSTANCE Lsu/plo/voice/groups/api/result/BanResult$Success;
 }
 
+public abstract class su/plo/voice/groups/api/result/CancelInviteResult {
+}
+
+public final class su/plo/voice/groups/api/result/CancelInviteResult$NotInvited : su/plo/voice/groups/api/result/CancelInviteResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/CancelInviteResult$NotInvited;
+}
+
+public final class su/plo/voice/groups/api/result/CancelInviteResult$Success : su/plo/voice/groups/api/result/CancelInviteResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/CancelInviteResult$Success;
+}
+
 public abstract class su/plo/voice/groups/api/result/CreateResult {
 }
 
@@ -188,6 +230,17 @@ public final class su/plo/voice/groups/api/result/CreateResult$Success : su/plo/
 	public final fun getGroup ()Lsu/plo/voice/groups/api/Group;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class su/plo/voice/groups/api/result/DeclineInviteResult {
+}
+
+public final class su/plo/voice/groups/api/result/DeclineInviteResult$NotFound : su/plo/voice/groups/api/result/DeclineInviteResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/DeclineInviteResult$NotFound;
+}
+
+public final class su/plo/voice/groups/api/result/DeclineInviteResult$Success : su/plo/voice/groups/api/result/DeclineInviteResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/DeclineInviteResult$Success;
 }
 
 public abstract class su/plo/voice/groups/api/result/DeleteResult {

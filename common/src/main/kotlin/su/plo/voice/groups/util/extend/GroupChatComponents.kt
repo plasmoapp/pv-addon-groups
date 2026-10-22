@@ -22,7 +22,6 @@ fun Group.notifyPlayersTranslatable(
 }
 
 private val Group.joinCommand get() = "/groups join $id"
-private val Group.joinCommandWithPassword get() = "/groups join $id $password"
 private const val LEAVE_COMMAND = "/groups leave"
 
 fun Group.joinButton(): McTextComponent =
@@ -34,18 +33,11 @@ fun Group.joinButton(): McTextComponent =
         }.hoverEvent(McTextHoverEvent.showText(McTextComponent.literal(joinCommand)))
     }
 
-fun Group.joinButtonWithPassword(): McTextComponent =
-    McTextComponent.translatable("pv.addon.groups.button.join").let {
-        if (password == null) {
-            it
-                .clickEvent(McTextClickEvent.runCommand(joinCommand))
-                .hoverEvent(McTextHoverEvent.showText(McTextComponent.literal(joinCommand)))
-        } else {
-            it
-                .clickEvent(McTextClickEvent.runCommand(joinCommandWithPassword))
-                .hoverEvent(McTextHoverEvent.showText(McTextComponent.literal("$joinCommand *******")))
-        }
-    }
+fun Group.inviteJoinButton(): McTextComponent =
+    McTextComponent
+        .translatable("pv.addon.groups.button.join")
+        .clickEvent(McTextClickEvent.runCommand(joinCommand))
+        .hoverEvent(McTextHoverEvent.showText(McTextComponent.literal(joinCommand)))
 
 fun Group.inlineChatComponent(): McTextComponent = McTextComponent.translatable("pv.addon.groups.format.group_name", name)
 

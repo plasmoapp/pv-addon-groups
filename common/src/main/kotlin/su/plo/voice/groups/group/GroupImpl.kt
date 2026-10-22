@@ -6,7 +6,9 @@ import su.plo.slib.api.entity.player.McGameProfile
 import su.plo.voice.api.server.audio.line.ServerPlayerSet
 import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.api.Group
+import su.plo.voice.groups.api.GroupInvite
 import su.plo.voice.groups.api.result.BanResult
+import su.plo.voice.groups.api.result.CancelInviteResult
 import su.plo.voice.groups.api.result.InviteResult
 import su.plo.voice.groups.api.result.KickResult
 import su.plo.voice.groups.api.result.SetNameResult
@@ -16,6 +18,7 @@ import su.plo.voice.groups.api.result.SetPersistentResult
 import su.plo.voice.groups.api.result.TransferResult
 import su.plo.voice.groups.api.result.UnbanResult
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 class GroupImpl(
@@ -32,6 +35,8 @@ class GroupImpl(
     Group {
     internal var permissionsFilterInternal: HashSet<String> = HashSet()
 
+    private val invitesByTarget: MutableMap<UUID, GroupInviteImpl> = ConcurrentHashMap()
+
     override val isDeleted: Boolean
         get() = manager.groupsById[id] !== this
 
@@ -40,6 +45,9 @@ class GroupImpl(
 
     override val onlinePlayers: Collection<VoicePlayer>
         get() = playerSet.players
+
+    override val invites: Collection<GroupInvite>
+        get() = invitesByTarget.values
 
     override val playerCount: Int
         get() = playersIds.size
@@ -67,13 +75,27 @@ class GroupImpl(
 
     fun onPlayerQuit(playerUuid: UUID): Boolean = playerSet.removePlayer(playerUuid)
 
-    override fun isBanned(playerUuid: UUID): Boolean = bannedPlayers.any { it.id == playerUuid }
-
     fun banPlayer(player: VoicePlayer) {
         bannedPlayers.add(player.instance.gameProfile)
     }
 
     fun unbanPlayer(player: McGameProfile): Boolean = bannedPlayers.removeIf { it.id == player.id }
+
+    fun getInvite(playerId: UUID): GroupInviteImpl? = invitesByTarget[playerId]
+
+    fun addInvite(
+        inviter: McGameProfile,
+        target: McGameProfile,
+    ): GroupInviteImpl =
+        invitesByTarget.computeIfAbsent(target.id) {
+            GroupInviteImpl(UUID.randomUUID(), id, inviter, target)
+        }
+
+    fun removeInvite(playerId: UUID): GroupInviteImpl? = invitesByTarget.remove(playerId)
+
+    fun removeInvite(invite: GroupInvite): Boolean = invitesByTarget.entries.removeIf { it.value.id == invite.id }
+
+    override fun isBanned(playerUuid: UUID): Boolean = bannedPlayers.any { it.id == playerUuid }
 
     override fun isOwner(player: VoicePlayer): Boolean = owner?.id == player.instance.uuid
 
@@ -92,6 +114,8 @@ class GroupImpl(
         inviter: VoicePlayer,
         target: VoicePlayer,
     ): InviteResult = manager.invite(this, inviter, target)
+
+    override fun cancelInvite(playerId: UUID): CancelInviteResult = manager.cancelInvite(this, playerId)
 
     override fun transferOwnership(target: VoicePlayer): TransferResult = manager.transferOwnership(this, target)
 

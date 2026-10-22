@@ -5,7 +5,10 @@ import su.plo.slib.api.command.McCommandSource
 import su.plo.slib.api.entity.player.McGameProfile
 import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.api.event.GroupInviteEvent
+import su.plo.voice.groups.api.event.GroupInviteRemovedEvent
+import su.plo.voice.groups.api.event.InviteRemoveReason
 import su.plo.voice.groups.api.result.BanResult
+import su.plo.voice.groups.api.result.CancelInviteResult
 import su.plo.voice.groups.api.result.InviteResult
 import su.plo.voice.groups.api.result.KickResult
 import su.plo.voice.groups.api.result.SetNameResult
@@ -48,6 +51,9 @@ interface Group {
 
     /** Banned players. */
     val bannedPlayers: List<McGameProfile>
+
+    /** Pending invites to the group. */
+    val invites: Collection<GroupInvite>
 
     /** Number of members, including offline ones. */
     val playerCount: Int
@@ -101,7 +107,9 @@ interface Group {
     fun unban(target: McGameProfile): UnbanResult
 
     /**
-     * Fires [GroupInviteEvent] if [target] can be invited. Doesn't notify [target].
+     * Adds a pending invite for [target] and fires [GroupInviteEvent]. Doesn't notify [target].
+     *
+     * Re-inviting keeps the existing invite, but fires [GroupInviteEvent] again.
      *
      * @param inviter the inviting player.
      * @param target the invited player.
@@ -110,6 +118,13 @@ interface Group {
         inviter: VoicePlayer,
         target: VoicePlayer,
     ): InviteResult
+
+    /**
+     * Cancels the pending invite of the player. Fires [GroupInviteRemovedEvent] with [InviteRemoveReason.CANCELLED].
+     *
+     * @param playerId the invited player UUID.
+     */
+    fun cancelInvite(playerId: UUID): CancelInviteResult
 
     /**
      * Transfers ownership to [target], who must be a member.

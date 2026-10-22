@@ -8,22 +8,27 @@ import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.GroupsConfig
 import su.plo.voice.groups.api.Group
 import su.plo.voice.groups.api.GroupCreateBuilder
+import su.plo.voice.groups.api.GroupInvite
 import su.plo.voice.groups.api.GroupsApi
 import su.plo.voice.groups.api.event.GroupCreatedEvent
 import su.plo.voice.groups.api.event.GroupDeletedEvent
 import su.plo.voice.groups.api.event.GroupInviteEvent
+import su.plo.voice.groups.api.event.GroupInviteRemovedEvent
 import su.plo.voice.groups.api.event.GroupNameChangedEvent
 import su.plo.voice.groups.api.event.GroupOwnerChangedEvent
 import su.plo.voice.groups.api.event.GroupPasswordChangedEvent
 import su.plo.voice.groups.api.event.GroupPermissionsChangedEvent
 import su.plo.voice.groups.api.event.GroupPersistentChangedEvent
+import su.plo.voice.groups.api.event.InviteRemoveReason
 import su.plo.voice.groups.api.event.LeaveReason
 import su.plo.voice.groups.api.event.PlayerBannedFromGroupEvent
 import su.plo.voice.groups.api.event.PlayerJoinedGroupEvent
 import su.plo.voice.groups.api.event.PlayerLeftGroupEvent
 import su.plo.voice.groups.api.event.PlayerUnbannedFromGroupEvent
 import su.plo.voice.groups.api.result.BanResult
+import su.plo.voice.groups.api.result.CancelInviteResult
 import su.plo.voice.groups.api.result.CreateResult
+import su.plo.voice.groups.api.result.DeclineInviteResult
 import su.plo.voice.groups.api.result.DeleteResult
 import su.plo.voice.groups.api.result.InviteResult
 import su.plo.voice.groups.api.result.JoinResult
@@ -53,6 +58,8 @@ class GroupsManager(
     override fun getGroup(id: UUID): Group? = groupsById[id]
 
     override fun getPlayerGroup(playerId: UUID): Group? = groupByPlayer[playerId]
+
+    override fun getPlayerInvites(playerId: UUID): Collection<GroupInvite> = groupsById.values.mapNotNull { it.getInvite(playerId) }
 
     override fun createGroup(): GroupCreateBuilder = GroupCreateBuilder(::createGroupInternal)
 
@@ -112,7 +119,7 @@ class GroupsManager(
         if (group.isBanned(player.instance.uuid)) return JoinResult.Banned
         if (!group.hasPermission(player.instance)) return JoinResult.NoPermission
 
-        if (group.password != null) {
+        if (group.password != null && group.getInvite(player.instance.uuid) == null) {
             if (password == null) return JoinResult.PasswordRequired
             if (group.password != password) return JoinResult.WrongPassword
         }
@@ -137,6 +144,7 @@ class GroupsManager(
         groupByPlayer[player.instance.uuid] = group
         group.addPlayer(player)
         sourceLine.playerSetManager?.setPlayerSet(player, group.playerSet)
+        removeInvite(group, player.instance.uuid, InviteRemoveReason.ACCEPTED)
 
         PlayerJoinedGroupEvent.invoker.onPlayerJoinedGroup(group, player)
 
@@ -164,6 +172,7 @@ class GroupsManager(
         val wasMember = group.playersIds.contains(target.instance.uuid)
         if (wasMember) leaveInternal(target.instance.uuid, LeaveReason.BANNED)
         group.banPlayer(target)
+        removeInvite(group, target.instance.uuid, InviteRemoveReason.BANNED)
 
         PlayerBannedFromGroupEvent.invoker.onPlayerBannedFromGroup(group, target, wasMember)
         return BanResult.Success
@@ -191,8 +200,43 @@ class GroupsManager(
         if (group.isBanned(target.instance.uuid)) return InviteResult.Banned
         if (groupByPlayer[target.instance.uuid]?.id == group.id) return InviteResult.AlreadyInGroup
 
+        group.addInvite(inviter.instance.gameProfile, target.instance.gameProfile)
         GroupInviteEvent.invoker.onGroupInvite(group, inviter, target)
         return InviteResult.Success
+    }
+
+    fun cancelInvite(
+        group: GroupImpl,
+        playerId: UUID,
+    ): CancelInviteResult {
+        checkNotDeleted(group)
+        if (!removeInvite(group, playerId, InviteRemoveReason.CANCELLED)) return CancelInviteResult.NotInvited
+        return CancelInviteResult.Success
+    }
+
+    override fun declineInvite(invite: GroupInvite): DeclineInviteResult {
+        val group = groupsById[invite.groupId] ?: return DeclineInviteResult.NotFound
+        if (!group.removeInvite(invite)) return DeclineInviteResult.NotFound
+
+        GroupInviteRemovedEvent.invoker.onGroupInviteRemoved(group, invite, InviteRemoveReason.DECLINED)
+        return DeclineInviteResult.Success
+    }
+
+    fun removePlayerInvites(
+        playerId: UUID,
+        reason: InviteRemoveReason,
+    ) {
+        groupsById.values.forEach { removeInvite(it, playerId, reason) }
+    }
+
+    private fun removeInvite(
+        group: GroupImpl,
+        playerId: UUID,
+        reason: InviteRemoveReason,
+    ): Boolean {
+        val invite = group.removeInvite(playerId) ?: return false
+        GroupInviteRemovedEvent.invoker.onGroupInviteRemoved(group, invite, reason)
+        return true
     }
 
     override fun deleteGroup(group: Group): DeleteResult {
@@ -204,6 +248,7 @@ class GroupsManager(
     internal fun deleteGroupInternal(group: GroupImpl) {
         if (!groupsById.remove(group.id, group)) return
         group.playersIds.toList().forEach { leaveInternal(it, LeaveReason.GROUP_DELETED) }
+        group.invites.toList().forEach { removeInvite(group, it.target.id, InviteRemoveReason.GROUP_DELETED) }
         GroupDeletedEvent.invoker.onGroupDeleted(group)
     }
 

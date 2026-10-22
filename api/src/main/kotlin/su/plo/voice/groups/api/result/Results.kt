@@ -64,6 +64,18 @@ sealed class InviteResult {
     object Self : InviteResult()
 }
 
+sealed class CancelInviteResult {
+    object Success : CancelInviteResult()
+
+    object NotInvited : CancelInviteResult()
+}
+
+sealed class DeclineInviteResult {
+    object Success : DeclineInviteResult()
+
+    object NotFound : DeclineInviteResult()
+}
+
 sealed class DeleteResult {
     object Success : DeleteResult()
 }
