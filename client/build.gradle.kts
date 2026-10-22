@@ -33,7 +33,7 @@ modstitch {
 
         configureLoom {
             mods {
-                maybeCreate("pv_addon_groups_client").apply {
+                maybeCreate("pv_addon_groups").apply {
                     sourceSet(sourceSets.main.get())
                     configuration(shaded)
                 }
@@ -52,11 +52,23 @@ modstitch {
         replacementProperties.put("plasmovoice_version", plasmoVoiceVersion)
         replacementProperties.put("minecraft_range", property("minecraft_range") as String)
     }
+
+    mixin {
+        addMixinsToModManifest = true
+
+        configs.register("pv_addon_groups") {
+            side = CLIENT
+        }
+    }
 }
 
-val nestedJarMods = mutableListOf<String>()
+java {
+    toolchain.languageVersion = modstitch.javaVersion.map(JavaLanguageVersion::of)
+}
 
-fun DependencyHandler.modLocalRuntimeNested(notation: String) {
+val nestedJarMods = mutableListOf<Any>()
+
+fun DependencyHandler.modLocalRuntimeNested(notation: Any) {
     add("modstitchModLocalRuntime", notation)
     nestedJarMods += notation
 }
@@ -142,7 +154,7 @@ dependencies {
     modstitchModLocalRuntime(rootProject.libs.kotlinx.json)
     modstitchModLocalRuntime(rootProject.libs.kotlinx.coroutines)
 
-    modstitchModLocalRuntime(files(unpackNestedJars()))
+    modstitchModLocalRuntime(files(provider { unpackNestedJars() }))
 }
 
 buildConfig {
@@ -166,8 +178,10 @@ tasks {
         relocate("com.ensarsarajcic.kotlinx.serialization.msgpack", "su.plo.voice.groups.libs.msgpack")
     }
 
-    named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
-        dependsOn(shadowJar)
-        inputFile.set(shadowJar.flatMap { it.archiveFile })
+    if (modstitch.platform.isLoomRemap) {
+        named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
+            dependsOn(shadowJar)
+            inputFile.set(shadowJar.flatMap { it.archiveFile })
+        }
     }
 }
