@@ -34,20 +34,6 @@ class MainPage : GroupsPage() {
         tab.refresh()
     }
 
-    private fun reload() {
-        if (!state.capabilities.canBrowse) return
-
-        loading = true
-        tab.launch({ browse() }, onFailure = { loading = false }) { groups ->
-            loading = false
-            this.groups =
-                groups.sortedWith(
-                    compareByDescending<GroupSummary> { it.onlineCount }.thenBy { it.name.lowercase() },
-                )
-            tab.refresh()
-        }
-    }
-
     override fun init() {
         val current = state.current
         current?.let { addCurrentGroup(it) }
@@ -74,6 +60,20 @@ class MainPage : GroupsPage() {
         val others = groups.filter { it.id != current?.summary?.id }
         if (others.isEmpty()) addHint(tr("main.no_groups"))
         others.forEach { addGroup(it) }
+    }
+
+    private fun reload() {
+        if (!state.capabilities.canBrowse) return
+
+        loading = true
+        tab.launch({ browse() }, onFailure = { loading = false }) { groups ->
+            loading = false
+            this.groups =
+                groups.sortedWith(
+                    compareByDescending<GroupSummary> { it.onlineCount }.thenBy { it.name.lowercase() },
+                )
+            tab.refresh()
+        }
     }
 
     private fun addCurrentGroup(group: GroupDetails) {

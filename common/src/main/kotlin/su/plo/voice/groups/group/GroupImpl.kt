@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 class GroupImpl(
-    internal val manager: GroupsManager,
+    private val manager: GroupsManager,
     val playerSet: ServerPlayerSet,
     id: UUID,
     name: String,
@@ -33,7 +33,7 @@ class GroupImpl(
     owner: McGameProfile? = null,
 ) : GroupData(id, name, password, persistent, playersIds, bannedPlayers, owner),
     Group {
-    internal var permissionsFilterInternal: HashSet<String> = HashSet()
+    var permissionsFilterInternal: HashSet<String> = HashSet()
 
     private val invitesByTarget: MutableMap<UUID, GroupInviteImpl> = ConcurrentHashMap()
 
@@ -54,6 +54,38 @@ class GroupImpl(
 
     override val onlinePlayerCount: Int
         get() = onlinePlayers.size
+
+    override fun isBanned(playerUuid: UUID): Boolean = bannedPlayers.any { it.id == playerUuid }
+
+    override fun isOwner(player: VoicePlayer): Boolean = owner?.id == player.instance.uuid
+
+    override fun hasPermission(source: McCommandSource): Boolean {
+        if (permissionsFilterInternal.isEmpty()) return true
+        return permissionsFilterInternal.any { source.hasPermission(it) }
+    }
+
+    override fun kick(target: VoicePlayer): KickResult = manager.kick(this, target)
+
+    override fun ban(target: VoicePlayer): BanResult = manager.ban(this, target)
+
+    override fun unban(target: McGameProfile): UnbanResult = manager.unban(this, target)
+
+    override fun invite(
+        inviter: VoicePlayer,
+        target: VoicePlayer,
+    ): InviteResult = manager.invite(this, inviter, target)
+
+    override fun cancelInvite(playerId: UUID): CancelInviteResult = manager.cancelInvite(this, playerId)
+
+    override fun transferOwnership(target: VoicePlayer): TransferResult = manager.transferOwnership(this, target)
+
+    override fun setName(name: String): SetNameResult = manager.setName(this, name)
+
+    override fun setPassword(password: String?): SetPasswordResult = manager.setPassword(this, password)
+
+    override fun setPermissions(permissions: Set<String>?): SetPermissionsResult = manager.setPermissions(this, permissions)
+
+    override fun setPersistent(persistent: Boolean): SetPersistentResult = manager.setPersistent(this, persistent)
 
     fun addPlayer(player: VoicePlayer) {
         playersIds.add(player.instance.uuid)
@@ -94,36 +126,4 @@ class GroupImpl(
     fun removeInvite(playerId: UUID): GroupInviteImpl? = invitesByTarget.remove(playerId)
 
     fun removeInvite(invite: GroupInvite): Boolean = invitesByTarget.entries.removeIf { it.value.id == invite.id }
-
-    override fun isBanned(playerUuid: UUID): Boolean = bannedPlayers.any { it.id == playerUuid }
-
-    override fun isOwner(player: VoicePlayer): Boolean = owner?.id == player.instance.uuid
-
-    override fun hasPermission(source: McCommandSource): Boolean {
-        if (permissionsFilterInternal.isEmpty()) return true
-        return permissionsFilterInternal.any { source.hasPermission(it) }
-    }
-
-    override fun kick(target: VoicePlayer): KickResult = manager.kick(this, target)
-
-    override fun ban(target: VoicePlayer): BanResult = manager.ban(this, target)
-
-    override fun unban(target: McGameProfile): UnbanResult = manager.unban(this, target)
-
-    override fun invite(
-        inviter: VoicePlayer,
-        target: VoicePlayer,
-    ): InviteResult = manager.invite(this, inviter, target)
-
-    override fun cancelInvite(playerId: UUID): CancelInviteResult = manager.cancelInvite(this, playerId)
-
-    override fun transferOwnership(target: VoicePlayer): TransferResult = manager.transferOwnership(this, target)
-
-    override fun setName(name: String): SetNameResult = manager.setName(this, name)
-
-    override fun setPassword(password: String?): SetPasswordResult = manager.setPassword(this, password)
-
-    override fun setPermissions(permissions: Set<String>?): SetPermissionsResult = manager.setPermissions(this, permissions)
-
-    override fun setPersistent(persistent: Boolean): SetPersistentResult = manager.setPersistent(this, persistent)
 }

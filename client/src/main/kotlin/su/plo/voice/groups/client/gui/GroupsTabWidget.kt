@@ -529,22 +529,6 @@ class GroupsTabWidget(
             wrap(containerWidth)
         }
 
-        private fun wrap(entryWidth: Int) {
-            if (entryWidth == wrappedWidth) return
-            wrappedWidth = entryWidth
-
-            lines =
-                messages.flatMap { message ->
-                    TextKt.getStringSplitToWidth(
-                        RenderUtil.getFormattedString(message),
-                        (entryWidth - MESSAGE_PADDING * 2).toFloat(),
-                        true,
-                        true,
-                    )
-                }
-            setHeight(lines.size * lineHeight + 12)
-        }
-
         override fun updatePosition(
             context: GuiRenderContext,
             index: Int,
@@ -575,6 +559,22 @@ class GroupsTabWidget(
                 val lineX = x + (entryWidth - RenderUtil.getStringWidth(value)) / 2
                 context.drawString(value, lineX, y + 7 + line * lineHeight, Colors.WHITE)
             }
+        }
+
+        private fun wrap(entryWidth: Int) {
+            if (entryWidth == wrappedWidth) return
+            wrappedWidth = entryWidth
+
+            lines =
+                messages.flatMap { message ->
+                    TextKt.getStringSplitToWidth(
+                        RenderUtil.getFormattedString(message),
+                        (entryWidth - MESSAGE_PADDING * 2).toFloat(),
+                        true,
+                        true,
+                    )
+                }
+            setHeight(lines.size * lineHeight + 12)
         }
     }
 

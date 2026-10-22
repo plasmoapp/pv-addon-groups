@@ -39,33 +39,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.milliseconds
 
 class MockGroupsService : GroupsService {
-    private class Player(
-        val id: UUID,
-        val name: String,
-        var online: Boolean = true,
-    ) {
-        constructor(name: String, online: Boolean = true) :
-            this(UUID.nameUUIDFromBytes("OfflinePlayer:$name".toByteArray()), name, online)
-    }
-
-    private class Group(
-        var name: String,
-        var owner: UUID?,
-        val members: MutableList<UUID>,
-        var password: String? = null,
-        var persistent: Boolean = false,
-        val banned: MutableList<UUID> = mutableListOf(),
-        val permissions: MutableSet<String> = mutableSetOf(),
-        val sentInvites: MutableList<UUID> = mutableListOf(),
-        val id: UUID = UUID.randomUUID(),
-    )
-
-    private class Invite(
-        val group: Group,
-        val from: UUID,
-        val id: UUID = UUID.randomUUID(),
-    )
-
     private val lock = Any()
     private val listeners = CopyOnWriteArrayList<GroupsStateListener>()
 
@@ -91,17 +64,6 @@ class MockGroupsService : GroupsService {
         )
 
     private val players = mutableMapOf<UUID, Player>()
-
-    private fun player(
-        name: String,
-        online: Boolean = true,
-    ): Player = Player(name, online).also { players[it.id] = it }
-
-    private fun player(
-        id: String,
-        name: String,
-        online: Boolean = true,
-    ): Player = Player(UUID.fromString(id), name, online).also { players[it.id] = it }
 
     private val groups = mutableListOf<Group>()
     private val invites = mutableListOf<Invite>()
@@ -378,6 +340,17 @@ class MockGroupsService : GroupsService {
             Success
         }
 
+    private fun player(
+        name: String,
+        online: Boolean = true,
+    ): Player = Player(name, online).also { players[it.id] = it }
+
+    private fun player(
+        id: String,
+        name: String,
+        online: Boolean = true,
+    ): Player = Player(UUID.fromString(id), name, online).also { players[it.id] = it }
+
     private suspend fun <R : ActionResult> mutate(block: () -> R): R {
         delay(LATENCY)
 
@@ -498,6 +471,33 @@ class MockGroupsService : GroupsService {
                 maxNameLength = MAX_NAME_LENGTH,
             ),
         )
+
+    private class Player(
+        val id: UUID,
+        val name: String,
+        var online: Boolean = true,
+    ) {
+        constructor(name: String, online: Boolean = true) :
+            this(UUID.nameUUIDFromBytes("OfflinePlayer:$name".toByteArray()), name, online)
+    }
+
+    private class Group(
+        var name: String,
+        var owner: UUID?,
+        val members: MutableList<UUID>,
+        var password: String? = null,
+        var persistent: Boolean = false,
+        val banned: MutableList<UUID> = mutableListOf(),
+        val permissions: MutableSet<String> = mutableSetOf(),
+        val sentInvites: MutableList<UUID> = mutableListOf(),
+        val id: UUID = UUID.randomUUID(),
+    )
+
+    private class Invite(
+        val group: Group,
+        val from: UUID,
+        val id: UUID = UUID.randomUUID(),
+    )
 
     private companion object {
         val LATENCY = 200L.milliseconds

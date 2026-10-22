@@ -168,6 +168,8 @@ abstract class GroupsPage {
         return StatusLabel(RenderUtil.getTextWidth(label)) { label.takeIf { isLoading() } }
     }
 
+    protected fun fitWidth(vararg labels: McTextComponent): Int = labels.maxOf { RenderUtil.getTextWidth(it) } + BUTTON_PADDING * 2
+
     private fun row(vararg widgets: GuiAbstractWidget) =
         tab.FullWidthEntry(
             CompositeRowWidget(
@@ -179,8 +181,6 @@ abstract class GroupsPage {
                 *widgets,
             ),
         )
-
-    protected fun fitWidth(vararg labels: McTextComponent): Int = labels.maxOf { RenderUtil.getTextWidth(it) } + BUTTON_PADDING * 2
 
     private fun tooltip(value: McTextComponent?): Button.OnTooltip =
         if (value == null) {

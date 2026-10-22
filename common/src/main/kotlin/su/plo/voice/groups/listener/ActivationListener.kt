@@ -32,7 +32,7 @@ class ActivationListener(
         return ServerActivation.Result.IGNORED
     }
 
-    fun onActivationEnd(
+    private fun onActivationEnd(
         player: VoicePlayer,
         packet: PlayerAudioEndPacket,
     ): ServerActivation.Result {

@@ -8,6 +8,9 @@ import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.api.Group
 import su.plo.voice.groups.command.GroupsCommands
 
+private val Group.joinCommand get() = "/groups join $id"
+private const val LEAVE_COMMAND = "/groups leave"
+
 fun Group.notifyPlayersTranslatable(
     key: String,
     vararg args: Any,
@@ -20,9 +23,6 @@ fun Group.notifyPlayersTranslatable(
             .append(McTextComponent.translatable(key, *args))
     onlinePlayers.forEach { it.instance.sendMessage(component) }
 }
-
-private val Group.joinCommand get() = "/groups join $id"
-private const val LEAVE_COMMAND = "/groups leave"
 
 fun Group.joinButton(): McTextComponent =
     McTextComponent.translatable("pv.addon.groups.button.join").let {
@@ -48,12 +48,6 @@ fun Group.leaveButton(): McTextComponent =
         .hoverEvent(McTextHoverEvent.showText(McTextComponent.literal(LEAVE_COMMAND)))
         .append(McTextComponent.literal("  "))
         .append(inviteButton())
-
-private fun inviteButton(): McTextComponent =
-    McTextComponent
-        .translatable("pv.addon.groups.button.invite")
-        .clickEvent(McTextClickEvent.suggestCommand("/groups invite "))
-        .hoverEvent(McTextHoverEvent.showText(McTextComponent.literal("/groups invite")))
 
 fun Group.asTextComponents(
     commands: GroupsCommands,
@@ -107,3 +101,9 @@ fun Group.asTextComponents(
             ?.let { commands.groupManager.getPlayerGroup(it.instance.uuid) }
             .let { if (id == it?.id) leaveButton() else joinButton() },
     )
+
+private fun inviteButton(): McTextComponent =
+    McTextComponent
+        .translatable("pv.addon.groups.button.invite")
+        .clickEvent(McTextClickEvent.suggestCommand("/groups invite "))
+        .hoverEvent(McTextHoverEvent.showText(McTextComponent.literal("/groups invite")))

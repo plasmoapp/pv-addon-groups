@@ -33,6 +33,21 @@ class ChannelClient(
 ) : ModClientChannelHandler {
     val pending: MutableMap<String, Channel<ByteArray>> = ConcurrentHashMap()
 
+    override fun receive(
+        payload: ByteArray,
+        connection: Connection,
+    ) {
+        val message =
+            try {
+                channelMsgPack.decodeFromByteArray<ChannelMessage>(payload)
+            } catch (_: Throwable) {
+                return
+            }
+
+        val requestId = message.requestId ?: return
+        pending[requestId]?.trySend(message.payload)
+    }
+
     suspend inline fun <reified Request : ChannelRequest<Response>, reified Response> request(
         request: Request,
         timeout: Duration = DEFAULT_TIMEOUT,
@@ -59,21 +74,6 @@ class ChannelClient(
         val connection = Minecraft.getInstance().connection?.connection ?: error("Not connected")
 
         clientChannelManager.sendPacket(channelKey, channelMsgPack.encodeToByteArray(message), connection)
-    }
-
-    override fun receive(
-        payload: ByteArray,
-        connection: Connection,
-    ) {
-        val message =
-            try {
-                channelMsgPack.decodeFromByteArray<ChannelMessage>(payload)
-            } catch (_: Throwable) {
-                return
-            }
-
-        val requestId = message.requestId ?: return
-        pending[requestId]?.trySend(message.payload)
     }
 
     fun reset() {
