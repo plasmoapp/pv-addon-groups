@@ -7,20 +7,27 @@ import su.plo.voice.groups.protocol.ActionResult
 import su.plo.voice.groups.protocol.AlreadyInGroup
 import su.plo.voice.groups.protocol.Banned
 import su.plo.voice.groups.protocol.CreateResult
+import su.plo.voice.groups.protocol.DeclineInviteResult
 import su.plo.voice.groups.protocol.GroupAction
 import su.plo.voice.groups.protocol.GroupDetails
+import su.plo.voice.groups.protocol.GroupInvite
 import su.plo.voice.groups.protocol.GroupNotFound
 import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupSummary
 import su.plo.voice.groups.protocol.GroupsCapabilities
 import su.plo.voice.groups.protocol.GroupsState
+import su.plo.voice.groups.protocol.InviteResult
 import su.plo.voice.groups.protocol.JoinResult
 import su.plo.voice.groups.protocol.JoinState
 import su.plo.voice.groups.protocol.LeaveResult
+import su.plo.voice.groups.protocol.MemberAction
+import su.plo.voice.groups.protocol.MemberActionResult
 import su.plo.voice.groups.protocol.NameLengthInvalid
 import su.plo.voice.groups.protocol.NoPermission
 import su.plo.voice.groups.protocol.NotInGroup
 import su.plo.voice.groups.protocol.PasswordRequired
+import su.plo.voice.groups.protocol.PlayerNotFound
+import su.plo.voice.groups.protocol.Self
 import su.plo.voice.groups.protocol.Success
 import su.plo.voice.groups.protocol.WrongPassword
 import java.util.UUID
@@ -45,6 +52,13 @@ class MockGroupsService : GroupsService {
         var persistent: Boolean = false,
         val banned: MutableList<UUID> = mutableListOf(),
         val permissions: MutableSet<String> = mutableSetOf(),
+        val sentInvites: MutableList<UUID> = mutableListOf(),
+        val id: UUID = UUID.randomUUID(),
+    )
+
+    private class Invite(
+        val group: Group,
+        val from: UUID,
         val id: UUID = UUID.randomUUID(),
     )
 
@@ -86,6 +100,7 @@ class MockGroupsService : GroupsService {
     ): Player = Player(UUID.fromString(id), name, online).also { players[it.id] = it }
 
     private val groups = mutableListOf<Group>()
+    private val invites = mutableListOf<Invite>()
 
     @Volatile
     override var state: GroupsState? = null
@@ -96,6 +111,9 @@ class MockGroupsService : GroupsService {
     override val self: GroupPlayer
         get() = selfPlayer.dto()
 
+    override val voicePlayers: List<GroupPlayer>
+        get() = synchronized(lock) { players.values.filter { it.online }.map { it.dto() } }
+
     init {
         players[selfPlayer.id] = selfPlayer
 
@@ -104,6 +122,8 @@ class MockGroupsService : GroupsService {
         val gnome = player("78bc6ced-3bc1-4f7f-9ec2-9657f79b05cb", "GNOME__", online = false)
         val longest = player("W".repeat(16))
         val haffk = player("4f3d5a24-6dc1-4743-a7c9-0a2c14d9795a", "haffk", online = false)
+        val apehum = player("8f552657-df1d-42cd-89c6-c176e195f703", "Apehum")
+        val binero = player("e7d9db44-3268-4409-9777-0227f7390fbd", "Binero")
         val notch = player("069a79f4-44e9-4726-a5be-fca90e38aaf5", "Notch")
         val jeb = player("853c80ef-3c37-49fd-aa49-938b674adae6", "jeb_")
         val dinnerbone = player("61699b2e-d327-4a01-9f1e-0ea8c3f06bc6", "Dinnerbone", online = false)
@@ -111,9 +131,18 @@ class MockGroupsService : GroupsService {
         val kai = player("Kai")
         val moderator = player("Moderator")
         val sunny = player("Sunny", online = false)
+        val efe = player("Efe")
         val zuri = player("Zuri")
         val alex = player("Alex")
         val steve = player("Steve")
+
+        listOf("Ari", "Makena", "Noor").forEach { player(it) }
+        GENERATED_ADJECTIVES.forEachIndexed { adjectiveIndex, adjective ->
+            GENERATED_NOUNS.forEachIndexed { nounIndex, noun ->
+                val index = adjectiveIndex * GENERATED_NOUNS.size + nounIndex
+                player("$adjective$noun", online = index % 7 != 0)
+            }
+        }
 
         fun ids(vararg players: Player) = players.map { it.id }.toMutableList()
 
@@ -125,6 +154,8 @@ class MockGroupsService : GroupsService {
                     ids(selfPlayer, kpids, venterok, longest, gnome),
                     password = "hunter2",
                     persistent = true,
+                    banned = ids(haffk),
+                    sentInvites = ids(binero),
                 ),
                 Group("Builders", notch.id, ids(notch, alex, steve)),
                 Group("Night Shift", jeb.id, ids(jeb, sunny), password = "zzz"),
@@ -135,6 +166,10 @@ class MockGroupsService : GroupsService {
                 Group("Server Lounge", null, mutableListOf(), persistent = true),
                 Group("Griefers Anonymous", haffk.id, ids(haffk), banned = ids(selfPlayer)),
             )
+
+        val apehumGroup = Group("Apehum's group", apehum.id, ids(apehum, efe))
+        invites += Invite(apehumGroup, apehum.id)
+        invites += Invite(groups.first { it.name == "Night Shift" }, jeb.id)
     }
 
     override fun addListener(listener: GroupsStateListener) {
@@ -181,20 +216,27 @@ class MockGroupsService : GroupsService {
         password: String?,
     ): JoinResult =
         mutate {
-            val group = groups.firstOrNull { it.id == groupId } ?: return@mutate GroupNotFound
+            val invite = invites.firstOrNull { it.group.id == groupId }
+            val group =
+                groups.firstOrNull { it.id == groupId }
+                    ?: invite?.group
+                    ?: return@mutate GroupNotFound
 
             if (selfPlayer.id in group.members) return@mutate AlreadyInGroup
             if (!has("join.*")) {
                 if (selfPlayer.id in group.banned) return@mutate Banned
                 if (!canPassFilter(group) && !has("join.all")) return@mutate NoPermission
-                if (group.password != null) {
+                if (group.password != null && invite == null) {
                     if (password == null) return@mutate PasswordRequired
                     if (password != group.password) return@mutate WrongPassword
                 }
             }
 
             leaveCurrent()
+            if (group !in groups) groups += group
             group.members += selfPlayer.id
+            group.sentInvites -= selfPlayer.id
+            invites.removeAll { it.group.id == groupId }
             Success
         }
 
@@ -202,6 +244,66 @@ class MockGroupsService : GroupsService {
         mutate {
             if (!has("leave")) return@mutate NoPermission
             if (!leaveCurrent()) return@mutate NotInGroup
+            Success
+        }
+
+    override suspend fun memberAction(
+        groupId: UUID,
+        playerId: UUID,
+        action: MemberAction,
+    ): MemberActionResult =
+        mutate {
+            val group = current()?.takeIf { it.id == groupId } ?: return@mutate GroupNotFound
+            val required =
+                when (action) {
+                    MemberAction.CANCEL_INVITE -> GroupAction.INVITE
+                }
+            if (required !in group.actions()) return@mutate NoPermission
+            if (playerId == selfPlayer.id) return@mutate Self
+
+            when (action) {
+                MemberAction.CANCEL_INVITE -> {
+                    if (!group.sentInvites.remove(playerId)) return@mutate PlayerNotFound
+                }
+            }
+            Success
+        }
+
+    override suspend fun invite(
+        groupId: UUID,
+        playerId: UUID,
+    ): InviteResult =
+        mutate {
+            val group = current()?.takeIf { it.id == groupId } ?: return@mutate GroupNotFound
+            if (GroupAction.INVITE !in group.actions()) return@mutate NoPermission
+
+            val target =
+                players[playerId]?.takeIf { it.online }
+                    ?: return@mutate PlayerNotFound
+
+            when {
+                target.id == selfPlayer.id -> {
+                    Self
+                }
+
+                target.id in group.banned -> {
+                    Banned
+                }
+
+                target.id in group.members -> {
+                    AlreadyInGroup
+                }
+
+                else -> {
+                    if (target.id !in group.sentInvites) group.sentInvites += target.id
+                    Success
+                }
+            }
+        }
+
+    override suspend fun declineInvite(inviteId: UUID): DeclineInviteResult =
+        mutate {
+            if (!invites.removeAll { it.id == inviteId }) return@mutate GroupNotFound
             Success
         }
 
@@ -280,7 +382,7 @@ class MockGroupsService : GroupsService {
             has("join.*") -> JoinState.JOINABLE
             selfPlayer.id in banned -> JoinState.BANNED
             !canPassFilter(this) && !has("join.all") -> JoinState.NO_PERMISSION
-            password != null -> JoinState.PASSWORD
+            password != null && invites.none { it.group.id == id } -> JoinState.PASSWORD
             else -> JoinState.JOINABLE
         }
 
@@ -297,16 +399,23 @@ class MockGroupsService : GroupsService {
             joinState(),
         )
 
-    private fun Group.details(): GroupDetails =
-        GroupDetails(
+    private fun Group.details(): GroupDetails {
+        val actions = actions()
+
+        return GroupDetails(
             summary(),
             members.mapNotNull { it.dto() },
-            actions(),
+            actions,
+            sentInvites = sentInvites.mapNotNull { it.dto() }.takeIf { GroupAction.INVITE in actions },
         )
+    }
 
     private fun project(): GroupsState =
         GroupsState(
             current()?.details(),
+            invites.mapNotNull { invite ->
+                invite.from.dto()?.let { GroupInvite(invite.id, invite.group.summary(), it) }
+            },
             GroupsCapabilities(
                 canCreate = has("create"),
                 canBrowse = has("browse"),
@@ -318,5 +427,10 @@ class MockGroupsService : GroupsService {
         val LATENCY = 200L.milliseconds
         const val MIN_NAME_LENGTH = 3
         const val MAX_NAME_LENGTH = 32
+
+        val GENERATED_ADJECTIVES =
+            listOf("Quiet", "Brave", "Lucky", "Swift", "Sleepy", "Clever", "Rusty", "Mossy", "Frosty")
+        val GENERATED_NOUNS =
+            listOf("Fox", "Cat", "Golem", "Panda", "Axolotl", "Creeper", "Beacon", "Llama", "Wolf")
     }
 }

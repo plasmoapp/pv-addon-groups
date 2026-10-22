@@ -4,6 +4,7 @@ import su.plo.lib.mod.client.gui.widget.GuiAbstractWidget
 import su.plo.slib.api.chat.style.McTextStyle
 import su.plo.voice.client.gui.settings.widget.VolumeSliderWidget
 import su.plo.voice.groups.client.gui.addonIcon
+import su.plo.voice.groups.client.gui.gray
 import su.plo.voice.groups.client.gui.groupStatus
 import su.plo.voice.groups.client.gui.onlineStatus
 import su.plo.voice.groups.client.gui.pvIcon
@@ -13,6 +14,7 @@ import su.plo.voice.groups.client.gui.widget.ResetButton
 import su.plo.voice.groups.client.gui.widget.SearchFilter
 import su.plo.voice.groups.protocol.GroupAction
 import su.plo.voice.groups.protocol.GroupDetails
+import su.plo.voice.groups.protocol.GroupInvite
 import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupSummary
 import su.plo.voice.groups.protocol.JoinState
@@ -47,6 +49,11 @@ class MainPage : GroupsPage() {
         val current = state.current
         current?.let { addCurrentGroup(it) }
 
+        if (state.invites.isNotEmpty()) {
+            addCategory(tr("main.invites"))
+            state.invites.forEach { addInvite(it) }
+        }
+
         val create =
             button(tr("main.create")) { button ->
                 tab.leaveCurrentThen(button, tr("main.create.title")) { create() }
@@ -70,9 +77,8 @@ class MainPage : GroupsPage() {
         val self = service.self
         val buttons =
             listOfNotNull(
-                iconButton(addonIcon("invite"), tr("invite.title")) {
-                    // TODO: open invite page
-                }.takeIf { GroupAction.INVITE in group.actions },
+                iconButton(addonIcon("invite"), tr("invite.title")) { tab.open(InvitePage(group.summary.id)) }
+                    .takeIf { GroupAction.INVITE in group.actions },
                 iconButton(addonIcon("edit"), tr("settings.title")) {
                     // TODO: open settings page
                 }.takeIf { group.actions.any { it in SETTINGS_ACTIONS } },
@@ -137,6 +143,26 @@ class MainPage : GroupsPage() {
             }
 
         return listOf(volume, mute, reset)
+    }
+
+    private fun addInvite(invite: GroupInvite) {
+        val accept =
+            iconButton(addonIcon("accept"), tr("main.invite.accept")) { button ->
+                tab.leaveCurrentThen(button, tr("main.join.title", invite.group.name)) { join(invite.group.id) }
+            }
+        val decline =
+            iconButton(addonIcon("decline"), tr("main.invite.decline")) { button ->
+                perform(button) { declineInvite(invite.id) }
+            }
+
+        add(
+            tab.CardEntry(
+                invite.from,
+                text(invite.group.name),
+                tr("main.invite.from", invite.from.name, invite.group.onlineCount).gray(),
+                listOf(accept, decline),
+            ),
+        )
     }
 
     private fun addGroup(group: GroupSummary) {

@@ -53,11 +53,24 @@ data class GroupSummary(
     val joinState: JoinState,
 )
 
+/**
+ * Nullable fields are sent only when the viewer has the matching [GroupAction]:
+ * - [sentInvites] for [GroupAction.INVITE]
+ */
 @Serializable
 data class GroupDetails(
     val summary: GroupSummary,
     val members: List<GroupPlayer>,
     val actions: Set<GroupAction>,
+    val sentInvites: List<GroupPlayer>? = null,
+)
+
+@Serializable
+data class GroupInvite(
+    @Serializable(with = UUIDByteSerializer::class)
+    val id: UUID,
+    val group: GroupSummary,
+    val from: GroupPlayer,
 )
 
 @Serializable
@@ -71,6 +84,7 @@ data class GroupsCapabilities(
 @SerialName("state")
 data class GroupsState(
     val current: GroupDetails?,
+    val invites: List<GroupInvite>,
     val capabilities: GroupsCapabilities,
 )
 
@@ -92,16 +106,49 @@ sealed interface JoinResult : ActionResult
 sealed interface LeaveResult : ActionResult
 
 @Serializable
+@SerialName("member_action_result")
+sealed interface MemberActionResult : ActionResult
+
+@Serializable
+@SerialName("invite_result")
+sealed interface InviteResult : ActionResult
+
+@Serializable
+@SerialName("decline_invite_result")
+sealed interface DeclineInviteResult : ActionResult
+
+@Serializable
 @SerialName("success")
-data object Success : CreateResult, JoinResult, LeaveResult
+data object Success :
+    CreateResult,
+    JoinResult,
+    LeaveResult,
+    MemberActionResult,
+    InviteResult,
+    DeclineInviteResult
 
 @Serializable
 @SerialName("no_permission")
-data object NoPermission : ActionError, CreateResult, JoinResult, LeaveResult
+data object NoPermission :
+    ActionError,
+    CreateResult,
+    JoinResult,
+    LeaveResult,
+    MemberActionResult,
+    InviteResult
 
 @Serializable
 @SerialName("group_not_found")
-data object GroupNotFound : ActionError, JoinResult
+data object GroupNotFound :
+    ActionError,
+    JoinResult,
+    MemberActionResult,
+    InviteResult,
+    DeclineInviteResult
+
+@Serializable
+@SerialName("player_not_found")
+data object PlayerNotFound : ActionError, MemberActionResult, InviteResult
 
 @Serializable
 @SerialName("not_in_group")
@@ -109,11 +156,11 @@ data object NotInGroup : ActionError, LeaveResult
 
 @Serializable
 @SerialName("already_in_group")
-data object AlreadyInGroup : ActionError, JoinResult
+data object AlreadyInGroup : ActionError, JoinResult, InviteResult
 
 @Serializable
 @SerialName("banned")
-data object Banned : ActionError, JoinResult
+data object Banned : ActionError, JoinResult, InviteResult
 
 @Serializable
 @SerialName("password_required")
@@ -122,6 +169,10 @@ data object PasswordRequired : ActionError, JoinResult
 @Serializable
 @SerialName("wrong_password")
 data object WrongPassword : ActionError, JoinResult
+
+@Serializable
+@SerialName("self")
+data object Self : ActionError, MemberActionResult, InviteResult
 
 @Serializable
 @SerialName("name_length_invalid")
@@ -162,6 +213,37 @@ data class JoinRequest(
 @Serializable
 @SerialName("leave")
 data object LeaveRequest : ChannelRequest<LeaveResult>
+
+@Serializable
+enum class MemberAction {
+    CANCEL_INVITE,
+}
+
+@Serializable
+@SerialName("member_action")
+data class MemberActionRequest(
+    @Serializable(with = UUIDByteSerializer::class)
+    val groupId: UUID,
+    @Serializable(with = UUIDByteSerializer::class)
+    val playerId: UUID,
+    val action: MemberAction,
+) : ChannelRequest<MemberActionResult>
+
+@Serializable
+@SerialName("invite")
+data class InviteRequest(
+    @Serializable(with = UUIDByteSerializer::class)
+    val groupId: UUID,
+    @Serializable(with = UUIDByteSerializer::class)
+    val playerId: UUID,
+) : ChannelRequest<InviteResult>
+
+@Serializable
+@SerialName("decline_invite")
+data class DeclineInviteRequest(
+    @Serializable(with = UUIDByteSerializer::class)
+    val inviteId: UUID,
+) : ChannelRequest<DeclineInviteResult>
 
 @Serializable
 @SerialName("state_changed")

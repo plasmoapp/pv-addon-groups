@@ -4,6 +4,7 @@
     "gui.pv_addon_groups.back": "Back",
     "gui.pv_addon_groups.cancel": "Cancel",
     "gui.pv_addon_groups.join": "Join",
+    "gui.pv_addon_groups.invite": "Invite",
     "gui.pv_addon_groups.you": "%s (you)",
     "gui.pv_addon_groups.list_separator": ", ",
     "gui.pv_addon_groups.loading": "Loading...",
@@ -13,15 +14,18 @@
     "gui.pv_addon_groups.error.request": "Request failed, try again later",
     "gui.pv_addon_groups.error.no_permission": "You don't have permission to do that",
     "gui.pv_addon_groups.error.group_not_found": "Group not found",
+    "gui.pv_addon_groups.error.player_not_found": "Player not found",
     "gui.pv_addon_groups.error.not_in_group": "Player is not in the group",
     "gui.pv_addon_groups.error.already_in_group": "Already in the group",
     "gui.pv_addon_groups.error.banned": "Player is banned from the group",
     "gui.pv_addon_groups.error.password_required": "Password required",
     "gui.pv_addon_groups.error.wrong_password": "Wrong password",
     "gui.pv_addon_groups.error.name_length_invalid": "Name must be %s to %s characters long",
+    "gui.pv_addon_groups.error.self": "You can't do that to yourself",
 
     "gui.pv_addon_groups.status.online": "Online",
     "gui.pv_addon_groups.status.offline": "Offline",
+    "gui.pv_addon_groups.status.invited": "Invited",
 
     "gui.pv_addon_groups.group.online": "%s/%s online",
     "gui.pv_addon_groups.group.status_flags": "%s | %s",
@@ -30,6 +34,7 @@
     "gui.pv_addon_groups.group.flag.restricted": "restricted",
 
     "gui.pv_addon_groups.main.your_group": "Your group",
+    "gui.pv_addon_groups.main.invites": "Invites",
     "gui.pv_addon_groups.main.browse": "Browse",
     "gui.pv_addon_groups.main.search": "Search groups or owners",
     "gui.pv_addon_groups.main.create": "Create",
@@ -38,6 +43,9 @@
     "gui.pv_addon_groups.main.join.title": "Join \"%s\"",
     "gui.pv_addon_groups.main.join.no_permission": "You don't have permission to join this group",
     "gui.pv_addon_groups.main.join.banned": "You are banned from this group",
+    "gui.pv_addon_groups.main.invite.from": "Invited by %s | %s online",
+    "gui.pv_addon_groups.main.invite.accept": "Accept",
+    "gui.pv_addon_groups.main.invite.decline": "Decline",
 
     "gui.pv_addon_groups.leave.title": "Leave group",
     "gui.pv_addon_groups.leave.confirm": "Leave",
@@ -48,6 +56,8 @@
     "gui.pv_addon_groups.leave.current.confirm": "Leave and continue",
 
     "gui.pv_addon_groups.invite.title": "Invite players",
+    "gui.pv_addon_groups.invite.search": "Search players",
+    "gui.pv_addon_groups.invite.nobody": "No players to invite",
 
     "gui.pv_addon_groups.password.placeholder": "Password",
     "gui.pv_addon_groups.password.wrong": "Wrong password",

@@ -51,6 +51,11 @@ abstract class GroupsPage {
         tab.open(ConfirmPage(title, message, confirmLabel, pops, action))
     }
 
+    protected fun <R : ActionResult> perform(
+        button: GuiAbstractWidget?,
+        call: suspend GroupsService.() -> R,
+    ) = tab.perform(button, call)
+
     protected fun add(entry: AbstractScrollbar<VoiceSettingsScreen>.Entry) = tab.addEntry(entry)
 
     protected fun addCategory(title: McTextComponent) = add(tab.CategoryEntry(title))
@@ -146,7 +151,7 @@ abstract class GroupsPage {
             ),
         )
 
-    private fun fitWidth(label: McTextComponent): Int = RenderUtil.getTextWidth(label) + BUTTON_PADDING * 2
+    protected fun fitWidth(vararg labels: McTextComponent): Int = labels.maxOf { RenderUtil.getTextWidth(it) } + BUTTON_PADDING * 2
 
     private fun tooltip(value: McTextComponent?): Button.OnTooltip =
         if (value == null) {

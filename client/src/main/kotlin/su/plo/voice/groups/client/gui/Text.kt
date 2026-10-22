@@ -12,6 +12,8 @@ import su.plo.voice.groups.protocol.NameLengthInvalid
 import su.plo.voice.groups.protocol.NoPermission
 import su.plo.voice.groups.protocol.NotInGroup
 import su.plo.voice.groups.protocol.PasswordRequired
+import su.plo.voice.groups.protocol.PlayerNotFound
+import su.plo.voice.groups.protocol.Self
 import su.plo.voice.groups.protocol.WrongPassword
 
 fun tr(
@@ -54,11 +56,13 @@ fun ActionError.message(): McTextComponent =
     when (this) {
         NoPermission -> tr("error.no_permission")
         GroupNotFound -> tr("error.group_not_found")
+        PlayerNotFound -> tr("error.player_not_found")
         NotInGroup -> tr("error.not_in_group")
         AlreadyInGroup -> tr("error.already_in_group")
         Banned -> tr("error.banned")
         PasswordRequired -> tr("error.password_required")
         WrongPassword -> tr("error.wrong_password")
+        Self -> tr("error.self")
         is NameLengthInvalid -> tr("error.name_length_invalid", min, max)
     }
 
