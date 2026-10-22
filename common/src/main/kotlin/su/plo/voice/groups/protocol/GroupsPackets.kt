@@ -55,6 +55,9 @@ data class GroupSummary(
 
 /**
  * Nullable fields are sent only when the viewer has the matching [GroupAction]:
+ * - [password] for [GroupAction.SET_PASSWORD]
+ * - [permissions] for [GroupAction.SET_PERMISSIONS]
+ * - [banned] for [GroupAction.UNBAN]
  * - [sentInvites] for [GroupAction.INVITE]
  */
 @Serializable
@@ -62,6 +65,9 @@ data class GroupDetails(
     val summary: GroupSummary,
     val members: List<GroupPlayer>,
     val actions: Set<GroupAction>,
+    val password: String? = null,
+    val permissions: Set<String>? = null,
+    val banned: List<GroupPlayer>? = null,
     val sentInvites: List<GroupPlayer>? = null,
 )
 
@@ -78,6 +84,8 @@ data class GroupsCapabilities(
     val canCreate: Boolean,
     val canBrowse: Boolean,
     val canLeave: Boolean,
+    val minNameLength: Int,
+    val maxNameLength: Int,
 )
 
 @Serializable
@@ -118,6 +126,14 @@ sealed interface InviteResult : ActionResult
 sealed interface DeclineInviteResult : ActionResult
 
 @Serializable
+@SerialName("delete_result")
+sealed interface DeleteResult : ActionResult
+
+@Serializable
+@SerialName("update_settings_result")
+sealed interface UpdateSettingsResult : ActionResult
+
+@Serializable
 @SerialName("success")
 data object Success :
     CreateResult,
@@ -125,7 +141,9 @@ data object Success :
     LeaveResult,
     MemberActionResult,
     InviteResult,
-    DeclineInviteResult
+    DeclineInviteResult,
+    DeleteResult,
+    UpdateSettingsResult
 
 @Serializable
 @SerialName("no_permission")
@@ -135,7 +153,9 @@ data object NoPermission :
     JoinResult,
     LeaveResult,
     MemberActionResult,
-    InviteResult
+    InviteResult,
+    DeleteResult,
+    UpdateSettingsResult
 
 @Serializable
 @SerialName("group_not_found")
@@ -144,7 +164,9 @@ data object GroupNotFound :
     JoinResult,
     MemberActionResult,
     InviteResult,
-    DeclineInviteResult
+    DeclineInviteResult,
+    DeleteResult,
+    UpdateSettingsResult
 
 @Serializable
 @SerialName("player_not_found")
@@ -161,6 +183,10 @@ data object AlreadyInGroup : ActionError, JoinResult, InviteResult
 @Serializable
 @SerialName("banned")
 data object Banned : ActionError, JoinResult, InviteResult
+
+@Serializable
+@SerialName("not_banned")
+data object NotBanned : ActionError, MemberActionResult
 
 @Serializable
 @SerialName("password_required")
@@ -180,7 +206,8 @@ data class NameLengthInvalid(
     val min: Int,
     val max: Int,
 ) : ActionError,
-    CreateResult
+    CreateResult,
+    UpdateSettingsResult
 
 @Serializable
 @SerialName("state_request")
@@ -217,6 +244,7 @@ data object LeaveRequest : ChannelRequest<LeaveResult>
 @Serializable
 enum class MemberAction {
     CANCEL_INVITE,
+    UNBAN,
 }
 
 @Serializable
@@ -244,6 +272,28 @@ data class DeclineInviteRequest(
     @Serializable(with = UUIDByteSerializer::class)
     val inviteId: UUID,
 ) : ChannelRequest<DeclineInviteResult>
+
+@Serializable
+@SerialName("delete")
+data class DeleteRequest(
+    @Serializable(with = UUIDByteSerializer::class)
+    val groupId: UUID,
+) : ChannelRequest<DeleteResult>
+
+/**
+ * Null fields are left unchanged.
+ * An empty [password] removes the password, empty [permissions] removes the join filter.
+ */
+@Serializable
+@SerialName("update_settings")
+data class UpdateSettingsRequest(
+    @Serializable(with = UUIDByteSerializer::class)
+    val groupId: UUID,
+    val name: String? = null,
+    val password: String? = null,
+    val permissions: Set<String>? = null,
+    val persistent: Boolean? = null,
+) : ChannelRequest<UpdateSettingsResult>
 
 @Serializable
 @SerialName("state_changed")

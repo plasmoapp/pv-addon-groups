@@ -10,7 +10,7 @@ class ConfirmPage<R : ActionResult>(
     private val message: List<McTextComponent>,
     private val confirmLabel: McTextComponent,
     private val pops: Int,
-    private val action: suspend GroupsService.() -> R,
+    private val action: (suspend GroupsService.() -> R)?,
     private val onFailure: ((R) -> Unit)? = null,
 ) : GroupsPage() {
     override fun init() {
@@ -20,6 +20,8 @@ class ConfirmPage<R : ActionResult>(
         addRow(
             button(tr("cancel"), width = 0) { tab.back() },
             button(confirmLabel, width = 0) { button ->
+                val action = action ?: return@button tab.back(pops)
+
                 tab.perform(
                     button,
                     action,

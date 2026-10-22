@@ -23,6 +23,7 @@ class InvitePage(
         val members = group.members.map { it.id }
         val invited = group.sentInvites.orEmpty()
         val invitedIds = invited.map { it.id }
+        val bannedIds = group.banned.orEmpty().map { it.id }
         val candidates =
             (invited + service.voicePlayers)
                 .distinctBy { it.id }
@@ -33,23 +34,38 @@ class InvitePage(
         addRow(search.field(tr("invite.search")))
 
         if (candidates.isEmpty()) addHint(tr("invite.nobody"))
-        candidates.forEach { addCandidate(it, it.id in invitedIds) }
+        candidates.forEach { addCandidate(it, it.id in invitedIds, it.id in bannedIds) }
     }
 
     private fun addCandidate(
         player: GroupPlayer,
         invited: Boolean,
+        banned: Boolean,
     ) {
         val width = fitWidth(tr("invite"), tr("cancel"))
         val action =
-            if (invited) {
-                button(tr("cancel"), width) { button ->
-                    perform(button) { memberAction(groupId, player.id, MemberAction.CANCEL_INVITE) }
+            when {
+                banned -> {
+                    disabledButton(tr("invite"), tr("invite.banned"), width)
                 }
-            } else {
-                button(tr("invite"), width) { button ->
-                    perform(button) { invite(groupId, player.id) }
+
+                invited -> {
+                    button(tr("cancel"), width) { button ->
+                        perform(button) { memberAction(groupId, player.id, MemberAction.CANCEL_INVITE) }
+                    }
                 }
+
+                else -> {
+                    button(tr("invite"), width) { button ->
+                        perform(button) { invite(groupId, player.id) }
+                    }
+                }
+            }
+        val status =
+            when {
+                banned -> tr("status.banned").withStyle(McTextStyle.RED)
+                invited -> tr("status.invited").withStyle(McTextStyle.YELLOW)
+                else -> null
             }
 
         add(
@@ -58,7 +74,7 @@ class InvitePage(
                 tab.CardEntry(
                     player,
                     text(player.name),
-                    tr("status.invited").withStyle(McTextStyle.YELLOW).takeIf { invited },
+                    status,
                     listOf(action),
                 ),
             ),

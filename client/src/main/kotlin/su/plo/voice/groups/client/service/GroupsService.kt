@@ -2,6 +2,7 @@ package su.plo.voice.groups.client.service
 
 import su.plo.voice.groups.protocol.CreateResult
 import su.plo.voice.groups.protocol.DeclineInviteResult
+import su.plo.voice.groups.protocol.DeleteResult
 import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupSummary
 import su.plo.voice.groups.protocol.GroupsState
@@ -10,6 +11,8 @@ import su.plo.voice.groups.protocol.JoinResult
 import su.plo.voice.groups.protocol.LeaveResult
 import su.plo.voice.groups.protocol.MemberAction
 import su.plo.voice.groups.protocol.MemberActionResult
+import su.plo.voice.groups.protocol.UpdateSettingsRequest
+import su.plo.voice.groups.protocol.UpdateSettingsResult
 import java.util.UUID
 
 typealias GroupsStateListener = (GroupsState) -> Unit
@@ -52,4 +55,8 @@ interface GroupsService {
     ): InviteResult
 
     suspend fun declineInvite(inviteId: UUID): DeclineInviteResult
+
+    suspend fun delete(groupId: UUID): DeleteResult
+
+    suspend fun updateSettings(request: UpdateSettingsRequest): UpdateSettingsResult
 }

@@ -8,6 +8,7 @@ import su.plo.voice.groups.protocol.AlreadyInGroup
 import su.plo.voice.groups.protocol.Banned
 import su.plo.voice.groups.protocol.CreateResult
 import su.plo.voice.groups.protocol.DeclineInviteResult
+import su.plo.voice.groups.protocol.DeleteResult
 import su.plo.voice.groups.protocol.GroupAction
 import su.plo.voice.groups.protocol.GroupDetails
 import su.plo.voice.groups.protocol.GroupInvite
@@ -24,11 +25,14 @@ import su.plo.voice.groups.protocol.MemberAction
 import su.plo.voice.groups.protocol.MemberActionResult
 import su.plo.voice.groups.protocol.NameLengthInvalid
 import su.plo.voice.groups.protocol.NoPermission
+import su.plo.voice.groups.protocol.NotBanned
 import su.plo.voice.groups.protocol.NotInGroup
 import su.plo.voice.groups.protocol.PasswordRequired
 import su.plo.voice.groups.protocol.PlayerNotFound
 import su.plo.voice.groups.protocol.Self
 import su.plo.voice.groups.protocol.Success
+import su.plo.voice.groups.protocol.UpdateSettingsRequest
+import su.plo.voice.groups.protocol.UpdateSettingsResult
 import su.plo.voice.groups.protocol.WrongPassword
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -154,7 +158,7 @@ class MockGroupsService : GroupsService {
                     ids(selfPlayer, kpids, venterok, longest, gnome),
                     password = "hunter2",
                     persistent = true,
-                    banned = ids(haffk),
+                    banned = ids(haffk, zuri),
                     sentInvites = ids(binero),
                 ),
                 Group("Builders", notch.id, ids(notch, alex, steve)),
@@ -257,13 +261,18 @@ class MockGroupsService : GroupsService {
             val required =
                 when (action) {
                     MemberAction.CANCEL_INVITE -> GroupAction.INVITE
+                    MemberAction.UNBAN -> GroupAction.UNBAN
                 }
             if (required !in group.actions()) return@mutate NoPermission
-            if (playerId == selfPlayer.id) return@mutate Self
+            if (playerId == selfPlayer.id && action != MemberAction.UNBAN) return@mutate Self
 
             when (action) {
                 MemberAction.CANCEL_INVITE -> {
                     if (!group.sentInvites.remove(playerId)) return@mutate PlayerNotFound
+                }
+
+                MemberAction.UNBAN -> {
+                    if (!group.banned.remove(playerId)) return@mutate NotBanned
                 }
             }
             Success
@@ -304,6 +313,50 @@ class MockGroupsService : GroupsService {
     override suspend fun declineInvite(inviteId: UUID): DeclineInviteResult =
         mutate {
             if (!invites.removeAll { it.id == inviteId }) return@mutate GroupNotFound
+            Success
+        }
+
+    override suspend fun delete(groupId: UUID): DeleteResult =
+        mutate {
+            val group = current()?.takeIf { it.id == groupId } ?: return@mutate GroupNotFound
+            if (GroupAction.DELETE !in group.actions()) return@mutate NoPermission
+
+            groups -= group
+            invites.removeAll { it.group.id == groupId }
+            Success
+        }
+
+    override suspend fun updateSettings(request: UpdateSettingsRequest): UpdateSettingsResult =
+        mutate {
+            val group = current()?.takeIf { it.id == request.groupId } ?: return@mutate GroupNotFound
+            val actions = group.actions()
+
+            fun allowed(
+                value: Any?,
+                action: GroupAction,
+            ) = value == null || action in actions
+
+            if (!allowed(request.name, GroupAction.SET_NAME) ||
+                !allowed(request.password, GroupAction.SET_PASSWORD) ||
+                !allowed(request.permissions, GroupAction.SET_PERMISSIONS) ||
+                !allowed(request.persistent, GroupAction.SET_PERSISTENT)
+            ) {
+                return@mutate NoPermission
+            }
+
+            request.name?.let {
+                if (it.length !in MIN_NAME_LENGTH..MAX_NAME_LENGTH) {
+                    return@mutate NameLengthInvalid(MIN_NAME_LENGTH, MAX_NAME_LENGTH)
+                }
+            }
+
+            request.name?.let { group.name = it }
+            request.password?.let { group.password = it.ifEmpty { null } }
+            request.permissions?.let {
+                group.permissions.clear()
+                group.permissions += it
+            }
+            request.persistent?.let { group.persistent = it }
             Success
         }
 
@@ -406,6 +459,9 @@ class MockGroupsService : GroupsService {
             summary(),
             members.mapNotNull { it.dto() },
             actions,
+            password = password.takeIf { GroupAction.SET_PASSWORD in actions },
+            permissions = permissions.toSet().takeIf { GroupAction.SET_PERMISSIONS in actions },
+            banned = banned.mapNotNull { it.dto() }.takeIf { GroupAction.UNBAN in actions },
             sentInvites = sentInvites.mapNotNull { it.dto() }.takeIf { GroupAction.INVITE in actions },
         )
     }
@@ -420,6 +476,8 @@ class MockGroupsService : GroupsService {
                 canCreate = has("create"),
                 canBrowse = has("browse"),
                 canLeave = has("leave"),
+                minNameLength = MIN_NAME_LENGTH,
+                maxNameLength = MAX_NAME_LENGTH,
             ),
         )
 

@@ -10,6 +10,7 @@ import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupSummary
 import su.plo.voice.groups.protocol.NameLengthInvalid
 import su.plo.voice.groups.protocol.NoPermission
+import su.plo.voice.groups.protocol.NotBanned
 import su.plo.voice.groups.protocol.NotInGroup
 import su.plo.voice.groups.protocol.PasswordRequired
 import su.plo.voice.groups.protocol.PlayerNotFound
@@ -58,6 +59,7 @@ fun ActionError.message(): McTextComponent =
         GroupNotFound -> tr("error.group_not_found")
         PlayerNotFound -> tr("error.player_not_found")
         NotInGroup -> tr("error.not_in_group")
+        NotBanned -> tr("error.not_banned")
         AlreadyInGroup -> tr("error.already_in_group")
         Banned -> tr("error.banned")
         PasswordRequired -> tr("error.password_required")

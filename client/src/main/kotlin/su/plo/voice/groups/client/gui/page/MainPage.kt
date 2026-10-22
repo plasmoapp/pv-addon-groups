@@ -79,9 +79,8 @@ class MainPage : GroupsPage() {
             listOfNotNull(
                 iconButton(addonIcon("invite"), tr("invite.title")) { tab.open(InvitePage(group.summary.id)) }
                     .takeIf { GroupAction.INVITE in group.actions },
-                iconButton(addonIcon("edit"), tr("settings.title")) {
-                    // TODO: open settings page
-                }.takeIf { group.actions.any { it in SETTINGS_ACTIONS } },
+                iconButton(addonIcon("edit"), tr("settings.title")) { tab.open(SettingsPage(group.summary.id)) }
+                    .takeIf { group.actions.any { it in SettingsPage.ACTIONS } },
                 iconButton(addonIcon("leave"), tr("leave.title")) { leave(group) }
                     .takeIf { state.capabilities.canLeave },
             )
@@ -193,17 +192,5 @@ class MainPage : GroupsPage() {
                 tab.CardEntry(group.owner, text(group.name), groupStatus(group), listOf(join)),
             ),
         )
-    }
-
-    private companion object {
-        val SETTINGS_ACTIONS =
-            setOf(
-                GroupAction.SET_NAME,
-                GroupAction.SET_PASSWORD,
-                GroupAction.SET_PERMISSIONS,
-                GroupAction.SET_PERSISTENT,
-                GroupAction.UNBAN,
-                GroupAction.DELETE,
-            )
     }
 }
