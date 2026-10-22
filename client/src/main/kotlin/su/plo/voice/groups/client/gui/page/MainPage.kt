@@ -10,13 +10,60 @@ import su.plo.voice.groups.client.gui.pvIcon
 import su.plo.voice.groups.client.gui.text
 import su.plo.voice.groups.client.gui.tr
 import su.plo.voice.groups.client.gui.widget.ResetButton
+import su.plo.voice.groups.client.gui.widget.SearchFilter
 import su.plo.voice.groups.protocol.GroupAction
 import su.plo.voice.groups.protocol.GroupDetails
 import su.plo.voice.groups.protocol.GroupPlayer
+import su.plo.voice.groups.protocol.GroupSummary
+import su.plo.voice.groups.protocol.JoinState
 
 class MainPage : GroupsPage() {
+    private val search = SearchFilter()
+    private var groups: List<GroupSummary>? = null
+    private var loading = false
+
+    override fun onOpen() = reload()
+
+    override fun onStateChanged() {
+        reload()
+        tab.refresh()
+    }
+
+    private fun reload() {
+        if (!state.capabilities.canBrowse) return
+
+        loading = true
+        tab.launch({ browse() }, onFailure = { loading = false }) { groups ->
+            loading = false
+            this.groups =
+                groups.sortedWith(
+                    compareByDescending<GroupSummary> { it.onlineCount }.thenBy { it.name.lowercase() },
+                )
+            tab.refresh()
+        }
+    }
+
     override fun init() {
-        state.current?.let { addCurrentGroup(it) }
+        val current = state.current
+        current?.let { addCurrentGroup(it) }
+
+        val create =
+            button(tr("main.create")) { button ->
+                tab.leaveCurrentThen(button, tr("main.create.title")) { create() }
+            }.takeIf { state.capabilities.canCreate }
+
+        if (!state.capabilities.canBrowse) {
+            create?.let { addRow(it) }
+            return
+        }
+
+        addCategory(tr("main.browse"), loadingLabel { loading && groups != null })
+        addRow(*listOfNotNull(search.field(tr("main.search")), create).toTypedArray())
+
+        val groups = groups ?: return addLoading()
+        val others = groups.filter { it.id != current?.summary?.id }
+        if (others.isEmpty()) addHint(tr("main.no_groups"))
+        others.forEach { addGroup(it) }
     }
 
     private fun addCurrentGroup(group: GroupDetails) {
@@ -29,9 +76,8 @@ class MainPage : GroupsPage() {
                 iconButton(addonIcon("edit"), tr("settings.title")) {
                     // TODO: open settings page
                 }.takeIf { group.actions.any { it in SETTINGS_ACTIONS } },
-                iconButton(addonIcon("leave"), tr("leave.title")) {
-                    // TODO: confirm and leave
-                }.takeIf { state.capabilities.canLeave },
+                iconButton(addonIcon("leave"), tr("leave.title")) { leave(group) }
+                    .takeIf { state.capabilities.canLeave },
             )
 
         addCategory(tr("main.your_group"))
@@ -66,6 +112,14 @@ class MainPage : GroupsPage() {
         }
     }
 
+    private fun leave(group: GroupDetails) {
+        confirm(
+            tr("leave.title"),
+            listOf(group.leaveConsequence(service.self.id)),
+            tr("leave.confirm"),
+        ) { leave() }
+    }
+
     private fun memberControls(player: GroupPlayer): List<GuiAbstractWidget> {
         val volumeEntry = tab.volumes.getPlayerVolume(player.id)
         val muteEntry = tab.volumes.getPlayerMute(player.id)
@@ -83,6 +137,36 @@ class MainPage : GroupsPage() {
             }
 
         return listOf(volume, mute, reset)
+    }
+
+    private fun addGroup(group: GroupSummary) {
+        val join =
+            when (group.joinState) {
+                JoinState.JOINABLE -> {
+                    button(tr("join")) { button ->
+                        tab.leaveCurrentThen(button, tr("main.join.title", group.name)) { join(group.id) }
+                    }
+                }
+
+                JoinState.PASSWORD -> {
+                    button(tr("join")) { tab.open(PasswordPage(group)) }
+                }
+
+                JoinState.NO_PERMISSION -> {
+                    disabledButton(tr("join"), tr("main.join.no_permission"))
+                }
+
+                JoinState.BANNED -> {
+                    disabledButton(tr("join"), tr("main.join.banned"))
+                }
+            }
+
+        add(
+            search.track(
+                listOfNotNull(group.name, group.owner?.name).joinToString(" "),
+                tab.CardEntry(group.owner, text(group.name), groupStatus(group), listOf(join)),
+            ),
+        )
     }
 
     private companion object {

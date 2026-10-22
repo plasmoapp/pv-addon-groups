@@ -2,8 +2,17 @@ package su.plo.voice.groups.client.gui
 
 import su.plo.slib.api.chat.component.McTextComponent
 import su.plo.slib.api.chat.style.McTextStyle
+import su.plo.voice.groups.protocol.ActionError
+import su.plo.voice.groups.protocol.AlreadyInGroup
+import su.plo.voice.groups.protocol.Banned
+import su.plo.voice.groups.protocol.GroupNotFound
 import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupSummary
+import su.plo.voice.groups.protocol.NameLengthInvalid
+import su.plo.voice.groups.protocol.NoPermission
+import su.plo.voice.groups.protocol.NotInGroup
+import su.plo.voice.groups.protocol.PasswordRequired
+import su.plo.voice.groups.protocol.WrongPassword
 
 fun tr(
     key: String,
@@ -40,6 +49,18 @@ fun groupStatus(group: GroupSummary): McTextComponent {
 
     return status.gray()
 }
+
+fun ActionError.message(): McTextComponent =
+    when (this) {
+        NoPermission -> tr("error.no_permission")
+        GroupNotFound -> tr("error.group_not_found")
+        NotInGroup -> tr("error.not_in_group")
+        AlreadyInGroup -> tr("error.already_in_group")
+        Banned -> tr("error.banned")
+        PasswordRequired -> tr("error.password_required")
+        WrongPassword -> tr("error.wrong_password")
+        is NameLengthInvalid -> tr("error.name_length_invalid", min, max)
+    }
 
 fun joinComponents(components: List<McTextComponent>): McTextComponent =
     McTextComponent.empty().append(

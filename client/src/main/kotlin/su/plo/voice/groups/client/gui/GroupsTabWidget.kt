@@ -4,6 +4,7 @@ import kotlinx.coroutines.launch
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.components.toasts.SystemToast
 import su.plo.lib.mod.client.gui.components.AbstractScrollbar
+import su.plo.lib.mod.client.gui.components.Button
 import su.plo.lib.mod.client.gui.widget.GuiAbstractWidget
 import su.plo.lib.mod.client.gui.widget.GuiWidgetListener
 import su.plo.lib.mod.client.render.Colors
@@ -14,6 +15,7 @@ import su.plo.slib.api.chat.component.McTextComponent
 import su.plo.voice.api.client.PlasmoVoiceClient
 import su.plo.voice.api.client.config.hotkey.Hotkeys
 import su.plo.voice.client.config.VoiceClientConfig
+import su.plo.voice.client.extension.TextKt
 import su.plo.voice.client.gui.settings.VoiceSettingsScreen
 import su.plo.voice.client.gui.settings.tab.TabWidget
 import su.plo.voice.groups.client.gui.page.GroupsPage
@@ -21,6 +23,8 @@ import su.plo.voice.groups.client.service.GroupsClient
 import su.plo.voice.groups.client.service.GroupsService
 import su.plo.voice.groups.client.service.GroupsStateListener
 import su.plo.voice.groups.logging.ADDON_LOGGER
+import su.plo.voice.groups.protocol.ActionError
+import su.plo.voice.groups.protocol.ActionResult
 import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupsState
 
@@ -47,6 +51,9 @@ class GroupsTabWidget(
 
     val volumes: VoiceClientConfig.Voice.SourceLineVolumes
         get() = config.voice.volumes
+
+    val rowWidth: Int
+        get() = containerWidth
 
     override fun init() {
         super.init()
@@ -127,6 +134,29 @@ class GroupsTabWidget(
                     }
             }
         }
+    }
+
+    fun <R : ActionResult> perform(
+        button: GuiAbstractWidget?,
+        call: suspend GroupsService.() -> R,
+        onFailure: (R) -> Unit = { toast(it) },
+        onSuccess: () -> Unit = { refresh() },
+    ) {
+        val page = navigation.currentPage
+        button?.isActive = false
+
+        launch(call, onFailure = { button?.isActive = true }) { result ->
+            if (result is ActionError) button?.isActive = true
+            when {
+                navigation.currentPage !== page -> toast(result)
+                result is ActionError -> onFailure(result)
+                else -> onSuccess()
+            }
+        }
+    }
+
+    fun toast(result: ActionResult) {
+        if (result is ActionError) toast(result.message())
     }
 
     fun toast(message: McTextComponent) {
@@ -224,6 +254,12 @@ class GroupsTabWidget(
             loadHead(head)
         }
 
+        var visible: Boolean = true
+            set(value) {
+                field = value
+                setHeight(if (value) headSize + 6 else 0)
+            }
+
         override fun render(
             context: GuiRenderContext,
             index: Int,
@@ -235,6 +271,8 @@ class GroupsTabWidget(
             hovered: Boolean,
             delta: Float,
         ) {
+            if (!visible) return
+
             val rowHeight = height - 2
             val padding = (rowHeight - headSize) / 2
             context.drawRowBackground(x, y, entryWidth, rowHeight)
@@ -287,6 +325,114 @@ class GroupsTabWidget(
         override fun widgets(): List<GuiWidgetListener> = trailing
     }
 
+    inner class HeaderEntry(
+        private val title: McTextComponent,
+        private val backButton: Button,
+    ) : AbstractScrollbar<VoiceSettingsScreen>.Entry(28) {
+        override fun render(
+            context: GuiRenderContext,
+            index: Int,
+            x: Int,
+            y: Int,
+            entryWidth: Int,
+            mouseX: Int,
+            mouseY: Int,
+            hovered: Boolean,
+            delta: Float,
+        ) {
+            backButton.x = x
+            backButton.y = y + 2
+            backButton.render(context, mouseX, mouseY, delta)
+
+            context.drawCenteredString(title, x + entryWidth / 2, y + 8, Colors.WHITE)
+        }
+
+        override fun widgets(): List<GuiWidgetListener> = listOf(backButton)
+    }
+
+    inner class SectionEntry(
+        private val title: McTextComponent,
+        private val trailing: List<GuiAbstractWidget>,
+    ) : AbstractScrollbar<VoiceSettingsScreen>.Entry(24) {
+        override fun render(
+            context: GuiRenderContext,
+            index: Int,
+            x: Int,
+            y: Int,
+            entryWidth: Int,
+            mouseX: Int,
+            mouseY: Int,
+            hovered: Boolean,
+            delta: Float,
+        ) {
+            renderTrailing(context, trailing, x + entryWidth, y, height, mouseX, mouseY, delta)
+
+            val titleY = y + (height - RenderUtil.getFontHeight()) / 2
+            context.drawCenteredString(title, x + entryWidth / 2, titleY, Colors.WHITE)
+        }
+
+        override fun widgets(): List<GuiWidgetListener> = trailing
+    }
+
+    inner class MessageEntry(
+        private val messages: List<McTextComponent>,
+    ) : AbstractScrollbar<VoiceSettingsScreen>.Entry(0) {
+        private var wrappedWidth = -1
+        private var lines: List<String> = emptyList()
+
+        init {
+            wrap(containerWidth)
+        }
+
+        private fun wrap(entryWidth: Int) {
+            if (entryWidth == wrappedWidth) return
+            wrappedWidth = entryWidth
+
+            lines =
+                messages.flatMap { message ->
+                    TextKt.getStringSplitToWidth(
+                        RenderUtil.getFormattedString(message),
+                        (entryWidth - MESSAGE_PADDING * 2).toFloat(),
+                        true,
+                        true,
+                    )
+                }
+            setHeight(lines.size * lineHeight + 12)
+        }
+
+        override fun updatePosition(
+            context: GuiRenderContext,
+            index: Int,
+            x: Int,
+            y: Int,
+            entryWidth: Int,
+            mouseX: Int,
+            mouseY: Int,
+            hovered: Boolean,
+            delta: Float,
+        ) {
+            wrap(entryWidth)
+        }
+
+        override fun render(
+            context: GuiRenderContext,
+            index: Int,
+            x: Int,
+            y: Int,
+            entryWidth: Int,
+            mouseX: Int,
+            mouseY: Int,
+            hovered: Boolean,
+            delta: Float,
+        ) {
+            context.drawRowBackground(x, y, entryWidth, height)
+            lines.forEachIndexed { line, value ->
+                val lineX = x + (entryWidth - RenderUtil.getStringWidth(value)) / 2
+                context.drawString(value, lineX, y + 7 + line * lineHeight, Colors.WHITE)
+            }
+        }
+    }
+
     inner class HintEntry(
         private val value: () -> McTextComponent,
     ) : AbstractScrollbar<VoiceSettingsScreen>.Entry(HINT_HEIGHT) {
@@ -305,9 +451,29 @@ class GroupsTabWidget(
         }
     }
 
+    inner class SpacerEntry(
+        height: Int,
+    ) : AbstractScrollbar<VoiceSettingsScreen>.Entry(height) {
+        override fun render(
+            context: GuiRenderContext,
+            index: Int,
+            x: Int,
+            y: Int,
+            entryWidth: Int,
+            mouseX: Int,
+            mouseY: Int,
+            hovered: Boolean,
+            delta: Float,
+        ) = Unit
+    }
+
     private companion object {
         const val LINE_GAP = 2
         const val HINT_HEIGHT = 16
+        const val MESSAGE_PADDING = 8
+
+        val lineHeight: Int
+            get() = RenderUtil.getFontHeight() + LINE_GAP
 
         val TOAST_ID = SystemToast.SystemToastId()
     }
