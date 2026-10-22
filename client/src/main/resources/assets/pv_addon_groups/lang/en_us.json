@@ -57,6 +57,17 @@
     "gui.pv_addon_groups.leave.current.deleted": "You will leave \"%s\" and it will be deleted",
     "gui.pv_addon_groups.leave.current.confirm": "Leave and continue",
 
+    "gui.pv_addon_groups.manage.transfer": "Transfer ownership",
+    "gui.pv_addon_groups.manage.transfer.message": "Make %s the owner of \"%s\"?",
+    "gui.pv_addon_groups.manage.transfer.confirm": "Transfer",
+    "gui.pv_addon_groups.manage.kick": "Kick",
+    "gui.pv_addon_groups.manage.kick.title": "Kick player",
+    "gui.pv_addon_groups.manage.kick.message": "Kick %s from \"%s\"?",
+    "gui.pv_addon_groups.manage.kick.details": "They can join again later",
+    "gui.pv_addon_groups.manage.ban": "Ban",
+    "gui.pv_addon_groups.manage.ban.title": "Ban player",
+    "gui.pv_addon_groups.manage.ban.message": "Ban %s from \"%s\"?",
+
     "gui.pv_addon_groups.invite.title": "Invite players",
     "gui.pv_addon_groups.invite.search": "Search players",
     "gui.pv_addon_groups.invite.nobody": "No players to invite",

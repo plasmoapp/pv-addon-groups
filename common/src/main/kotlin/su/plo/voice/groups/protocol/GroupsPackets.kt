@@ -174,7 +174,7 @@ data object PlayerNotFound : ActionError, MemberActionResult, InviteResult
 
 @Serializable
 @SerialName("not_in_group")
-data object NotInGroup : ActionError, LeaveResult
+data object NotInGroup : ActionError, LeaveResult, MemberActionResult
 
 @Serializable
 @SerialName("already_in_group")
@@ -244,7 +244,10 @@ data object LeaveRequest : ChannelRequest<LeaveResult>
 @Serializable
 enum class MemberAction {
     CANCEL_INVITE,
+    KICK,
+    BAN,
     UNBAN,
+    TRANSFER,
 }
 
 @Serializable

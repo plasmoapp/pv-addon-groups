@@ -1,6 +1,7 @@
 package su.plo.voice.groups.client.gui.page
 
 import su.plo.lib.mod.client.gui.widget.GuiAbstractWidget
+import su.plo.slib.api.chat.component.McTextComponent
 import su.plo.slib.api.chat.style.McTextStyle
 import su.plo.voice.client.gui.settings.widget.VolumeSliderWidget
 import su.plo.voice.groups.client.gui.addonIcon
@@ -10,6 +11,7 @@ import su.plo.voice.groups.client.gui.onlineStatus
 import su.plo.voice.groups.client.gui.pvIcon
 import su.plo.voice.groups.client.gui.text
 import su.plo.voice.groups.client.gui.tr
+import su.plo.voice.groups.client.gui.widget.ContextMenuButton
 import su.plo.voice.groups.client.gui.widget.ResetButton
 import su.plo.voice.groups.client.gui.widget.SearchFilter
 import su.plo.voice.groups.protocol.GroupAction
@@ -18,6 +20,7 @@ import su.plo.voice.groups.protocol.GroupInvite
 import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupSummary
 import su.plo.voice.groups.protocol.JoinState
+import su.plo.voice.groups.protocol.MemberAction
 
 class MainPage : GroupsPage() {
     private val search = SearchFilter()
@@ -110,7 +113,7 @@ class MainPage : GroupsPage() {
                     player,
                     if (isOwner) name.withStyle(McTextStyle.GOLD) else name,
                     onlineStatus(player),
-                    if (isSelf) emptyList() else memberControls(player),
+                    if (isSelf) emptyList() else memberControls(group, player),
                     tr("owner").takeIf { isOwner },
                 ),
             )
@@ -125,7 +128,10 @@ class MainPage : GroupsPage() {
         ) { leave() }
     }
 
-    private fun memberControls(player: GroupPlayer): List<GuiAbstractWidget> {
+    private fun memberControls(
+        group: GroupDetails,
+        player: GroupPlayer,
+    ): List<GuiAbstractWidget> {
         val volumeEntry = tab.volumes.getPlayerVolume(player.id)
         val muteEntry = tab.volumes.getPlayerMute(player.id)
 
@@ -141,7 +147,63 @@ class MainPage : GroupsPage() {
                 volume.updateValue()
             }
 
-        return listOf(volume, mute, reset)
+        return listOfNotNull(volume, mute, reset, memberMenu(group, player))
+    }
+
+    private fun memberMenu(
+        group: GroupDetails,
+        player: GroupPlayer,
+    ): ContextMenuButton? {
+        val groupId = group.summary.id
+        val groupName = group.summary.name
+        val items =
+            buildList {
+                if (GroupAction.TRANSFER in group.actions) {
+                    add(
+                        tr("manage.transfer") to {
+                            confirm(
+                                tr("manage.transfer"),
+                                listOf(
+                                    tr("manage.transfer.message", player.name, groupName),
+                                ),
+                                tr("manage.transfer.confirm"),
+                            ) { memberAction(groupId, player.id, MemberAction.TRANSFER) }
+                        },
+                    )
+                }
+
+                if (GroupAction.KICK in group.actions) {
+                    add(
+                        tr("manage.kick") to {
+                            confirm(
+                                tr("manage.kick.title"),
+                                listOf(
+                                    tr("manage.kick.message", player.name, groupName),
+                                    tr("manage.kick.details"),
+                                ),
+                                tr("manage.kick"),
+                            ) { memberAction(groupId, player.id, MemberAction.KICK) }
+                        },
+                    )
+                }
+
+                if (GroupAction.BAN in group.actions) {
+                    add(
+                        tr("manage.ban") to {
+                            confirm(
+                                tr("manage.ban.title"),
+                                listOf(
+                                    tr("manage.ban.message", player.name, groupName),
+                                ),
+                                tr("manage.ban"),
+                            ) { memberAction(groupId, player.id, MemberAction.BAN) }
+                        },
+                    )
+                }
+            }
+
+        if (items.isEmpty()) return null
+        return ContextMenuButton(tab, player.id, items)
     }
 
     private fun addInvite(invite: GroupInvite) {

@@ -261,7 +261,10 @@ class MockGroupsService : GroupsService {
             val required =
                 when (action) {
                     MemberAction.CANCEL_INVITE -> GroupAction.INVITE
+                    MemberAction.KICK -> GroupAction.KICK
+                    MemberAction.BAN -> GroupAction.BAN
                     MemberAction.UNBAN -> GroupAction.UNBAN
+                    MemberAction.TRANSFER -> GroupAction.TRANSFER
                 }
             if (required !in group.actions()) return@mutate NoPermission
             if (playerId == selfPlayer.id && action != MemberAction.UNBAN) return@mutate Self
@@ -271,8 +274,23 @@ class MockGroupsService : GroupsService {
                     if (!group.sentInvites.remove(playerId)) return@mutate PlayerNotFound
                 }
 
+                MemberAction.KICK -> {
+                    if (!group.members.remove(playerId)) return@mutate NotInGroup
+                }
+
+                MemberAction.BAN -> {
+                    group.members.remove(playerId)
+                    group.sentInvites.remove(playerId)
+                    if (playerId !in group.banned) group.banned += playerId
+                }
+
                 MemberAction.UNBAN -> {
                     if (!group.banned.remove(playerId)) return@mutate NotBanned
+                }
+
+                MemberAction.TRANSFER -> {
+                    if (playerId !in group.members) return@mutate NotInGroup
+                    group.owner = playerId
                 }
             }
             Success

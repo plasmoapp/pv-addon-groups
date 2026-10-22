@@ -22,6 +22,7 @@ import su.plo.voice.client.extension.TextKt
 import su.plo.voice.client.gui.settings.VoiceSettingsScreen
 import su.plo.voice.client.gui.settings.tab.TabWidget
 import su.plo.voice.groups.client.gui.page.GroupsPage
+import su.plo.voice.groups.client.gui.widget.ContextMenuButton
 import su.plo.voice.groups.client.gui.widget.OpenButton
 import su.plo.voice.groups.client.service.GroupsClient
 import su.plo.voice.groups.client.service.GroupsService
@@ -67,6 +68,8 @@ class GroupsTabWidget(
         get() = ELEMENT_WIDTH + 24
 
     override fun init() {
+        val openMenuKey = (screen.overlay as? ContextMenuButton)?.key
+        if (openMenuKey != null) screen.overlay = null
         super.init()
         if (!attached) {
             attached = true
@@ -90,6 +93,7 @@ class GroupsTabWidget(
             page.onOpen()
         }
         page.init()
+        openMenuKey?.let(::reopenMenu)
 
         if (restoreScroll) setScrollTop(navigation.scrollTop)
     }
@@ -98,7 +102,21 @@ class GroupsTabWidget(
         attached = false
         service.removeListener(stateListener)
         navigation.scrollTop = scrollTop
+        if (screen.overlay is ContextMenuButton) screen.overlay = null
         super.removed()
+    }
+
+    override fun mouseClicked(
+        mouseX: Double,
+        mouseY: Double,
+        button: Int,
+    ): Boolean {
+        (screen.overlay as? ContextMenuButton)?.let { menu ->
+            menu.menuClicked(mouseX, mouseY)
+            return true
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button)
     }
 
     fun open(page: GroupsPage) {
@@ -213,6 +231,15 @@ class GroupsTabWidget(
 
         while (navigation.pages.size > invalidIndex) navigation.pages.removeLast()
         return true
+    }
+
+    private fun reopenMenu(key: Any) {
+        screen.overlay =
+            entries
+                .asSequence()
+                .flatMap { it.widgets() }
+                .filterIsInstance<ContextMenuButton>()
+                .firstOrNull { it.key == key }
     }
 
     private fun loadHead(player: GroupPlayer?) {
