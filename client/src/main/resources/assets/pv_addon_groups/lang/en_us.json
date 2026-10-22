@@ -1,3 +1,28 @@
 {
-    "gui.pv_addon_groups.groups": "Groups"
+    "gui.pv_addon_groups.groups": "Groups",
+
+    "gui.pv_addon_groups.you": "%s (you)",
+    "gui.pv_addon_groups.list_separator": ", ",
+    "gui.pv_addon_groups.loading": "Loading...",
+    "gui.pv_addon_groups.owner": "Group owner",
+
+    "gui.pv_addon_groups.error.title": "Groups",
+    "gui.pv_addon_groups.error.request": "Request failed, try again later",
+
+    "gui.pv_addon_groups.status.online": "Online",
+    "gui.pv_addon_groups.status.offline": "Offline",
+
+    "gui.pv_addon_groups.group.online": "%s/%s online",
+    "gui.pv_addon_groups.group.status_flags": "%s | %s",
+    "gui.pv_addon_groups.group.flag.password": "password",
+    "gui.pv_addon_groups.group.flag.persistent": "persistent",
+    "gui.pv_addon_groups.group.flag.restricted": "restricted",
+
+    "gui.pv_addon_groups.main.your_group": "Your group",
+
+    "gui.pv_addon_groups.leave.title": "Leave group",
+
+    "gui.pv_addon_groups.invite.title": "Invite players",
+
+    "gui.pv_addon_groups.settings.title": "Group settings"
 }

@@ -17,6 +17,7 @@ import su.plo.voice.client.config.VoiceClientConfig;
 import su.plo.voice.client.gui.settings.VoiceSettingsNavigation;
 import su.plo.voice.client.gui.settings.VoiceSettingsScreen;
 import su.plo.voice.client.gui.settings.tab.TabWidget;
+import su.plo.voice.groups.client.gui.GroupsNavigationState;
 import su.plo.voice.groups.client.gui.GroupsTabWidget;
 import su.plo.voice.groups.client.service.GroupsClient;
 
@@ -56,6 +57,9 @@ public abstract class MixinVoiceSettingsNavigation {
     public abstract void openTab(int index);
 
     @Unique
+    private final GroupsNavigationState groupsNavigation = new GroupsNavigationState();
+
+    @Unique
     private IconButton groupsButton;
 
     @Unique
@@ -67,7 +71,7 @@ public abstract class MixinVoiceSettingsNavigation {
         groupsTabIndex = -1;
         if (!GroupsClient.getService().getAvailable()) return;
 
-        GroupsTabWidget tab = new GroupsTabWidget(parent, voiceClient, config);
+        GroupsTabWidget tab = new GroupsTabWidget(parent, voiceClient, config, groupsNavigation);
 
         int tabIndex = tabWidgets.size();
         groupsTabIndex = tabIndex;
