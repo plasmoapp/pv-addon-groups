@@ -1,5 +1,7 @@
 package su.plo.voice.groups.client.service
 
+import su.plo.voice.groups.protocol.BanResult
+import su.plo.voice.groups.protocol.CancelInviteResult
 import su.plo.voice.groups.protocol.CreateResult
 import su.plo.voice.groups.protocol.DeclineInviteResult
 import su.plo.voice.groups.protocol.DeleteResult
@@ -8,9 +10,10 @@ import su.plo.voice.groups.protocol.GroupSummary
 import su.plo.voice.groups.protocol.GroupsState
 import su.plo.voice.groups.protocol.InviteResult
 import su.plo.voice.groups.protocol.JoinResult
+import su.plo.voice.groups.protocol.KickResult
 import su.plo.voice.groups.protocol.LeaveResult
-import su.plo.voice.groups.protocol.MemberAction
-import su.plo.voice.groups.protocol.MemberActionResult
+import su.plo.voice.groups.protocol.TransferResult
+import su.plo.voice.groups.protocol.UnbanResult
 import su.plo.voice.groups.protocol.UpdateSettingsRequest
 import su.plo.voice.groups.protocol.UpdateSettingsResult
 import java.util.UUID
@@ -43,16 +46,35 @@ interface GroupsService {
 
     suspend fun leave(): LeaveResult
 
-    suspend fun memberAction(
+    suspend fun kick(
         groupId: UUID,
         playerId: UUID,
-        action: MemberAction,
-    ): MemberActionResult
+    ): KickResult
+
+    suspend fun ban(
+        groupId: UUID,
+        playerId: UUID,
+    ): BanResult
+
+    suspend fun unban(
+        groupId: UUID,
+        playerId: UUID,
+    ): UnbanResult
+
+    suspend fun transfer(
+        groupId: UUID,
+        playerId: UUID,
+    ): TransferResult
 
     suspend fun invite(
         groupId: UUID,
         playerId: UUID,
     ): InviteResult
+
+    suspend fun cancelInvite(
+        groupId: UUID,
+        playerId: UUID,
+    ): CancelInviteResult
 
     suspend fun declineInvite(inviteId: UUID): DeclineInviteResult
 

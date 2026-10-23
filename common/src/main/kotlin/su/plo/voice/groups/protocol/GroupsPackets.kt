@@ -114,12 +114,28 @@ sealed interface JoinResult : ActionResult
 sealed interface LeaveResult : ActionResult
 
 @Serializable
-@SerialName("member_action_result")
-sealed interface MemberActionResult : ActionResult
+@SerialName("kick_result")
+sealed interface KickResult : ActionResult
+
+@Serializable
+@SerialName("ban_result")
+sealed interface BanResult : ActionResult
+
+@Serializable
+@SerialName("unban_result")
+sealed interface UnbanResult : ActionResult
+
+@Serializable
+@SerialName("transfer_result")
+sealed interface TransferResult : ActionResult
 
 @Serializable
 @SerialName("invite_result")
 sealed interface InviteResult : ActionResult
+
+@Serializable
+@SerialName("cancel_invite_result")
+sealed interface CancelInviteResult : ActionResult
 
 @Serializable
 @SerialName("decline_invite_result")
@@ -139,8 +155,12 @@ data object Success :
     CreateResult,
     JoinResult,
     LeaveResult,
-    MemberActionResult,
+    KickResult,
+    BanResult,
+    UnbanResult,
+    TransferResult,
     InviteResult,
+    CancelInviteResult,
     DeclineInviteResult,
     DeleteResult,
     UpdateSettingsResult
@@ -152,8 +172,12 @@ data object NoPermission :
     CreateResult,
     JoinResult,
     LeaveResult,
-    MemberActionResult,
+    KickResult,
+    BanResult,
+    UnbanResult,
+    TransferResult,
     InviteResult,
+    CancelInviteResult,
     DeleteResult,
     UpdateSettingsResult
 
@@ -162,19 +186,23 @@ data object NoPermission :
 data object GroupNotFound :
     ActionError,
     JoinResult,
-    MemberActionResult,
+    KickResult,
+    BanResult,
+    UnbanResult,
+    TransferResult,
     InviteResult,
+    CancelInviteResult,
     DeclineInviteResult,
     DeleteResult,
     UpdateSettingsResult
 
 @Serializable
 @SerialName("player_not_found")
-data object PlayerNotFound : ActionError, MemberActionResult, InviteResult
+data object PlayerNotFound : ActionError, BanResult, InviteResult, CancelInviteResult
 
 @Serializable
 @SerialName("not_in_group")
-data object NotInGroup : ActionError, LeaveResult, MemberActionResult
+data object NotInGroup : ActionError, LeaveResult, KickResult, TransferResult
 
 @Serializable
 @SerialName("already_in_group")
@@ -186,7 +214,7 @@ data object Banned : ActionError, JoinResult, InviteResult
 
 @Serializable
 @SerialName("not_banned")
-data object NotBanned : ActionError, MemberActionResult
+data object NotBanned : ActionError, UnbanResult
 
 @Serializable
 @SerialName("password_required")
@@ -198,7 +226,7 @@ data object WrongPassword : ActionError, JoinResult
 
 @Serializable
 @SerialName("self")
-data object Self : ActionError, MemberActionResult, InviteResult
+data object Self : ActionError, KickResult, BanResult, TransferResult, InviteResult
 
 @Serializable
 @SerialName("name_length_invalid")
@@ -240,23 +268,40 @@ data class JoinRequest(
 data object LeaveRequest : ChannelRequest<LeaveResult>
 
 @Serializable
-enum class MemberAction {
-    CANCEL_INVITE,
-    KICK,
-    BAN,
-    UNBAN,
-    TRANSFER,
-}
-
-@Serializable
-@SerialName("member_action")
-data class MemberActionRequest(
+@SerialName("kick")
+data class KickRequest(
     @Serializable(with = UUIDByteSerializer::class)
     val groupId: UUID,
     @Serializable(with = UUIDByteSerializer::class)
     val playerId: UUID,
-    val action: MemberAction,
-) : ChannelRequest<MemberActionResult>
+) : ChannelRequest<KickResult>
+
+@Serializable
+@SerialName("ban")
+data class BanRequest(
+    @Serializable(with = UUIDByteSerializer::class)
+    val groupId: UUID,
+    @Serializable(with = UUIDByteSerializer::class)
+    val playerId: UUID,
+) : ChannelRequest<BanResult>
+
+@Serializable
+@SerialName("unban")
+data class UnbanRequest(
+    @Serializable(with = UUIDByteSerializer::class)
+    val groupId: UUID,
+    @Serializable(with = UUIDByteSerializer::class)
+    val playerId: UUID,
+) : ChannelRequest<UnbanResult>
+
+@Serializable
+@SerialName("transfer")
+data class TransferRequest(
+    @Serializable(with = UUIDByteSerializer::class)
+    val groupId: UUID,
+    @Serializable(with = UUIDByteSerializer::class)
+    val playerId: UUID,
+) : ChannelRequest<TransferResult>
 
 @Serializable
 @SerialName("invite")
@@ -266,6 +311,15 @@ data class InviteRequest(
     @Serializable(with = UUIDByteSerializer::class)
     val playerId: UUID,
 ) : ChannelRequest<InviteResult>
+
+@Serializable
+@SerialName("cancel_invite")
+data class CancelInviteRequest(
+    @Serializable(with = UUIDByteSerializer::class)
+    val groupId: UUID,
+    @Serializable(with = UUIDByteSerializer::class)
+    val playerId: UUID,
+) : ChannelRequest<CancelInviteResult>
 
 @Serializable
 @SerialName("decline_invite")

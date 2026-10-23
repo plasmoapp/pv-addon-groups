@@ -6,7 +6,11 @@ import su.plo.slib.api.logging.McLoggerFactory
 import su.plo.voice.api.client.PlasmoVoiceClient
 import su.plo.voice.groups.client.channel.ChannelClient
 import su.plo.voice.groups.logging.ADDON_LOGGER
+import su.plo.voice.groups.protocol.BanRequest
+import su.plo.voice.groups.protocol.BanResult
 import su.plo.voice.groups.protocol.BrowseRequest
+import su.plo.voice.groups.protocol.CancelInviteRequest
+import su.plo.voice.groups.protocol.CancelInviteResult
 import su.plo.voice.groups.protocol.CreateRequest
 import su.plo.voice.groups.protocol.CreateResult
 import su.plo.voice.groups.protocol.DeclineInviteRequest
@@ -23,14 +27,17 @@ import su.plo.voice.groups.protocol.InviteRequest
 import su.plo.voice.groups.protocol.InviteResult
 import su.plo.voice.groups.protocol.JoinRequest
 import su.plo.voice.groups.protocol.JoinResult
+import su.plo.voice.groups.protocol.KickRequest
+import su.plo.voice.groups.protocol.KickResult
 import su.plo.voice.groups.protocol.LeaveRequest
 import su.plo.voice.groups.protocol.LeaveResult
 import su.plo.voice.groups.protocol.MIN_PROTOCOL_VERSION
-import su.plo.voice.groups.protocol.MemberAction
-import su.plo.voice.groups.protocol.MemberActionRequest
-import su.plo.voice.groups.protocol.MemberActionResult
 import su.plo.voice.groups.protocol.PROTOCOL_VERSION
 import su.plo.voice.groups.protocol.StateRequest
+import su.plo.voice.groups.protocol.TransferRequest
+import su.plo.voice.groups.protocol.TransferResult
+import su.plo.voice.groups.protocol.UnbanRequest
+import su.plo.voice.groups.protocol.UnbanResult
 import su.plo.voice.groups.protocol.UpdateSettingsRequest
 import su.plo.voice.groups.protocol.UpdateSettingsResult
 import su.plo.voice.groups.protocol.isProtocolCompatible
@@ -109,16 +116,35 @@ class NetworkGroupsService(
 
     override suspend fun leave(): LeaveResult = channel.request(LeaveRequest)
 
-    override suspend fun memberAction(
+    override suspend fun kick(
         groupId: UUID,
         playerId: UUID,
-        action: MemberAction,
-    ): MemberActionResult = channel.request(MemberActionRequest(groupId, playerId, action))
+    ): KickResult = channel.request(KickRequest(groupId, playerId))
+
+    override suspend fun ban(
+        groupId: UUID,
+        playerId: UUID,
+    ): BanResult = channel.request(BanRequest(groupId, playerId))
+
+    override suspend fun unban(
+        groupId: UUID,
+        playerId: UUID,
+    ): UnbanResult = channel.request(UnbanRequest(groupId, playerId))
+
+    override suspend fun transfer(
+        groupId: UUID,
+        playerId: UUID,
+    ): TransferResult = channel.request(TransferRequest(groupId, playerId))
 
     override suspend fun invite(
         groupId: UUID,
         playerId: UUID,
     ): InviteResult = channel.request(InviteRequest(groupId, playerId))
+
+    override suspend fun cancelInvite(
+        groupId: UUID,
+        playerId: UUID,
+    ): CancelInviteResult = channel.request(CancelInviteRequest(groupId, playerId))
 
     override suspend fun declineInvite(inviteId: UUID): DeclineInviteResult = channel.request(DeclineInviteRequest(inviteId))
 

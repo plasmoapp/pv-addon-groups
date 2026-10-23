@@ -20,7 +20,6 @@ import su.plo.voice.groups.protocol.GroupInvite
 import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupSummary
 import su.plo.voice.groups.protocol.JoinState
-import su.plo.voice.groups.protocol.MemberAction
 
 class MainPage : GroupsPage() {
     private val search = SearchFilter()
@@ -167,7 +166,7 @@ class MainPage : GroupsPage() {
                                     tr("manage.transfer.message", player.name, groupName),
                                 ),
                                 tr("manage.transfer.confirm"),
-                            ) { memberAction(groupId, player.id, MemberAction.TRANSFER) }
+                            ) { transfer(groupId, player.id) }
                         },
                     )
                 }
@@ -182,7 +181,7 @@ class MainPage : GroupsPage() {
                                     tr("manage.kick.details"),
                                 ),
                                 tr("manage.kick"),
-                            ) { memberAction(groupId, player.id, MemberAction.KICK) }
+                            ) { kick(groupId, player.id) }
                         },
                     )
                 }
@@ -196,7 +195,7 @@ class MainPage : GroupsPage() {
                                     tr("manage.ban.message", player.name, groupName),
                                 ),
                                 tr("manage.ban"),
-                            ) { memberAction(groupId, player.id, MemberAction.BAN) }
+                            ) { ban(groupId, player.id) }
                         },
                     )
                 }

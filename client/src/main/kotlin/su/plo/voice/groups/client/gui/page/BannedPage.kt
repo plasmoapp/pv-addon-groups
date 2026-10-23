@@ -4,7 +4,6 @@ import su.plo.voice.groups.client.gui.text
 import su.plo.voice.groups.client.gui.tr
 import su.plo.voice.groups.protocol.GroupAction
 import su.plo.voice.groups.protocol.GroupsState
-import su.plo.voice.groups.protocol.MemberAction
 import java.util.UUID
 
 class BannedPage(
@@ -25,7 +24,7 @@ class BannedPage(
         banned.forEach { player ->
             val unban =
                 button(tr("banned.unban")) { button ->
-                    perform(button) { memberAction(groupId, player.id, MemberAction.UNBAN) }
+                    perform(button) { unban(groupId, player.id) }
                 }
             add(
                 tab.CardEntry(

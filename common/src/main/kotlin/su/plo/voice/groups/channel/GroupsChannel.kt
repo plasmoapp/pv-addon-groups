@@ -7,10 +7,14 @@ import su.plo.voice.groups.GroupsAddon
 import su.plo.voice.groups.group.GroupImpl
 import su.plo.voice.groups.listener.GroupsStateListener
 import su.plo.voice.groups.protocol.AlreadyInGroup
+import su.plo.voice.groups.protocol.BanRequest
+import su.plo.voice.groups.protocol.BanResult
 import su.plo.voice.groups.protocol.Banned
 import su.plo.voice.groups.protocol.BrowseRequest
 import su.plo.voice.groups.protocol.BrowseResponse
 import su.plo.voice.groups.protocol.CHANNEL_KEY
+import su.plo.voice.groups.protocol.CancelInviteRequest
+import su.plo.voice.groups.protocol.CancelInviteResult
 import su.plo.voice.groups.protocol.ChannelRequest
 import su.plo.voice.groups.protocol.CreateRequest
 import su.plo.voice.groups.protocol.CreateResult
@@ -27,11 +31,10 @@ import su.plo.voice.groups.protocol.InviteRequest
 import su.plo.voice.groups.protocol.InviteResult
 import su.plo.voice.groups.protocol.JoinRequest
 import su.plo.voice.groups.protocol.JoinResult
+import su.plo.voice.groups.protocol.KickRequest
+import su.plo.voice.groups.protocol.KickResult
 import su.plo.voice.groups.protocol.LeaveRequest
 import su.plo.voice.groups.protocol.LeaveResult
-import su.plo.voice.groups.protocol.MemberAction
-import su.plo.voice.groups.protocol.MemberActionRequest
-import su.plo.voice.groups.protocol.MemberActionResult
 import su.plo.voice.groups.protocol.NameLengthInvalid
 import su.plo.voice.groups.protocol.NoPermission
 import su.plo.voice.groups.protocol.NotBanned
@@ -41,6 +44,10 @@ import su.plo.voice.groups.protocol.PlayerNotFound
 import su.plo.voice.groups.protocol.Self
 import su.plo.voice.groups.protocol.StateRequest
 import su.plo.voice.groups.protocol.Success
+import su.plo.voice.groups.protocol.TransferRequest
+import su.plo.voice.groups.protocol.TransferResult
+import su.plo.voice.groups.protocol.UnbanRequest
+import su.plo.voice.groups.protocol.UnbanResult
 import su.plo.voice.groups.protocol.UpdateSettingsRequest
 import su.plo.voice.groups.protocol.UpdateSettingsResult
 import su.plo.voice.groups.protocol.WrongPassword
@@ -95,8 +102,12 @@ class GroupsChannel(
         handle<CreateRequest, CreateResult> { player, _ -> create(player) }
         handle<JoinRequest, JoinResult>(::join)
         handle<LeaveRequest, LeaveResult> { player, _ -> leave(player) }
-        handle<MemberActionRequest, MemberActionResult>(::memberAction)
+        handle<KickRequest, KickResult>(::kick)
+        handle<BanRequest, BanResult>(::ban)
+        handle<UnbanRequest, UnbanResult>(::unban)
+        handle<TransferRequest, TransferResult>(::transfer)
         handle<InviteRequest, InviteResult>(::invite)
+        handle<CancelInviteRequest, CancelInviteResult>(::cancelInvite)
         handle<DeclineInviteRequest, DeclineInviteResult>(::declineInvite)
         handle<DeleteRequest, DeleteResult>(::delete)
         handle<UpdateSettingsRequest, UpdateSettingsResult>(::updateSettings)
@@ -167,55 +178,65 @@ class GroupsChannel(
             }
         }
 
-    private fun memberAction(
+    private fun kick(
         player: VoicePlayer,
-        request: MemberActionRequest,
-    ): MemberActionResult =
+        request: KickRequest,
+    ): KickResult =
         mutate {
             val group = currentGroup(player, request.groupId) ?: return GroupNotFound
-            if (request.action.requiredAction !in projection.actions(group, player)) return NoPermission
-            if (request.playerId == player.instance.uuid && request.action != MemberAction.UNBAN) return Self
+            if (GroupAction.KICK !in projection.actions(group, player)) return NoPermission
+            if (request.playerId == player.instance.uuid) return Self
 
-            when (request.action) {
-                MemberAction.CANCEL_INVITE -> {
-                    when (group.cancelInvite(request.playerId)) {
-                        ApiCancelInviteResult.Success -> Success
-                        ApiCancelInviteResult.NotInvited -> PlayerNotFound
-                    }
-                }
+            when (group.kick(request.playerId)) {
+                ApiKickResult.Success -> Success
+                ApiKickResult.NotInGroup -> NotInGroup
+            }
+        }
 
-                MemberAction.KICK -> {
-                    when (group.kick(request.playerId)) {
-                        ApiKickResult.Success -> Success
-                        ApiKickResult.NotInGroup -> NotInGroup
-                    }
-                }
+    private fun ban(
+        player: VoicePlayer,
+        request: BanRequest,
+    ): BanResult =
+        mutate {
+            val group = currentGroup(player, request.groupId) ?: return GroupNotFound
+            if (GroupAction.BAN !in projection.actions(group, player)) return NoPermission
+            if (request.playerId == player.instance.uuid) return Self
+            if (group.isBanned(request.playerId)) return Success
 
-                MemberAction.BAN -> {
-                    if (!group.isBanned(request.playerId)) {
-                        val target = banTarget(group, player, request.playerId) ?: return PlayerNotFound
+            val target = banTarget(group, player, request.playerId) ?: return PlayerNotFound
+            group.ban(target)
 
-                        group.ban(target)
-                    }
+            Success
+        }
 
-                    Success
-                }
+    private fun unban(
+        player: VoicePlayer,
+        request: UnbanRequest,
+    ): UnbanResult =
+        mutate {
+            val group = currentGroup(player, request.groupId) ?: return GroupNotFound
+            if (GroupAction.UNBAN !in projection.actions(group, player)) return NoPermission
 
-                MemberAction.UNBAN -> {
-                    val target = group.bannedPlayers.firstOrNull { it.id == request.playerId } ?: return NotBanned
+            val target = group.bannedPlayers.firstOrNull { it.id == request.playerId } ?: return NotBanned
 
-                    when (group.unban(target)) {
-                        ApiUnbanResult.Success -> Success
-                        ApiUnbanResult.NotBanned -> NotBanned
-                    }
-                }
+            when (group.unban(target)) {
+                ApiUnbanResult.Success -> Success
+                ApiUnbanResult.NotBanned -> NotBanned
+            }
+        }
 
-                MemberAction.TRANSFER -> {
-                    when (group.transferOwnership(request.playerId)) {
-                        ApiTransferResult.Success -> Success
-                        ApiTransferResult.NotInGroup -> NotInGroup
-                    }
-                }
+    private fun transfer(
+        player: VoicePlayer,
+        request: TransferRequest,
+    ): TransferResult =
+        mutate {
+            val group = currentGroup(player, request.groupId) ?: return GroupNotFound
+            if (GroupAction.TRANSFER !in projection.actions(group, player)) return NoPermission
+            if (request.playerId == player.instance.uuid) return Self
+
+            when (group.transferOwnership(request.playerId)) {
+                ApiTransferResult.Success -> Success
+                ApiTransferResult.NotInGroup -> NotInGroup
             }
         }
 
@@ -238,6 +259,20 @@ class GroupsChannel(
                 ApiInviteResult.AlreadyInGroup -> AlreadyInGroup
                 ApiInviteResult.Banned -> Banned
                 ApiInviteResult.Self -> Self
+            }
+        }
+
+    private fun cancelInvite(
+        player: VoicePlayer,
+        request: CancelInviteRequest,
+    ): CancelInviteResult =
+        mutate {
+            val group = currentGroup(player, request.groupId) ?: return GroupNotFound
+            if (GroupAction.INVITE !in projection.actions(group, player)) return NoPermission
+
+            when (group.cancelInvite(request.playerId)) {
+                ApiCancelInviteResult.Success -> Success
+                ApiCancelInviteResult.NotInvited -> PlayerNotFound
             }
         }
 
@@ -356,13 +391,3 @@ class GroupsChannel(
             ?.let { handler(it, request) }
     }
 }
-
-private val MemberAction.requiredAction: GroupAction
-    get() =
-        when (this) {
-            MemberAction.CANCEL_INVITE -> GroupAction.INVITE
-            MemberAction.KICK -> GroupAction.KICK
-            MemberAction.BAN -> GroupAction.BAN
-            MemberAction.UNBAN -> GroupAction.UNBAN
-            MemberAction.TRANSFER -> GroupAction.TRANSFER
-        }

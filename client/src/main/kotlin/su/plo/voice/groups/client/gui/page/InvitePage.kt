@@ -7,7 +7,6 @@ import su.plo.voice.groups.client.gui.widget.SearchFilter
 import su.plo.voice.groups.protocol.GroupAction
 import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupsState
-import su.plo.voice.groups.protocol.MemberAction
 import java.util.UUID
 
 class InvitePage(
@@ -51,7 +50,7 @@ class InvitePage(
 
                 invited -> {
                     button(tr("cancel"), width) { button ->
-                        perform(button) { memberAction(groupId, player.id, MemberAction.CANCEL_INVITE) }
+                        perform(button) { cancelInvite(groupId, player.id) }
                     }
                 }
 
