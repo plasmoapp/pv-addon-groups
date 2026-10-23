@@ -4,12 +4,13 @@ import com.mojang.brigadier.arguments.StringArgumentType
 import dev.apehum.mcdsl.command.DslCommandBuilder
 import dev.apehum.mcdsl.command.extension.suggests
 import dev.apehum.mcdsl.command.literalCommandBuilder
+import su.plo.slib.api.command.McCommandSource
 import su.plo.slib.api.command.brigadier.McBrigadierSource
+import su.plo.slib.api.entity.player.McGameProfile
 import su.plo.voice.groups.api.result.KickResult
 import su.plo.voice.groups.api.result.TransferResult
 import su.plo.voice.groups.command.GroupsCommands
 import su.plo.voice.groups.command.tierPermissions
-import su.plo.voice.groups.util.extend.getVoicePlayer
 import su.plo.voice.groups.util.extend.playerNotFoundError
 import su.plo.voice.groups.util.extend.sendTranslatable
 
@@ -28,24 +29,23 @@ fun GroupsCommands.transferCommand(): DslCommandBuilder<McBrigadierSource> =
     literalCommandBuilder("transfer") {
         requires(tierPermissions("transfer"))
 
-        val newOwnerArgument by targets.player(this, "player") { source ->
-            val player = source.getVoicePlayer(voiceServer)
-
-            playerCollector
-                .getVisibleOnlinePlayers(player)
-                .filter { it != player }
-        }
+        val newOwnerArgument by targets.profile(
+            this,
+            "player",
+            lookup = { groupPlayers(it) },
+            suggestions = { otherGroupPlayers(it) },
+        )
 
         executes {
             val (player, group) = requireGroup("transfer") ?: return@executes
             val newOwner = newOwnerArgument ?: return@executes
 
-            if (newOwner.instance.uuid == player.instance.uuid) {
+            if (newOwner.id == player.instance.uuid) {
                 source.sendTranslatable("pv.addon.groups.command.transfer.error.already_owner")
                 return@executes
             }
 
-            when (group.transferOwnership(newOwner)) {
+            when (group.transferOwnership(newOwner.id)) {
                 TransferResult.Success -> {}
 
                 TransferResult.NotInGroup -> {
@@ -59,11 +59,12 @@ fun GroupsCommands.kickCommand(): DslCommandBuilder<McBrigadierSource> =
     literalCommandBuilder("kick") {
         requires(tierPermissions("kick"))
 
-        val targetsArgument by targets.players(this, "players") { source ->
-            val (player, group) = senderGroup(source) ?: return@players emptyList()
-
-            group.onlinePlayers.filter { it != player }
-        }
+        val targetsArgument by targets.profiles(
+            this,
+            "players",
+            lookup = { groupPlayers(it) },
+            suggestions = { otherGroupPlayers(it) },
+        )
 
         executes {
             val (player, group) = requireGroup("kick") ?: return@executes
@@ -71,9 +72,9 @@ fun GroupsCommands.kickCommand(): DslCommandBuilder<McBrigadierSource> =
 
             val single = players.size == 1
             players
-                .filter { single || it != player }
+                .filter { single || it.id != player.instance.uuid }
                 .forEach { target ->
-                    when (group.kick(target)) {
+                    when (group.kick(target.id)) {
                         KickResult.Success -> {}
 
                         KickResult.NotInGroup -> {
@@ -88,13 +89,12 @@ fun GroupsCommands.banCommand(): DslCommandBuilder<McBrigadierSource> =
     literalCommandBuilder("ban") {
         requires(tierPermissions("ban"))
 
-        val targetsArgument by targets.players(this, "players") { source ->
-            val (player, group) = senderGroup(source) ?: return@players emptyList()
-
-            playerCollector
-                .getVisibleOnlinePlayers(player)
-                .filter { !group.isBanned(it.instance.uuid) && it != player }
-        }
+        val targetsArgument by targets.profiles(
+            this,
+            "players",
+            lookup = { banTargets(it) },
+            suggestions = { banSuggestions(it) },
+        )
 
         executes {
             val (player, group) = requireGroup("ban") ?: return@executes
@@ -102,9 +102,9 @@ fun GroupsCommands.banCommand(): DslCommandBuilder<McBrigadierSource> =
 
             val single = players.size == 1
             players
-                .filter { single || it != player }
+                .filter { single || it.id != player.instance.uuid }
                 .forEach { target ->
-                    if (group.isBanned(target.instance.uuid)) {
+                    if (group.isBanned(target.id)) {
                         if (single) source.sendTranslatable("pv.addon.groups.command.ban.error.already_banned")
                         return@forEach
                     }
@@ -138,3 +138,27 @@ fun GroupsCommands.unbanCommand(): DslCommandBuilder<McBrigadierSource> =
             group.unban(target)
         }
     }
+
+private fun GroupsCommands.groupPlayers(source: McCommandSource): Collection<McGameProfile> = senderGroup(source)?.group?.players.orEmpty()
+
+private fun GroupsCommands.otherGroupPlayers(source: McCommandSource): List<McGameProfile> {
+    val (player, group) = senderGroup(source) ?: return emptyList()
+
+    return group.players.filter { it.id != player.instance.uuid }
+}
+
+private fun GroupsCommands.banTargets(source: McCommandSource): List<McGameProfile> {
+    val (player, group) = senderGroup(source) ?: return emptyList()
+    val onlinePlayers =
+        playerCollector
+            .getVisibleOnlinePlayers(player)
+            .map { it.instance.gameProfile }
+
+    return (group.players + onlinePlayers).distinctBy { it.id }
+}
+
+private fun GroupsCommands.banSuggestions(source: McCommandSource): List<McGameProfile> {
+    val (player, group) = senderGroup(source) ?: return emptyList()
+
+    return banTargets(source).filter { it.id != player.instance.uuid && !group.isBanned(it.id) }
+}

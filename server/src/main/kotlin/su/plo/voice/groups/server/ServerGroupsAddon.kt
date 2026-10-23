@@ -14,6 +14,7 @@ import su.plo.voice.groups.channel.ChannelServer
 import su.plo.voice.groups.channel.registerGroupsHandlers
 import su.plo.voice.groups.command.GroupsCommands
 import su.plo.voice.groups.protocol.CHANNEL_KEY
+import su.plo.voice.groups.server.command.ServerTargetArgument
 import su.plo.voice.groups.util.PlayerCollector
 
 @Addon(
@@ -34,7 +35,12 @@ class ServerGroupsAddon : GroupsAddon() {
     init {
         McServerChannelRegistry.register(CHANNEL_KEY)
 
-        val commands = GroupsCommands(this, playerCollector, ServerTargetArgument { voiceServer as PlasmoVoiceServer })
+        val commands =
+            GroupsCommands(
+                this,
+                playerCollector,
+                ServerTargetArgument { voiceServer as PlasmoVoiceServer },
+            )
 
         McBrigadierCommandsRegisterEvent.registerListener { registry ->
             registry.register(commands.build())

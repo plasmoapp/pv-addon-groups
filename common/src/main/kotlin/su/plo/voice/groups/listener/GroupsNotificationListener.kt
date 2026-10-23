@@ -2,6 +2,7 @@ package su.plo.voice.groups.listener
 
 import su.plo.slib.api.chat.component.McTextComponent
 import su.plo.slib.api.entity.player.McGameProfile
+import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.api.Group
 import su.plo.voice.groups.api.event.GroupInviteEvent
@@ -21,7 +22,9 @@ import su.plo.voice.groups.util.extend.printDivider
 import su.plo.voice.groups.util.extend.sendTranslatable
 import java.util.UUID
 
-object GroupsNotificationListener {
+class GroupsNotificationListener(
+    private val voiceServer: PlasmoBaseVoiceServer,
+) {
     fun register() {
         PlayerJoinedGroupEvent.registerListener(::onPlayerJoinedGroup)
         PlayerLeftGroupEvent.registerListener(::onPlayerLeftGroup)
@@ -48,10 +51,10 @@ object GroupsNotificationListener {
 
     private fun onPlayerLeftGroup(
         group: Group,
-        player: VoicePlayer,
+        profile: McGameProfile,
         reason: LeaveReason,
     ) {
-        val name = player.instance.name
+        val name = profile.name
         when (reason) {
             LeaveReason.LEFT -> {
                 group.broadcast("pv.addon.groups.notifications.player_left", name)
@@ -59,7 +62,7 @@ object GroupsNotificationListener {
 
             LeaveReason.KICKED, LeaveReason.PERMISSIONS_REVOKED -> {
                 group.broadcast("pv.addon.groups.notifications.player_kicked", name)
-                player.instance.sendTranslatable("pv.addon.groups.notifications.kicked")
+                profile.onlinePlayer()?.instance?.sendTranslatable("pv.addon.groups.notifications.kicked")
             }
 
             LeaveReason.BANNED -> {
@@ -67,19 +70,22 @@ object GroupsNotificationListener {
             }
 
             LeaveReason.GROUP_DELETED -> {
-                player.instance.sendTranslatable("pv.addon.groups.notifications.group_deleted")
+                profile.onlinePlayer()?.instance?.sendTranslatable("pv.addon.groups.notifications.group_deleted")
             }
         }
     }
 
     private fun onPlayerBannedFromGroup(
         group: Group,
-        player: VoicePlayer,
+        profile: McGameProfile,
         wasMember: Boolean,
     ) {
-        group.broadcast("pv.addon.groups.notifications.player_banned", player.instance.name)
+        group.broadcast("pv.addon.groups.notifications.player_banned", profile.name)
         if (wasMember) {
-            player.instance.sendTranslatable("pv.addon.groups.notifications.banned", group.inlineChatComponent())
+            profile
+                .onlinePlayer()
+                ?.instance
+                ?.sendTranslatable("pv.addon.groups.notifications.banned", group.inlineChatComponent())
         }
     }
 
@@ -160,6 +166,11 @@ object GroupsNotificationListener {
         targetPlayer.sendMessage(group.inviteJoinButton())
         targetPlayer.printDivider()
     }
+
+    private fun McGameProfile.onlinePlayer(): VoicePlayer? =
+        voiceServer.playerManager
+            .getPlayerById(id)
+            .orElse(null)
 
     private fun Group.broadcast(
         key: String,

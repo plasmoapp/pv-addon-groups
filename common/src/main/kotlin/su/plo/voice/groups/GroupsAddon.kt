@@ -1,6 +1,5 @@
 package su.plo.voice.groups
 
-import com.google.common.collect.Sets
 import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
 import su.plo.slib.api.event.permission.McPermissionsRegisterEvent
@@ -22,6 +21,7 @@ import su.plo.voice.groups.repository.JsonGroupRepository
 import java.io.IOException
 import java.io.InputStream
 import java.net.URI
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 open class GroupsAddon : AddonInitializer {
@@ -39,7 +39,7 @@ open class GroupsAddon : AddonInitializer {
 
     override fun onAddonInitialize() {
         onConfigLoaded()
-        GroupsNotificationListener.register()
+        GroupsNotificationListener(voiceServer).register()
         McPlayerQuitEvent.registerListener { player ->
             groupManager.removePlayerInvites(player.uuid, InviteRemoveReason.PLAYER_QUIT)
         }
@@ -134,7 +134,7 @@ open class GroupsAddon : AddonInitializer {
                     group.name,
                     group.password,
                     group.persistent,
-                    Sets.newConcurrentHashSet(group.playersIds),
+                    ConcurrentHashMap(group.playersById),
                     CopyOnWriteArrayList(group.bannedPlayers),
                     group.owner,
                 )

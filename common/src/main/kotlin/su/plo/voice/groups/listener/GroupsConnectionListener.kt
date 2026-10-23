@@ -14,6 +14,7 @@ class GroupsConnectionListener(
         val playerId = player.instance.uuid
 
         groupManager.groupByPlayer[playerId]?.let { group ->
+            group.playersById.replace(playerId, player.instance.gameProfile)
             if (group.owner?.id == playerId) {
                 group.owner = player.instance.gameProfile
             }

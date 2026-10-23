@@ -1,5 +1,5 @@
 public abstract interface class su/plo/voice/groups/api/Group {
-	public abstract fun ban (Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/result/BanResult;
+	public abstract fun ban (Lsu/plo/slib/api/entity/player/McGameProfile;)Lsu/plo/voice/groups/api/result/BanResult;
 	public abstract fun cancelInvite (Ljava/util/UUID;)Lsu/plo/voice/groups/api/result/CancelInviteResult;
 	public abstract fun getBannedPlayers ()Ljava/util/List;
 	public abstract fun getId ()Ljava/util/UUID;
@@ -12,17 +12,18 @@ public abstract interface class su/plo/voice/groups/api/Group {
 	public abstract fun getPermissionsFilter ()Ljava/util/Set;
 	public abstract fun getPersistent ()Z
 	public abstract fun getPlayerCount ()I
+	public abstract fun getPlayers ()Ljava/util/Collection;
 	public abstract fun hasPermission (Lsu/plo/slib/api/command/McCommandSource;)Z
 	public abstract fun invite (Lsu/plo/voice/api/server/player/VoicePlayer;Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/result/InviteResult;
 	public abstract fun isBanned (Ljava/util/UUID;)Z
 	public abstract fun isDeleted ()Z
 	public abstract fun isOwner (Lsu/plo/voice/api/server/player/VoicePlayer;)Z
-	public abstract fun kick (Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/result/KickResult;
+	public abstract fun kick (Ljava/util/UUID;)Lsu/plo/voice/groups/api/result/KickResult;
 	public abstract fun setName (Ljava/lang/String;)Lsu/plo/voice/groups/api/result/SetNameResult;
 	public abstract fun setPassword (Ljava/lang/String;)Lsu/plo/voice/groups/api/result/SetPasswordResult;
 	public abstract fun setPermissions (Ljava/util/Set;)Lsu/plo/voice/groups/api/result/SetPermissionsResult;
 	public abstract fun setPersistent (Z)Lsu/plo/voice/groups/api/result/SetPersistentResult;
-	public abstract fun transferOwnership (Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/result/TransferResult;
+	public abstract fun transferOwnership (Ljava/util/UUID;)Lsu/plo/voice/groups/api/result/TransferResult;
 	public abstract fun unban (Lsu/plo/slib/api/entity/player/McGameProfile;)Lsu/plo/voice/groups/api/result/UnbanResult;
 }
 
@@ -160,7 +161,7 @@ public final class su/plo/voice/groups/api/event/PlayerBannedFromGroupEvent : su
 }
 
 public abstract interface class su/plo/voice/groups/api/event/PlayerBannedFromGroupEvent$Callback {
-	public abstract fun onPlayerBannedFromGroup (Lsu/plo/voice/groups/api/Group;Lsu/plo/voice/api/server/player/VoicePlayer;Z)V
+	public abstract fun onPlayerBannedFromGroup (Lsu/plo/voice/groups/api/Group;Lsu/plo/slib/api/entity/player/McGameProfile;Z)V
 }
 
 public final class su/plo/voice/groups/api/event/PlayerJoinedGroupEvent : su/plo/slib/api/event/GlobalEvent {
@@ -176,7 +177,7 @@ public final class su/plo/voice/groups/api/event/PlayerLeftGroupEvent : su/plo/s
 }
 
 public abstract interface class su/plo/voice/groups/api/event/PlayerLeftGroupEvent$Callback {
-	public abstract fun onPlayerLeftGroup (Lsu/plo/voice/groups/api/Group;Lsu/plo/voice/api/server/player/VoicePlayer;Lsu/plo/voice/groups/api/event/LeaveReason;)V
+	public abstract fun onPlayerLeftGroup (Lsu/plo/voice/groups/api/Group;Lsu/plo/slib/api/entity/player/McGameProfile;Lsu/plo/voice/groups/api/event/LeaveReason;)V
 }
 
 public final class su/plo/voice/groups/api/event/PlayerUnbannedFromGroupEvent : su/plo/slib/api/event/GlobalEvent {

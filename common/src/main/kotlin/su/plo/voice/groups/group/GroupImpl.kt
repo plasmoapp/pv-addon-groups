@@ -1,6 +1,5 @@
 package su.plo.voice.groups.group
 
-import com.google.common.collect.Sets
 import su.plo.slib.api.command.McCommandSource
 import su.plo.slib.api.entity.player.McGameProfile
 import su.plo.voice.api.server.audio.line.ServerPlayerSet
@@ -28,10 +27,10 @@ class GroupImpl(
     name: String,
     password: String? = null,
     persistent: Boolean = false,
-    playersIds: MutableSet<UUID> = Sets.newConcurrentHashSet(),
+    playersById: MutableMap<UUID, McGameProfile> = ConcurrentHashMap(),
     bannedPlayers: MutableList<McGameProfile> = CopyOnWriteArrayList(),
     owner: McGameProfile? = null,
-) : GroupData(id, name, password, persistent, playersIds, bannedPlayers, owner),
+) : GroupData(id, name, password, persistent, playersById, bannedPlayers, owner),
     Group {
     var permissionsFilterInternal: HashSet<String> = HashSet()
 
@@ -49,8 +48,11 @@ class GroupImpl(
     override val invites: Collection<GroupInvite>
         get() = invitesByTarget.values
 
+    override val players: Collection<McGameProfile>
+        get() = playersById.values
+
     override val playerCount: Int
-        get() = playersIds.size
+        get() = playersById.size
 
     override val onlinePlayerCount: Int
         get() = onlinePlayers.size
@@ -64,9 +66,9 @@ class GroupImpl(
         return permissionsFilterInternal.any { source.hasPermission(it) }
     }
 
-    override fun kick(target: VoicePlayer): KickResult = manager.kick(this, target)
+    override fun kick(playerId: UUID): KickResult = manager.kick(this, playerId)
 
-    override fun ban(target: VoicePlayer): BanResult = manager.ban(this, target)
+    override fun ban(target: McGameProfile): BanResult = manager.ban(this, target)
 
     override fun unban(target: McGameProfile): UnbanResult = manager.unban(this, target)
 
@@ -77,7 +79,7 @@ class GroupImpl(
 
     override fun cancelInvite(playerId: UUID): CancelInviteResult = manager.cancelInvite(this, playerId)
 
-    override fun transferOwnership(target: VoicePlayer): TransferResult = manager.transferOwnership(this, target)
+    override fun transferOwnership(playerId: UUID): TransferResult = manager.transferOwnership(this, playerId)
 
     override fun setName(name: String): SetNameResult = manager.setName(this, name)
 
@@ -88,14 +90,12 @@ class GroupImpl(
     override fun setPersistent(persistent: Boolean): SetPersistentResult = manager.setPersistent(this, persistent)
 
     fun addPlayer(player: VoicePlayer) {
-        playersIds.add(player.instance.uuid)
+        playersById[player.instance.uuid] = player.instance.gameProfile
         onPlayerJoin(player)
     }
 
-    fun removePlayer(player: VoicePlayer): Boolean = removePlayer(player.instance.uuid)
-
-    fun removePlayer(playerUuid: UUID): Boolean =
-        playersIds.remove(playerUuid).also {
+    fun removePlayer(playerUuid: UUID): McGameProfile? =
+        playersById.remove(playerUuid).also {
             onPlayerQuit(playerUuid)
         }
 
@@ -107,8 +107,8 @@ class GroupImpl(
 
     fun onPlayerQuit(playerUuid: UUID): Boolean = playerSet.removePlayer(playerUuid)
 
-    fun banPlayer(player: VoicePlayer) {
-        bannedPlayers.add(player.instance.gameProfile)
+    fun banPlayer(profile: McGameProfile) {
+        bannedPlayers.add(profile)
     }
 
     fun unbanPlayer(player: McGameProfile): Boolean = bannedPlayers.removeIf { it.id == player.id }

@@ -55,6 +55,9 @@ interface Group {
     /** Pending invites to the group. */
     val invites: Collection<GroupInvite>
 
+    /** Members, including offline ones. */
+    val players: Collection<McGameProfile>
+
     /** Number of members, including offline ones. */
     val playerCount: Int
 
@@ -86,18 +89,18 @@ interface Group {
     fun hasPermission(source: McCommandSource): Boolean
 
     /**
-     * Kicks [target] from the group.
+     * Kicks the member from the group. Works for offline members too.
      *
-     * @param target the player to kick.
+     * @param playerId the member UUID.
      */
-    fun kick(target: VoicePlayer): KickResult
+    fun kick(playerId: UUID): KickResult
 
     /**
-     * Bans [target], kicking them if they are a member.
+     * Bans [target], kicking them if they are a member. Works for offline players too.
      *
      * @param target the player to ban.
      */
-    fun ban(target: VoicePlayer): BanResult
+    fun ban(target: McGameProfile): BanResult
 
     /**
      * Unbans [target].
@@ -127,11 +130,11 @@ interface Group {
     fun cancelInvite(playerId: UUID): CancelInviteResult
 
     /**
-     * Transfers ownership to [target], who must be a member.
+     * Transfers ownership to the member. Works for offline members too.
      *
-     * @param target the new owner.
+     * @param playerId the new owner's UUID.
      */
-    fun transferOwnership(target: VoicePlayer): TransferResult
+    fun transferOwnership(playerId: UUID): TransferResult
 
     /**
      * Renames the group.

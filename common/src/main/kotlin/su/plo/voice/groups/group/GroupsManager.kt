@@ -133,24 +133,24 @@ class GroupsManager(
 
     fun kick(
         group: GroupImpl,
-        target: VoicePlayer,
+        playerId: UUID,
     ): KickResult {
         checkNotDeleted(group)
-        if (!group.playersIds.contains(target.instance.uuid)) return KickResult.NotInGroup
+        if (playerId !in group.playersById) return KickResult.NotInGroup
 
-        leaveInternal(target.instance.uuid, LeaveReason.KICKED)
+        leaveInternal(playerId, LeaveReason.KICKED)
         return KickResult.Success
     }
 
     fun ban(
         group: GroupImpl,
-        target: VoicePlayer,
+        target: McGameProfile,
     ): BanResult {
         checkNotDeleted(group)
-        val wasMember = group.playersIds.contains(target.instance.uuid)
-        if (wasMember) leaveInternal(target.instance.uuid, LeaveReason.BANNED)
+        val wasMember = target.id in group.playersById
+        if (wasMember) leaveInternal(target.id, LeaveReason.BANNED)
         group.banPlayer(target)
-        removeInvite(group, target.instance.uuid, InviteRemoveReason.BANNED)
+        removeInvite(group, target.id, InviteRemoveReason.BANNED)
 
         PlayerBannedFromGroupEvent.invoker.onPlayerBannedFromGroup(group, target, wasMember)
         return BanResult.Success
@@ -201,12 +201,12 @@ class GroupsManager(
 
     fun transferOwnership(
         group: GroupImpl,
-        target: VoicePlayer,
+        playerId: UUID,
     ): TransferResult {
         checkNotDeleted(group)
-        if (!group.playersIds.contains(target.instance.uuid)) return TransferResult.NotInGroup
+        val newOwner = group.playersById[playerId] ?: return TransferResult.NotInGroup
         val oldOwner = group.owner
-        group.owner = target.instance.gameProfile
+        group.owner = newOwner
         GroupOwnerChangedEvent.invoker.onGroupOwnerChanged(group, oldOwner, group.owner)
         return TransferResult.Success
     }
@@ -275,7 +275,9 @@ class GroupsManager(
 
     fun deleteGroupInternal(group: GroupImpl) {
         if (!groupsById.remove(group.id, group)) return
-        group.playersIds.toList().forEach { leaveInternal(it, LeaveReason.GROUP_DELETED) }
+        group.playersById.keys
+            .toList()
+            .forEach { leaveInternal(it, LeaveReason.GROUP_DELETED) }
         group.invites.toList().forEach { removeInvite(group, it.target.id, InviteRemoveReason.GROUP_DELETED) }
         GroupDeletedEvent.invoker.onGroupDeleted(group)
     }
@@ -298,20 +300,15 @@ class GroupsManager(
         sourceByPlayer.remove(playerId)?.let { sourceLine.removeSource(it) }
 
         val group = groupByPlayer.remove(playerId) ?: return false
-        val didLeft =
+        val profile =
             group.removePlayer(playerId).also {
                 voiceServer.playerManager
                     .getPlayerById(playerId)
                     .orElse(null)
                     ?.let { sourceLine.playerSetManager?.setPlayerSet(it, null) }
-            }
+            } ?: return false
 
-        if (!didLeft) return false
-
-        val voicePlayer = voiceServer.playerManager.getPlayerById(playerId).orElse(null)
-        if (voicePlayer != null) {
-            PlayerLeftGroupEvent.invoker.onPlayerLeftGroup(group, voicePlayer, reason)
-        }
+        PlayerLeftGroupEvent.invoker.onPlayerLeftGroup(group, profile, reason)
 
         if (!group.persistent && reason != LeaveReason.GROUP_DELETED) {
             if (group.owner?.id == playerId) {
