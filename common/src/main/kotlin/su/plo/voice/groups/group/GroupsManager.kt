@@ -356,10 +356,10 @@ class GroupsManager(
 
     @Synchronized
     private fun createGroupInternal(builder: GroupCreateBuilder): CreateResult {
-        val creator = builder.creator
+        val owner = builder.owner
         val effectiveName =
             builder.name ?: config.defaultGroupNameFormat
-                .replace("%player%", creator?.instance?.name ?: "Server")
+                .replace("%player%", owner?.instance?.name ?: "Server")
 
         if (effectiveName.length !in config.minimumNameLength..config.maximumNameLength) {
             return CreateResult.NameLengthInvalid(config.minimumNameLength, config.maximumNameLength)
@@ -381,9 +381,9 @@ class GroupsManager(
 
         groupsById[group.id] = group
 
-        if (creator != null) {
-            group.owner = creator.instance.gameProfile
-            join(creator, group, group.password)
+        if (owner != null) {
+            group.owner = owner.instance.gameProfile
+            join(owner, group, group.password)
         }
 
         GroupCreatedEvent.invoker.onGroupCreated(group)

@@ -9,7 +9,7 @@ class GroupCreateBuilder(
     private val builder: Function<GroupCreateBuilder, CreateResult>,
 ) {
     /** The group owner, or `null` for an ownerless group. */
-    var creator: VoicePlayer? = null
+    var owner: VoicePlayer? = null
         private set
 
     /** The group name, or `null` to use the default name format. */
@@ -29,11 +29,11 @@ class GroupCreateBuilder(
         private set
 
     /**
-     * Sets [creator].
+     * Sets [owner].
      *
-     * @param creator the group owner.
+     * @param owner the group owner.
      */
-    fun creator(creator: VoicePlayer) = apply { this.creator = creator }
+    fun owner(owner: VoicePlayer) = apply { this.owner = owner }
 
     /**
      * Sets [name].

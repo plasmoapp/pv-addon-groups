@@ -30,13 +30,13 @@ public abstract interface class su/plo/voice/groups/api/Group {
 public final class su/plo/voice/groups/api/GroupCreateBuilder {
 	public fun <init> (Ljava/util/function/Function;)V
 	public final fun create ()Lsu/plo/voice/groups/api/result/CreateResult;
-	public final fun creator (Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/GroupCreateBuilder;
-	public final fun getCreator ()Lsu/plo/voice/api/server/player/VoicePlayer;
 	public final fun getName ()Ljava/lang/String;
+	public final fun getOwner ()Lsu/plo/voice/api/server/player/VoicePlayer;
 	public final fun getPassword ()Ljava/lang/String;
 	public final fun getPermissions ()Ljava/util/Set;
 	public final fun getPersistent ()Z
 	public final fun name (Ljava/lang/String;)Lsu/plo/voice/groups/api/GroupCreateBuilder;
+	public final fun owner (Lsu/plo/voice/api/server/player/VoicePlayer;)Lsu/plo/voice/groups/api/GroupCreateBuilder;
 	public final fun password (Ljava/lang/String;)Lsu/plo/voice/groups/api/GroupCreateBuilder;
 	public final fun permissions (Ljava/util/Set;)Lsu/plo/voice/groups/api/GroupCreateBuilder;
 	public final fun persistent (Z)Lsu/plo/voice/groups/api/GroupCreateBuilder;

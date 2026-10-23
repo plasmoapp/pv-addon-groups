@@ -38,7 +38,7 @@ fun GroupsCommands.createCommand(): DslCommandBuilder<McBrigadierSource> =
 
             val result =
                 groupManager.createGroup {
-                    sender.getVoicePlayer(voiceServer)?.let { creator(it) }
+                    sender.getVoicePlayer(voiceServer)?.let { owner(it) }
                     flags.name?.let { name(it) }
                     flags.password?.let { password(it) }
                     flags.permissions?.let { permissions(it.toHashSet()) }

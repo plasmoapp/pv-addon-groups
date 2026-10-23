@@ -120,7 +120,7 @@ class GroupsChannel(
 
             val result =
                 groupManager.createGroup {
-                    creator(player)
+                    owner(player)
                     request.name?.let { name(it) }
                 }
 
