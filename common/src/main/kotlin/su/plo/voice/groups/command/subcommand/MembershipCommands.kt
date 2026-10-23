@@ -60,7 +60,15 @@ fun GroupsCommands.joinCommand(): DslCommandBuilder<McBrigadierSource> =
                 return@executes
             }
 
-            when (groupManager.join(player, group, password.ifEmpty { null })) {
+            val result =
+                groupManager.join(
+                    player,
+                    group,
+                    password.ifEmpty { null },
+                    ignorePermissionsFilter = sender.hasAddonPermission("join.all"),
+                )
+
+            when (result) {
                 is JoinResult.Success -> {
                     sendSelfOrOther(
                         player,

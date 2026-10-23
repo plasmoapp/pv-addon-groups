@@ -22,6 +22,15 @@ fun McCommandSource.sendTranslatable(
 fun McCommandSource.hasAddonPermission(command: String): Boolean =
     this.hasPermission("pv.addon.groups.*") || this.hasPermission("pv.addon.groups.$command")
 
+fun McCommandSource.hasTierPermission(
+    permission: String,
+    isOwner: Boolean,
+    othersTier: String = "all",
+): Boolean =
+    hasAddonPermission("$permission.$othersTier") ||
+        hasAddonPermission("$permission.*") ||
+        (isOwner && hasAddonPermission("$permission.owner"))
+
 fun McCommandSource.hasFlagPermission(flag: String): Boolean =
     this.hasPermission("pv.addon.groups.*") || this.hasPermission("pv.addon.groups.flag.$flag")
 

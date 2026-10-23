@@ -13,15 +13,17 @@ class GroupsConnectionListener(
         val player = event.connection.player
         val playerId = player.instance.uuid
 
-        groupManager.groupByPlayer[playerId]?.let { group ->
-            group.playersById.replace(playerId, player.instance.gameProfile)
-            if (group.owner?.id == playerId) {
-                group.owner = player.instance.gameProfile
-            }
+        synchronized(groupManager) {
+            groupManager.groupByPlayer[playerId]?.let { group ->
+                group.playersById.replace(playerId, player.instance.gameProfile)
+                if (group.owner?.id == playerId) {
+                    group.owner = player.instance.gameProfile
+                }
 
-            group.onPlayerJoin(player)
-            groupManager.sourceLine.playerSetManager?.setPlayerSet(player, group.playerSet)
-            groupManager.initSource(player, group)
+                group.onPlayerJoin(player)
+                groupManager.sourceLine.playerSetManager?.setPlayerSet(player, group.playerSet)
+                groupManager.initSource(player, group)
+            }
         }
     }
 
@@ -29,10 +31,12 @@ class GroupsConnectionListener(
     fun onPlayerLeave(event: UdpClientDisconnectedEvent) {
         val playerId = event.connection.player.instance.uuid
 
-        groupManager.sourceByPlayer.remove(playerId)?.let { groupManager.sourceLine.removeSource(it) }
-        groupManager.groupByPlayer[playerId]?.let {
-            it.onPlayerQuit(playerId)
-            if (it.onlinePlayers.isEmpty() && !it.persistent) groupManager.deleteGroupInternal(it)
+        synchronized(groupManager) {
+            groupManager.sourceByPlayer.remove(playerId)?.let { groupManager.sourceLine.removeSource(it) }
+            groupManager.groupByPlayer[playerId]?.let {
+                it.onPlayerQuit(playerId)
+                if (it.onlinePlayers.isEmpty() && !it.persistent) groupManager.deleteGroupInternal(it)
+            }
         }
     }
 }

@@ -16,26 +16,34 @@ import su.plo.voice.groups.api.event.PlayerBannedFromGroupEvent
 import su.plo.voice.groups.api.event.PlayerJoinedGroupEvent
 import su.plo.voice.groups.api.event.PlayerLeftGroupEvent
 import su.plo.voice.groups.api.event.PlayerUnbannedFromGroupEvent
+import su.plo.voice.groups.util.GlobalEventContext
 import su.plo.voice.groups.util.extend.inlineChatComponent
 import su.plo.voice.groups.util.extend.inviteJoinButton
 import su.plo.voice.groups.util.extend.printDivider
 import su.plo.voice.groups.util.extend.sendTranslatable
+import su.plo.voice.groups.util.scoped
 import java.util.UUID
 
 class GroupsNotificationListener(
     private val voiceServer: PlasmoBaseVoiceServer,
 ) {
+    private val events = GlobalEventContext()
+
     fun register() {
-        PlayerJoinedGroupEvent.registerListener(::onPlayerJoinedGroup)
-        PlayerLeftGroupEvent.registerListener(::onPlayerLeftGroup)
-        PlayerBannedFromGroupEvent.registerListener(::onPlayerBannedFromGroup)
-        PlayerUnbannedFromGroupEvent.registerListener(::onPlayerUnbannedFromGroup)
-        GroupOwnerChangedEvent.registerListener(::onGroupOwnerChanged)
-        GroupNameChangedEvent.registerListener(::onGroupNameChanged)
-        GroupPasswordChangedEvent.registerListener(::onGroupPasswordChanged)
-        GroupPermissionsChangedEvent.registerListener(::onGroupPermissionsChanged)
-        GroupPersistentChangedEvent.registerListener(::onGroupPersistentChanged)
-        GroupInviteEvent.registerListener(::onGroupInvite)
+        PlayerJoinedGroupEvent.scoped(events).registerListener(::onPlayerJoinedGroup)
+        PlayerLeftGroupEvent.scoped(events).registerListener(::onPlayerLeftGroup)
+        PlayerBannedFromGroupEvent.scoped(events).registerListener(::onPlayerBannedFromGroup)
+        PlayerUnbannedFromGroupEvent.scoped(events).registerListener(::onPlayerUnbannedFromGroup)
+        GroupOwnerChangedEvent.scoped(events).registerListener(::onGroupOwnerChanged)
+        GroupNameChangedEvent.scoped(events).registerListener(::onGroupNameChanged)
+        GroupPasswordChangedEvent.scoped(events).registerListener(::onGroupPasswordChanged)
+        GroupPermissionsChangedEvent.scoped(events).registerListener(::onGroupPermissionsChanged)
+        GroupPersistentChangedEvent.scoped(events).registerListener(::onGroupPersistentChanged)
+        GroupInviteEvent.scoped(events).registerListener(::onGroupInvite)
+    }
+
+    fun unregister() {
+        events.unregisterListeners()
     }
 
     private fun onPlayerJoinedGroup(

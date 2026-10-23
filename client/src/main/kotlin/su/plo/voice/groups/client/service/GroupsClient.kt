@@ -8,5 +8,5 @@ object GroupsClient {
     val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     @JvmStatic
-    val service: GroupsService by lazy { MockGroupsService() }
+    lateinit var service: GroupsService
 }

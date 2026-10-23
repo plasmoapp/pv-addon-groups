@@ -61,6 +61,7 @@ class GroupsManager(
 
     override fun getPlayerInvites(playerId: UUID): Collection<GroupInvite> = groupsById.values.mapNotNull { it.getInvite(playerId) }
 
+    @Synchronized
     override fun declineInvite(invite: GroupInvite): DeclineInviteResult {
         val group = groupsById[invite.groupId] ?: return DeclineInviteResult.NotFound
         if (!group.removeInvite(invite)) return DeclineInviteResult.NotFound
@@ -71,6 +72,7 @@ class GroupsManager(
 
     override fun createGroup(): GroupCreateBuilder = GroupCreateBuilder(::createGroupInternal)
 
+    @Synchronized
     override fun deleteGroup(group: Group): DeleteResult {
         checkNotDeleted(group)
         deleteGroupInternal(group as GroupImpl)
@@ -81,6 +83,21 @@ class GroupsManager(
         player: VoicePlayer,
         group: Group,
         password: String?,
+    ): JoinResult = join(player, group, password, ignorePermissionsFilter = false)
+
+    @Synchronized
+    override fun leave(playerId: UUID): LeaveResult {
+        val group = groupByPlayer[playerId] ?: return LeaveResult.NotInGroup
+        leaveInternal(playerId, LeaveReason.LEFT)
+        return LeaveResult.Success(group)
+    }
+
+    @Synchronized
+    fun join(
+        player: VoicePlayer,
+        group: Group,
+        password: String?,
+        ignorePermissionsFilter: Boolean,
     ): JoinResult {
         group as GroupImpl
         checkNotDeleted(group)
@@ -89,7 +106,7 @@ class GroupsManager(
         if (currentGroup?.id == group.id) return JoinResult.AlreadyInGroup
 
         if (group.isBanned(player.instance.uuid)) return JoinResult.Banned
-        if (!group.hasPermission(player.instance)) return JoinResult.NoPermission
+        if (!ignorePermissionsFilter && !group.hasPermission(player.instance)) return JoinResult.NoPermission
 
         if (group.password != null && group.getInvite(player.instance.uuid) == null) {
             if (password == null) return JoinResult.PasswordRequired
@@ -99,12 +116,7 @@ class GroupsManager(
         return joinUnchecked(player, group)
     }
 
-    override fun leave(playerId: UUID): LeaveResult {
-        val group = groupByPlayer[playerId] ?: return LeaveResult.NotInGroup
-        leaveInternal(playerId, LeaveReason.LEFT)
-        return LeaveResult.Success(group)
-    }
-
+    @Synchronized
     fun joinUnchecked(
         player: VoicePlayer,
         group: GroupImpl,
@@ -131,6 +143,7 @@ class GroupsManager(
 
     fun leave(player: VoicePlayer): LeaveResult = leave(player.instance.uuid)
 
+    @Synchronized
     fun kick(
         group: GroupImpl,
         playerId: UUID,
@@ -142,6 +155,7 @@ class GroupsManager(
         return KickResult.Success
     }
 
+    @Synchronized
     fun ban(
         group: GroupImpl,
         target: McGameProfile,
@@ -156,6 +170,7 @@ class GroupsManager(
         return BanResult.Success
     }
 
+    @Synchronized
     fun unban(
         group: GroupImpl,
         target: McGameProfile,
@@ -168,6 +183,7 @@ class GroupsManager(
         return UnbanResult.Success
     }
 
+    @Synchronized
     fun invite(
         group: GroupImpl,
         inviter: VoicePlayer,
@@ -183,6 +199,7 @@ class GroupsManager(
         return InviteResult.Success
     }
 
+    @Synchronized
     fun cancelInvite(
         group: GroupImpl,
         playerId: UUID,
@@ -192,6 +209,7 @@ class GroupsManager(
         return CancelInviteResult.Success
     }
 
+    @Synchronized
     fun removePlayerInvites(
         playerId: UUID,
         reason: InviteRemoveReason,
@@ -199,6 +217,7 @@ class GroupsManager(
         groupsById.values.forEach { removeInvite(it, playerId, reason) }
     }
 
+    @Synchronized
     fun transferOwnership(
         group: GroupImpl,
         playerId: UUID,
@@ -211,6 +230,7 @@ class GroupsManager(
         return TransferResult.Success
     }
 
+    @Synchronized
     fun setName(
         group: GroupImpl,
         name: String,
@@ -226,6 +246,7 @@ class GroupsManager(
         return SetNameResult.Success(oldName)
     }
 
+    @Synchronized
     fun setPassword(
         group: GroupImpl,
         password: String?,
@@ -238,6 +259,7 @@ class GroupsManager(
         return SetPasswordResult.Success
     }
 
+    @Synchronized
     fun setPermissions(
         group: GroupImpl,
         permissions: Set<String>?,
@@ -262,6 +284,7 @@ class GroupsManager(
         return SetPermissionsResult.Success(removed)
     }
 
+    @Synchronized
     fun setPersistent(
         group: GroupImpl,
         persistent: Boolean,
@@ -273,6 +296,7 @@ class GroupsManager(
         return SetPersistentResult.Success
     }
 
+    @Synchronized
     fun deleteGroupInternal(group: GroupImpl) {
         if (!groupsById.remove(group.id, group)) return
         group.playersById.keys
@@ -282,6 +306,7 @@ class GroupsManager(
         GroupDeletedEvent.invoker.onGroupDeleted(group)
     }
 
+    @Synchronized
     fun initSource(
         player: VoicePlayer,
         group: GroupImpl,
@@ -329,6 +354,7 @@ class GroupsManager(
         return true
     }
 
+    @Synchronized
     private fun createGroupInternal(builder: GroupCreateBuilder): CreateResult {
         val creator = builder.creator
         val effectiveName =

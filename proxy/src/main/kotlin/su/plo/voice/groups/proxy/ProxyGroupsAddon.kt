@@ -8,8 +8,7 @@ import su.plo.voice.api.addon.annotation.Addon
 import su.plo.voice.api.proxy.PlasmoVoiceProxy
 import su.plo.voice.groups.BuildConstants
 import su.plo.voice.groups.GroupsAddon
-import su.plo.voice.groups.channel.ChannelServer
-import su.plo.voice.groups.channel.registerGroupsHandlers
+import su.plo.voice.groups.channel.GroupsChannel
 import su.plo.voice.groups.command.GroupsCommands
 import su.plo.voice.groups.protocol.CHANNEL_KEY
 import su.plo.voice.groups.util.PlayerCollector
@@ -28,7 +27,7 @@ class ProxyGroupsAddon : GroupsAddon() {
     private val minecraftProxy
         get() = (voiceServer as PlasmoVoiceProxy).minecraftServer
 
-    private var channelServer: ChannelServer? = null
+    private var channel: GroupsChannel? = null
     private var channelHandler: McProxyChannelHandler? = null
 
     init {
@@ -42,25 +41,25 @@ class ProxyGroupsAddon : GroupsAddon() {
     override fun onAddonInitialize() {
         super.onAddonInitialize()
 
-        val channelServer = ChannelServer(CHANNEL_KEY).also { it.registerGroupsHandlers() }
+        val channel = GroupsChannel(this, playerCollector)
         val channelHandler =
             McProxyChannelHandler { source, _, data ->
                 val player = source as? McProxyPlayer ?: return@McProxyChannelHandler false
-                channelServer.receive(player, data)
+                channel.server.receive(player, data)
                 true
             }
         minecraftProxy.channelManager.registerChannelHandler(CHANNEL_KEY, channelHandler)
 
-        this.channelServer = channelServer
+        this.channel = channel
         this.channelHandler = channelHandler
     }
 
     override fun onAddonShutdown() {
-        super.onAddonShutdown()
-
         channelHandler?.let { minecraftProxy.channelManager.unregisterChannelHandler(CHANNEL_KEY, it) }
-        channelServer?.shutdown()
+        channel?.shutdown()
         channelHandler = null
-        channelServer = null
+        channel = null
+
+        super.onAddonShutdown()
     }
 }

@@ -25,7 +25,7 @@ import su.plo.voice.groups.command.subcommand.unbanCommand
 import su.plo.voice.groups.command.subcommand.unsetCommand
 import su.plo.voice.groups.util.PlayerCollector
 import su.plo.voice.groups.util.extend.getVoicePlayer
-import su.plo.voice.groups.util.extend.hasAddonPermission
+import su.plo.voice.groups.util.extend.hasTierPermission
 import su.plo.voice.groups.util.extend.noPermissionError
 import su.plo.voice.groups.util.extend.notInGroupError
 import su.plo.voice.groups.util.extend.playerOnlyCommandError
@@ -88,12 +88,7 @@ class GroupsCommands(
             }
 
         val isOwner = group.isOwner(player)
-        val allowed =
-            sender.hasAddonPermission("$permission.$othersTier") ||
-                sender.hasAddonPermission("$permission.*") ||
-                (isOwner && sender.hasAddonPermission("$permission.owner"))
-
-        if (!allowed) {
+        if (!sender.hasTierPermission(permission, isOwner, othersTier)) {
             source.noPermissionError(if (isOwner) "$permission.owner" else "$permission.$othersTier")
             return null
         }

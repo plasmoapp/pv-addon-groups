@@ -10,8 +10,7 @@ import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.api.server.player.VoiceServerPlayer
 import su.plo.voice.groups.BuildConstants
 import su.plo.voice.groups.GroupsAddon
-import su.plo.voice.groups.channel.ChannelServer
-import su.plo.voice.groups.channel.registerGroupsHandlers
+import su.plo.voice.groups.channel.GroupsChannel
 import su.plo.voice.groups.command.GroupsCommands
 import su.plo.voice.groups.protocol.CHANNEL_KEY
 import su.plo.voice.groups.server.command.ServerTargetArgument
@@ -29,7 +28,7 @@ class ServerGroupsAddon : GroupsAddon() {
     private val minecraftServer
         get() = (voiceServer as PlasmoVoiceServer).minecraftServer
 
-    private var channelServer: ChannelServer? = null
+    private var channel: GroupsChannel? = null
     private var channelHandler: McServerChannelHandler? = null
 
     init {
@@ -50,21 +49,21 @@ class ServerGroupsAddon : GroupsAddon() {
     override fun onAddonInitialize() {
         super.onAddonInitialize()
 
-        val channelServer = ChannelServer(CHANNEL_KEY).also { it.registerGroupsHandlers() }
-        val channelHandler = McServerChannelHandler(channelServer::receive)
+        val channel = GroupsChannel(this, playerCollector)
+        val channelHandler = McServerChannelHandler(channel.server::receive)
         minecraftServer.channelManager.registerChannelHandler(CHANNEL_KEY, channelHandler)
 
-        this.channelServer = channelServer
+        this.channel = channel
         this.channelHandler = channelHandler
     }
 
     override fun onAddonShutdown() {
-        super.onAddonShutdown()
-
         channelHandler?.let { minecraftServer.channelManager.unregisterChannelHandler(CHANNEL_KEY, it) }
-        channelServer?.shutdown()
+        channel?.shutdown()
         channelHandler = null
-        channelServer = null
+        channel = null
+
+        super.onAddonShutdown()
     }
 
     private inner class ServerPlayerCollector : PlayerCollector {

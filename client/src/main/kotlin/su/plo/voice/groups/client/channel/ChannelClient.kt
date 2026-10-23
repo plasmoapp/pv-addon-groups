@@ -9,8 +9,10 @@ import kotlinx.serialization.encodeToByteArray
 import net.minecraft.client.Minecraft
 import net.minecraft.network.Connection
 import net.minecraft.resources.ResourceLocation
+import su.plo.slib.api.logging.McLoggerFactory
 import su.plo.slib.mod.channel.ModClientChannelHandler
 import su.plo.slib.mod.channel.ModClientChannelManager
+import su.plo.voice.groups.logging.ADDON_LOGGER
 import su.plo.voice.groups.protocol.ChannelMessage
 import su.plo.voice.groups.protocol.ChannelRequest
 import su.plo.voice.groups.protocol.channelMsgPack
@@ -24,6 +26,8 @@ val DEFAULT_TIMEOUT = 5.seconds
 
 private val clientChannelManager = ModClientChannelManager.INSTANCE
 
+private val logger = McLoggerFactory.createLogger(ADDON_LOGGER, "ChannelClient")
+
 fun createChannelClient(channelKey: ResourceLocation): ChannelClient =
     ChannelClient(channelKey)
         .also { clientChannelManager.registerHandler(channelKey, it) }
@@ -32,6 +36,7 @@ class ChannelClient(
     val channelKey: ResourceLocation,
 ) : ModClientChannelHandler {
     val pending: MutableMap<String, Channel<ByteArray>> = ConcurrentHashMap()
+    val messageHandlers: MutableMap<String, (ByteArray) -> Unit> = ConcurrentHashMap()
 
     override fun receive(
         payload: ByteArray,
@@ -44,8 +49,22 @@ class ChannelClient(
                 return
             }
 
-        val requestId = message.requestId ?: return
-        pending[requestId]?.trySend(message.payload)
+        val requestId = message.requestId
+        if (requestId != null) {
+            pending[requestId]?.trySend(message.payload)
+            return
+        }
+
+        val handler = messageHandlers[message.type] ?: return
+        try {
+            handler(message.payload)
+        } catch (e: Throwable) {
+            logger.debug("Failed to handle \"{}\"", message.type, e)
+        }
+    }
+
+    inline fun <reified Message> registerMessageHandler(crossinline handler: (Message) -> Unit) {
+        messageHandlers[packetType<Message>()] = { payload -> handler(channelMsgPack.decodeFromByteArray<Message>(payload)) }
     }
 
     suspend inline fun <reified Request : ChannelRequest<Response>, reified Response> request(

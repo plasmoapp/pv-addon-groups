@@ -32,6 +32,7 @@ open class GroupsAddon : AddonInitializer {
     private lateinit var repository: JsonGroupRepository
 
     private var connectionListener: GroupsConnectionListener? = null
+    private var notificationListener: GroupsNotificationListener? = null
 
     init {
         McPermissionsRegisterEvent.registerListener(GroupsPermissions::register)
@@ -39,20 +40,24 @@ open class GroupsAddon : AddonInitializer {
 
     override fun onAddonInitialize() {
         onConfigLoaded()
-        GroupsNotificationListener(voiceServer).register()
+        notificationListener = GroupsNotificationListener(voiceServer).also { it.register() }
         McPlayerQuitEvent.registerListener { player ->
             groupManager.removePlayerInvites(player.uuid, InviteRemoveReason.PLAYER_QUIT)
         }
     }
 
     override fun onAddonShutdown() {
-        val persistent = groupManager.groupsById.values.filter { it.persistent }
-        repository.save(
-            JsonGroupRepository.Snapshot(
-                groups = persistent,
-                groupByPlayer = groupManager.groupByPlayer.map { it.key to it.value.id }.toMap(),
-            ),
-        )
+        notificationListener?.unregister()
+        notificationListener = null
+
+        val snapshot =
+            synchronized(groupManager) {
+                JsonGroupRepository.Snapshot(
+                    groups = groupManager.groupsById.values.filter { it.persistent },
+                    groupByPlayer = groupManager.groupByPlayer.map { it.key to it.value.id }.toMap(),
+                )
+            }
+        repository.save(snapshot)
     }
 
     private fun onConfigLoaded() {
