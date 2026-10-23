@@ -100,7 +100,7 @@ class NetworkGroupsService(
 
     override suspend fun browse(): List<GroupSummary> = channel.request(BrowseRequest).groups
 
-    override suspend fun create(): CreateResult = channel.request(CreateRequest())
+    override suspend fun create(): CreateResult = channel.request(CreateRequest)
 
     override suspend fun join(
         groupId: UUID,

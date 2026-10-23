@@ -225,9 +225,7 @@ data class BrowseResponse(
 
 @Serializable
 @SerialName("create")
-data class CreateRequest(
-    val name: String? = null,
-) : ChannelRequest<CreateResult>
+data object CreateRequest : ChannelRequest<CreateResult>
 
 @Serializable
 @SerialName("join")

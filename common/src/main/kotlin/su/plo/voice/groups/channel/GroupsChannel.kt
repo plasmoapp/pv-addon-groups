@@ -92,7 +92,7 @@ class GroupsChannel(
                 BrowseResponse(projection.browse(player))
             }
         }
-        handle<CreateRequest, CreateResult>(::create)
+        handle<CreateRequest, CreateResult> { player, _ -> create(player) }
         handle<JoinRequest, JoinResult>(::join)
         handle<LeaveRequest, LeaveResult> { player, _ -> leave(player) }
         handle<MemberActionRequest, MemberActionResult>(::memberAction)
@@ -109,22 +109,11 @@ class GroupsChannel(
         server.shutdown()
     }
 
-    private fun create(
-        player: VoicePlayer,
-        request: CreateRequest,
-    ): CreateResult =
+    private fun create(player: VoicePlayer): CreateResult =
         mutate {
-            val source = player.instance
-            if (!source.hasAddonPermission("create")) return NoPermission
-            if (request.name != null && !source.hasFlagPermission("name")) return NoPermission
+            if (!player.instance.hasAddonPermission("create")) return NoPermission
 
-            val result =
-                groupManager.createGroup {
-                    owner(player)
-                    request.name?.let { name(it) }
-                }
-
-            when (result) {
+            when (val result = groupManager.createGroup { owner(player) }) {
                 is ApiCreateResult.Success -> Success
                 is ApiCreateResult.NameLengthInvalid -> NameLengthInvalid(result.min, result.max)
             }
