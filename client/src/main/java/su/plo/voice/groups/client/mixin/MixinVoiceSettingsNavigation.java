@@ -67,14 +67,21 @@ public abstract class MixinVoiceSettingsNavigation {
 
     @Inject(method = "init", at = @At("HEAD"))
     private void addGroupsTab(CallbackInfo ci) {
+        // PV keeps the settings screen (and `active`) across servers while rebuilding tabWidgets on each init,
+        // so a stale groups index can point past the list or at another tab once availability changes
+        boolean groupsTabWasActive = groupsTabIndex >= 0 && active == groupsTabIndex;
         groupsButton = null;
         groupsTabIndex = -1;
-        if (!GroupsClient.getService().getAvailable()) return;
+        if (!GroupsClient.getService().getAvailable()) {
+            if (groupsTabWasActive) active = 0;
+            return;
+        }
 
         GroupsTabWidget tab = new GroupsTabWidget(parent, voiceClient, config, groupsNavigation);
 
         int tabIndex = tabWidgets.size();
         groupsTabIndex = tabIndex;
+        if (groupsTabWasActive) active = tabIndex;
         tabWidgets.add(tab);
 
         groupsButton = new IconButton(
