@@ -6,9 +6,12 @@ import su.plo.slib.api.proxy.player.McProxyPlayer
 import su.plo.voice.api.addon.AddonLoaderScope
 import su.plo.voice.api.addon.annotation.Addon
 import su.plo.voice.api.proxy.PlasmoVoiceProxy
+import su.plo.voice.api.proxy.player.VoiceProxyPlayer
+import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.BuildConstants
 import su.plo.voice.groups.GroupsAddon
 import su.plo.voice.groups.channel.GroupsChannel
+import su.plo.voice.groups.channel.InviteSearch
 import su.plo.voice.groups.command.GroupsCommands
 import su.plo.voice.groups.protocol.CHANNEL_KEY
 import su.plo.voice.groups.util.PlayerCollector
@@ -41,7 +44,12 @@ class ProxyGroupsAddon : GroupsAddon() {
     override fun onAddonInitialize() {
         super.onAddonInitialize()
 
-        val channel = GroupsChannel(this, playerCollector)
+        val channel =
+            GroupsChannel(
+                this,
+                playerCollector,
+                InviteSearch(playerCollector, ::serverName),
+            )
         val channelHandler =
             McProxyChannelHandler { source, _, data ->
                 val player = source as? McProxyPlayer ?: return@McProxyChannelHandler false
@@ -62,4 +70,11 @@ class ProxyGroupsAddon : GroupsAddon() {
 
         super.onAddonShutdown()
     }
+
+    private fun serverName(player: VoicePlayer): String? =
+        (player as? VoiceProxyPlayer)
+            ?.instance
+            ?.server
+            ?.serverInfo
+            ?.name
 }

@@ -86,6 +86,7 @@ data class GroupsCapabilities(
     val canLeave: Boolean,
     val minNameLength: Int,
     val maxNameLength: Int,
+    val remoteInviteSearch: Boolean,
 )
 
 @Serializable
@@ -179,7 +180,8 @@ data object NoPermission :
     InviteResult,
     CancelInviteResult,
     DeleteResult,
-    UpdateSettingsResult
+    UpdateSettingsResult,
+    InviteCandidatesResult
 
 @Serializable
 @SerialName("group_not_found")
@@ -202,7 +204,7 @@ data object PlayerNotFound : ActionError, BanResult, InviteResult, CancelInviteR
 
 @Serializable
 @SerialName("not_in_group")
-data object NotInGroup : ActionError, LeaveResult, KickResult, TransferResult
+data object NotInGroup : ActionError, LeaveResult, KickResult, TransferResult, InviteCandidatesResult
 
 @Serializable
 @SerialName("already_in_group")
@@ -254,6 +256,38 @@ data object BrowseRequest : ChannelRequest<BrowseResponse>
 data class BrowseResponse(
     val groups: List<GroupSummary>,
 )
+
+const val MAX_INVITE_CANDIDATES = 50
+
+const val MIN_INVITE_QUERY_LENGTH = 2
+
+/**
+ * Handled only by the proxy addon; sent only when [GroupsCapabilities.remoteInviteSearch] is set.
+ *
+ * A [query] shorter than [MIN_INVITE_QUERY_LENGTH] matches only players on the requester's server and pending invites.
+ */
+@Serializable
+@SerialName("invite_candidates")
+data class InviteCandidatesRequest(
+    val query: String,
+) : ChannelRequest<InviteCandidatesResult>
+
+@Serializable
+@SerialName("invite_candidates_result")
+sealed interface InviteCandidatesResult
+
+@Serializable
+@SerialName("candidates")
+data class InviteCandidates(
+    val players: List<GroupPlayer>,
+    val hasMore: Boolean,
+) : InviteCandidatesResult
+
+@Serializable
+@SerialName("rate_limited")
+data class RateLimited(
+    val retryAfterMs: Long,
+) : InviteCandidatesResult
 
 @Serializable
 @SerialName("create")

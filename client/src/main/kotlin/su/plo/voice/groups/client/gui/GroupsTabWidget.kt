@@ -145,6 +145,21 @@ class GroupsTabWidget(
         setScrollTop(scroll)
     }
 
+    fun isShown(page: GroupsPage): Boolean = attached && navigation.currentPage === page
+
+    fun replaceEntriesAfter(
+        anchor: AbstractScrollbar<VoiceSettingsScreen>.Entry,
+        replacement: List<AbstractScrollbar<VoiceSettingsScreen>.Entry>,
+    ) {
+        val index = entries.indexOf(anchor)
+        if (index < 0) return
+
+        entries.subList(index + 1, entries.size).clear()
+        entries.addAll(replacement)
+        onEntryHeightChange()
+        setScrollTop(scrollTop)
+    }
+
     fun <T> launch(
         call: suspend GroupsService.() -> T,
         onFailure: () -> Unit = {},

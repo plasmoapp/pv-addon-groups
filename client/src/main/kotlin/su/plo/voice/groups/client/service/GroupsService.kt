@@ -8,6 +8,7 @@ import su.plo.voice.groups.protocol.DeleteResult
 import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupSummary
 import su.plo.voice.groups.protocol.GroupsState
+import su.plo.voice.groups.protocol.InviteCandidatesResult
 import su.plo.voice.groups.protocol.InviteResult
 import su.plo.voice.groups.protocol.JoinResult
 import su.plo.voice.groups.protocol.KickResult
@@ -36,6 +37,8 @@ interface GroupsService {
     suspend fun fetchState(): GroupsState
 
     suspend fun browse(): List<GroupSummary>
+
+    suspend fun inviteCandidates(query: String): InviteCandidatesResult
 
     suspend fun create(): CreateResult
 

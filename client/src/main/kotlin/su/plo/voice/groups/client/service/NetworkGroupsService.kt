@@ -23,6 +23,8 @@ import su.plo.voice.groups.protocol.GroupsState
 import su.plo.voice.groups.protocol.GroupsStateChanged
 import su.plo.voice.groups.protocol.HandshakeRequest
 import su.plo.voice.groups.protocol.HandshakeResponse
+import su.plo.voice.groups.protocol.InviteCandidatesRequest
+import su.plo.voice.groups.protocol.InviteCandidatesResult
 import su.plo.voice.groups.protocol.InviteRequest
 import su.plo.voice.groups.protocol.InviteResult
 import su.plo.voice.groups.protocol.JoinRequest
@@ -106,6 +108,8 @@ class NetworkGroupsService(
     }
 
     override suspend fun browse(): List<GroupSummary> = channel.request(BrowseRequest).groups
+
+    override suspend fun inviteCandidates(query: String): InviteCandidatesResult = channel.request(InviteCandidatesRequest(query))
 
     override suspend fun create(): CreateResult = channel.request(CreateRequest)
 

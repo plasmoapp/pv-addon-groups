@@ -72,6 +72,9 @@
     "gui.pv_addon_groups.invite.title": "Invite players",
     "gui.pv_addon_groups.invite.search": "Search players",
     "gui.pv_addon_groups.invite.nobody": "No players to invite",
+    "gui.pv_addon_groups.invite.no_matches": "No players found",
+    "gui.pv_addon_groups.invite.has_more": "Showing first %s players, refine the search",
+    "gui.pv_addon_groups.invite.search_for_more": "Type %s+ characters to search all servers",
     "gui.pv_addon_groups.invite.banned": "Unban the player in group settings to invite them",
 
     "gui.pv_addon_groups.password.placeholder": "Password",

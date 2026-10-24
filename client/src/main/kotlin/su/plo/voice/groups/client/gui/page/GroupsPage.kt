@@ -170,7 +170,7 @@ abstract class GroupsPage {
 
     protected fun fitWidth(vararg labels: McTextComponent): Int = labels.maxOf { RenderUtil.getTextWidth(it) } + BUTTON_PADDING * 2
 
-    private fun row(vararg widgets: GuiAbstractWidget) =
+    protected fun row(vararg widgets: GuiAbstractWidget) =
         tab.FullWidthEntry(
             CompositeRowWidget(
                 0,

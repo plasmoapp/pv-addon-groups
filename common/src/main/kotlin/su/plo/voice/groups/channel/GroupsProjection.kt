@@ -21,6 +21,7 @@ import java.util.UUID
 class GroupsProjection(
     private val groupManager: GroupsManager,
     private val playerCollector: PlayerCollector,
+    private val remoteInviteSearch: Boolean,
 ) {
     fun state(viewer: VoicePlayer): GroupsState {
         val source = viewer.instance
@@ -44,6 +45,7 @@ class GroupsProjection(
                 canLeave = source.hasAddonPermission("leave"),
                 minNameLength = config.minimumNameLength,
                 maxNameLength = config.maximumNameLength,
+                remoteInviteSearch = remoteInviteSearch,
             ),
         )
     }

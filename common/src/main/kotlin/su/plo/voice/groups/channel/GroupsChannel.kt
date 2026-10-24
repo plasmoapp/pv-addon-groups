@@ -1,7 +1,6 @@
 package su.plo.voice.groups.channel
 
 import su.plo.slib.api.entity.player.McGameProfile
-import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.api.server.player.VoicePlayer
 import su.plo.voice.groups.GroupsAddon
 import su.plo.voice.groups.group.GroupImpl
@@ -27,6 +26,8 @@ import su.plo.voice.groups.protocol.GroupNotFound
 import su.plo.voice.groups.protocol.GroupsState
 import su.plo.voice.groups.protocol.HandshakeRequest
 import su.plo.voice.groups.protocol.HandshakeResponse
+import su.plo.voice.groups.protocol.InviteCandidatesRequest
+import su.plo.voice.groups.protocol.InviteCandidatesResult
 import su.plo.voice.groups.protocol.InviteRequest
 import su.plo.voice.groups.protocol.InviteResult
 import su.plo.voice.groups.protocol.JoinRequest
@@ -73,12 +74,18 @@ import su.plo.voice.groups.api.result.UnbanResult as ApiUnbanResult
 class GroupsChannel(
     private val addon: GroupsAddon,
     private val playerCollector: PlayerCollector,
+    private val inviteSearch: InviteSearch? = null,
 ) {
     val server = ChannelServer(CHANNEL_KEY)
 
     private val voiceServer = addon.voiceServer
     private val groupManager = addon.groupManager
-    private val projection = GroupsProjection(groupManager, playerCollector)
+    private val projection =
+        GroupsProjection(
+            groupManager,
+            playerCollector,
+            remoteInviteSearch = inviteSearch != null,
+        )
     private val sessions = GroupsSessionManager()
     private val stateListener = GroupsStateListener(server, sessions, voiceServer, groupManager, projection)
 
@@ -101,6 +108,12 @@ class GroupsChannel(
                 BrowseResponse(projection.browse(player))
             }
         }
+        if (inviteSearch != null) {
+            voiceServer.eventBus.register(addon, inviteSearch)
+            handle<InviteCandidatesRequest, InviteCandidatesResult> { player, request ->
+                inviteCandidates(inviteSearch, player, request)
+            }
+        }
         handle<CreateRequest, CreateResult> { player, _ -> create(player) }
         handle<JoinRequest, JoinResult>(::join)
         handle<LeaveRequest, LeaveResult> { player, _ -> leave(player) }
@@ -119,7 +132,26 @@ class GroupsChannel(
         stateListener.unregister()
         voiceServer.eventBus.unregister(addon, stateListener)
         voiceServer.eventBus.unregister(addon, sessions)
+        inviteSearch?.let { voiceServer.eventBus.unregister(addon, it) }
         server.shutdown()
+    }
+
+    private fun inviteCandidates(
+        search: InviteSearch,
+        player: VoicePlayer,
+        request: InviteCandidatesRequest,
+    ): InviteCandidatesResult {
+        search.checkRateLimit(player.instance.uuid)?.let { return it }
+
+        val group =
+            synchronized(groupManager) {
+                val group = groupManager.groupByPlayer[player.instance.uuid] ?: return NotInGroup
+                if (GroupAction.INVITE !in projection.actions(group, player)) return NoPermission
+
+                group
+            }
+
+        return search.search(player, group, request.query)
     }
 
     private fun create(player: VoicePlayer): CreateResult =
