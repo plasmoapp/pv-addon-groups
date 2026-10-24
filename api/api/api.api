@@ -191,6 +191,10 @@ public abstract interface class su/plo/voice/groups/api/event/PlayerUnbannedFrom
 public abstract class su/plo/voice/groups/api/result/BanResult {
 }
 
+public final class su/plo/voice/groups/api/result/BanResult$Owner : su/plo/voice/groups/api/result/BanResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/BanResult$Owner;
+}
+
 public final class su/plo/voice/groups/api/result/BanResult$Success : su/plo/voice/groups/api/result/BanResult {
 	public static final field INSTANCE Lsu/plo/voice/groups/api/result/BanResult$Success;
 }

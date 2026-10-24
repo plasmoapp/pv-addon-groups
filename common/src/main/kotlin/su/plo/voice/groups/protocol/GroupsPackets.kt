@@ -229,6 +229,10 @@ data object WrongPassword : ActionError, JoinResult
 data object Self : ActionError, KickResult, BanResult, TransferResult, InviteResult
 
 @Serializable
+@SerialName("owner")
+data object Owner : ActionError, BanResult
+
+@Serializable
 @SerialName("name_length_invalid")
 data class NameLengthInvalid(
     val min: Int,

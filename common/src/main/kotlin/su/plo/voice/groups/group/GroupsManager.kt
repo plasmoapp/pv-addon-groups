@@ -161,6 +161,8 @@ class GroupsManager(
         target: McGameProfile,
     ): BanResult {
         checkNotDeleted(group)
+        if (group.owner?.id == target.id) return BanResult.Owner
+
         val wasMember = target.id in group.playersById
         if (wasMember) leaveInternal(target.id, LeaveReason.BANNED)
         group.banPlayer(target)

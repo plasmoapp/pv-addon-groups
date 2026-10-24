@@ -101,6 +101,8 @@ not_in_group = "&cPlayer is not in the group"
 
 [server.pv.addon.groups.command.ban.error]
 usage = "&cUsage: /groups ban <player>"
+ban_self = "&cYou can't ban yourself"
+ban_owner = "&cYou can't ban the owner of the group"
 already_banned = "&cPlayer is already banned in the group"
 
 [server.pv.addon.groups.command.unban.error]

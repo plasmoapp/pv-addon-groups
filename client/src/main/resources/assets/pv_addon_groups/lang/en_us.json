@@ -23,6 +23,7 @@
     "gui.pv_addon_groups.error.wrong_password": "Wrong password",
     "gui.pv_addon_groups.error.name_length_invalid": "Name must be %s to %s characters long",
     "gui.pv_addon_groups.error.self": "You can't do that to yourself",
+    "gui.pv_addon_groups.error.owner": "You can't do that to the group owner",
 
     "gui.pv_addon_groups.status.online": "Online",
     "gui.pv_addon_groups.status.offline": "Offline",

@@ -186,7 +186,7 @@ class MainPage : GroupsPage() {
                     )
                 }
 
-                if (GroupAction.BAN in group.actions) {
+                if (GroupAction.BAN in group.actions && player.id != group.summary.owner?.id) {
                     add(
                         tr("manage.ban") to {
                             confirm(

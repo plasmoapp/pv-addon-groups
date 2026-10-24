@@ -12,6 +12,7 @@ import su.plo.voice.groups.protocol.NameLengthInvalid
 import su.plo.voice.groups.protocol.NoPermission
 import su.plo.voice.groups.protocol.NotBanned
 import su.plo.voice.groups.protocol.NotInGroup
+import su.plo.voice.groups.protocol.Owner
 import su.plo.voice.groups.protocol.PasswordRequired
 import su.plo.voice.groups.protocol.PlayerNotFound
 import su.plo.voice.groups.protocol.Self
@@ -65,6 +66,7 @@ fun ActionError.message(): McTextComponent =
         PasswordRequired -> tr("error.password_required")
         WrongPassword -> tr("error.wrong_password")
         Self -> tr("error.self")
+        Owner -> tr("error.owner")
         is NameLengthInvalid -> tr("error.name_length_invalid", min, max)
     }
 

@@ -39,6 +39,7 @@ import su.plo.voice.groups.protocol.NameLengthInvalid
 import su.plo.voice.groups.protocol.NoPermission
 import su.plo.voice.groups.protocol.NotBanned
 import su.plo.voice.groups.protocol.NotInGroup
+import su.plo.voice.groups.protocol.Owner
 import su.plo.voice.groups.protocol.PasswordRequired
 import su.plo.voice.groups.protocol.PlayerNotFound
 import su.plo.voice.groups.protocol.Self
@@ -57,6 +58,7 @@ import su.plo.voice.groups.util.extend.hasAddonPermission
 import su.plo.voice.groups.util.extend.hasFlagPermission
 import su.plo.voice.groups.util.extend.hasTierPermission
 import java.util.UUID
+import su.plo.voice.groups.api.result.BanResult as ApiBanResult
 import su.plo.voice.groups.api.result.CancelInviteResult as ApiCancelInviteResult
 import su.plo.voice.groups.api.result.CreateResult as ApiCreateResult
 import su.plo.voice.groups.api.result.DeclineInviteResult as ApiDeclineInviteResult
@@ -204,9 +206,11 @@ class GroupsChannel(
             if (group.isBanned(request.playerId)) return Success
 
             val target = banTarget(group, player, request.playerId) ?: return PlayerNotFound
-            group.ban(target)
 
-            Success
+            when (group.ban(target)) {
+                ApiBanResult.Success -> Success
+                ApiBanResult.Owner -> Owner
+            }
         }
 
     private fun unban(

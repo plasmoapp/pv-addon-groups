@@ -7,6 +7,7 @@ import dev.apehum.mcdsl.command.literalCommandBuilder
 import su.plo.slib.api.command.McCommandSource
 import su.plo.slib.api.command.brigadier.McBrigadierSource
 import su.plo.slib.api.entity.player.McGameProfile
+import su.plo.voice.groups.api.result.BanResult
 import su.plo.voice.groups.api.result.KickResult
 import su.plo.voice.groups.api.result.TransferResult
 import su.plo.voice.groups.command.GroupsCommands
@@ -101,16 +102,25 @@ fun GroupsCommands.banCommand(): DslCommandBuilder<McBrigadierSource> =
             val players = targetsArgument.ifEmpty { return@executes }
 
             val single = players.size == 1
-            players
-                .filter { single || it.id != player.instance.uuid }
-                .forEach { target ->
-                    if (group.isBanned(target.id)) {
-                        if (single) source.sendTranslatable("pv.addon.groups.command.ban.error.already_banned")
-                        return@forEach
-                    }
-
-                    group.ban(target)
+            players.forEach { target ->
+                if (target.id == player.instance.uuid) {
+                    if (single) source.sendTranslatable("pv.addon.groups.command.ban.error.ban_self")
+                    return@forEach
                 }
+
+                if (group.isBanned(target.id)) {
+                    if (single) source.sendTranslatable("pv.addon.groups.command.ban.error.already_banned")
+                    return@forEach
+                }
+
+                when (group.ban(target)) {
+                    BanResult.Success -> {}
+
+                    BanResult.Owner -> {
+                        if (single) source.sendTranslatable("pv.addon.groups.command.ban.error.ban_owner")
+                    }
+                }
+            }
         }
     }
 
@@ -160,5 +170,7 @@ private fun GroupsCommands.banTargets(source: McCommandSource): List<McGameProfi
 private fun GroupsCommands.banSuggestions(source: McCommandSource): List<McGameProfile> {
     val (player, group) = senderGroup(source) ?: return emptyList()
 
-    return banTargets(source).filter { it.id != player.instance.uuid && !group.isBanned(it.id) }
+    return banTargets(source).filter {
+        it.id != player.instance.uuid && it.id != group.owner?.id && !group.isBanned(it.id)
+    }
 }

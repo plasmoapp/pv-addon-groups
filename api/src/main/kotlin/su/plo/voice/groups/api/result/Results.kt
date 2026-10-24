@@ -46,6 +46,11 @@ sealed class KickResult {
 
 sealed class BanResult {
     object Success : BanResult()
+
+    /**
+     * The target is the group owner, transfer ownership before banning them.
+     */
+    object Owner : BanResult()
 }
 
 sealed class UnbanResult {
