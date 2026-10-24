@@ -1,0 +1,29 @@
+config-version = "2.7"
+
+bind = "0.0.0.0:25577"
+motd = "<#09add3>pv-addon-groups test proxy"
+show-max-players = 20
+
+online-mode = false
+player-info-forwarding-mode = "modern"
+forwarding-secret-file = "forwarding.secret"
+
+announce-forge = false
+kick-existing-players = false
+ping-passthrough = "DISABLED"
+
+[servers]
+server-1 = "server-1:25565"
+server-2 = "server-2:25565"
+try = ["server-1"]
+
+[forced-hosts]
+
+[advanced]
+compression-threshold = 256
+compression-level = -1
+login-ratelimit = 0
+tcp-fast-open = false
+
+[query]
+enabled = false

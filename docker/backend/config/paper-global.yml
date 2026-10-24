@@ -1,0 +1,4 @@
+proxies:
+  velocity:
+    enabled: true
+    online-mode: false

@@ -1,0 +1,60 @@
+name: pv-addon-groups
+
+x-forwarding: &forwarding
+  VELOCITY_FORWARDING_SECRET: &velocity-secret "a7c524a5-a3b7-414d-acd9-791e7f5d4d4d"
+  PAPER_VELOCITY_SECRET: *velocity-secret
+  PLASMO_VOICE_FORWARDING_SECRET: "7a7826f9-cfa0-4b3e-aabc-9467dc0aa79b"
+
+x-backend: &backend
+  image: itzg/minecraft-server:java21
+  restart: unless-stopped
+  stdin_open: true
+  tty: true
+  environment:
+    <<: *forwarding
+    EULA: "TRUE"
+    TYPE: PAPER
+    VERSION: "1.21.1"
+    ONLINE_MODE: "FALSE"
+    MEMORY: 1G
+    PLUGINS: "https://cdn.modrinth.com/data/1bZhdhsH/versions/NZ5YrZoE/PlasmoVoice-Paper-2.2.0-beta.2.jar"
+
+services:
+  server-1:
+    <<: *backend
+    volumes:
+      - ./data/server-1:/data
+      - ./backend/config:/config:ro
+
+  server-2:
+    <<: *backend
+    volumes:
+      - ./data/server-2:/data
+      - ./backend/config:/config:ro
+
+  velocity:
+    image: itzg/mc-proxy:java25
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    environment:
+      <<: *forwarding
+      TYPE: VELOCITY
+      MEMORY: 512M
+      PLUGINS: "https://cdn.modrinth.com/data/1bZhdhsH/versions/RF94sBdh/PlasmoVoice-Velocity-2.2.0-beta.2.jar"
+    volumes:
+      - ./data/velocity:/server
+      - ./velocity.toml:/config/velocity.toml:ro
+    ports:
+      - "25577:25577/tcp"
+      - "25577:25577/udp"
+    depends_on:
+      - server-1
+      - server-2
+
+# the host VPN needs a lower MTU, the default 1500 blackholes container egress
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: "1376"

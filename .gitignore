@@ -44,3 +44,5 @@ bin/
 .DS_Store
 run/
 run-folia/
+
+docker/data/
