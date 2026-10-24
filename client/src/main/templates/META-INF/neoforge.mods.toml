@@ -1,0 +1,33 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "${mod_license}"
+issueTrackerURL = "https://github.com/plasmoapp/pv-addon-groups/issues"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+displayURL = "https://github.com/plasmoapp/pv-addon-groups"
+authors = "KPidS, Apehum"
+description = '''${mod_description}'''
+
+[[dependencies.${mod_id}]]
+modId = "neoforge"
+type = "required"
+versionRange = "*"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.${mod_id}]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_range}"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.${mod_id}]]
+modId = "plasmovoice"
+type = "required"
+versionRange = "[${plasmovoice_version},)"
+ordering = "AFTER"
+side = "CLIENT"

@@ -1,3 +1,4 @@
+//? if fabric {
 package su.plo.voice.groups.client.entrypoint
 
 import net.fabricmc.api.ClientModInitializer
@@ -18,3 +19,4 @@ class FabricGroupsLoader :
         PlasmoVoiceClient.getAddonsLoader().load(ClientGroupsAddon())
     }
 }
+//?}

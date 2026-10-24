@@ -1,4 +1,5 @@
 import groovy.json.JsonSlurper
+import net.neoforged.moddevgradle.dsl.NeoForgeExtension
 import java.util.zip.ZipFile
 
 plugins {
@@ -8,7 +9,9 @@ plugins {
 }
 
 val mcVersion = stonecutter.current.version
-val loader = "fabric"
+val loader = stonecutter.current.project.substringAfterLast('-')
+val target = stonecutter.current.project.substringBeforeLast('-')
+val isFabric = loader == "fabric"
 val plasmoVoiceVersion =
     libs.versions.plasmovoice
         .asProvider()
@@ -17,6 +20,7 @@ val plasmoVoiceVersion =
 fun propertyVersion(name: String) = property("versions.$name") as String
 
 val shaded: Configuration by configurations.creating
+val shadedProjects = listOf(":api", ":common", ":server")
 
 sourceSets {
     main {
@@ -41,10 +45,17 @@ modstitch {
         }
     }
 
+    moddevgradle {
+        neoForgeVersion = propertyVersion("neoforge")
+
+        defaultRuns(server = false)
+    }
+
     metadata {
-        modId = rootProject.name
+        // neoforge doesn't allow dashes in mod ids
+        modId = if (isFabric) rootProject.name else rootProject.name.replace('-', '_')
         modName = rootProject.name
-        modVersion = "${rootProject.version}+$mcVersion+$loader"
+        modVersion = "${rootProject.version}+$target+$loader"
         modGroup = rootProject.group.toString()
         modDescription = "Plasmo Voice groups addon with client GUI"
         modLicense = "MIT"
@@ -62,8 +73,16 @@ modstitch {
     }
 }
 
+base.archivesName = rootProject.name
+
 java {
     toolchain.languageVersion = modstitch.javaVersion.map(JavaLanguageVersion::of)
+}
+
+stonecutter {
+    replacements.string(current.parsed >= "1.21.11") {
+        replace("ResourceLocation", "Identifier")
+    }
 }
 
 val nestedJarMods = mutableListOf<Any>()
@@ -129,12 +148,11 @@ fun unpackNestedJars(): List<File> {
 }
 
 dependencies {
-    val plasmoVoice = "maven.modrinth:plasmo-voice:$loader-$mcVersion-$plasmoVoiceVersion"
+    val plasmoVoice = "maven.modrinth:plasmo-voice:$loader-$target-$plasmoVoiceVersion"
 
     modstitchModCompileOnly(plasmoVoice)
-    modLocalRuntimeNested(plasmoVoice)
 
-    listOf(":api", ":common", ":server").forEach {
+    shadedProjects.forEach {
         shaded(project(it)) {
             isTransitive = false
         }
@@ -148,13 +166,38 @@ dependencies {
 
     compileOnly(rootProject.libs.kotlinx.coroutines)
 
-    modstitchModLocalRuntime("net.fabricmc.fabric-api:fabric-api:${propertyVersion("fabric_api")}")
+    if (isFabric) {
+        modLocalRuntimeNested(plasmoVoice)
+        modstitchModLocalRuntime("net.fabricmc.fabric-api:fabric-api:${propertyVersion("fabric_api")}")
 
-    modstitchModLocalRuntime(kotlin("stdlib"))
-    modstitchModLocalRuntime(rootProject.libs.kotlinx.json)
-    modstitchModLocalRuntime(rootProject.libs.kotlinx.coroutines)
+        modstitchModLocalRuntime(kotlin("stdlib"))
+        modstitchModLocalRuntime(rootProject.libs.kotlinx.json)
+        modstitchModLocalRuntime(rootProject.libs.kotlinx.coroutines)
 
-    modstitchModLocalRuntime(files(provider { unpackNestedJars() }))
+        modstitchModLocalRuntime(files(provider { unpackNestedJars() }))
+    } else {
+        modstitchModLocalRuntime(plasmoVoice)
+
+        modstitchLocalRuntime(kotlin("stdlib"))
+        modstitchLocalRuntime(rootProject.libs.kotlinx.json)
+        modstitchLocalRuntime(rootProject.libs.kotlinx.coroutines)
+        modstitchLocalRuntime(rootProject.libs.mcdsl.brigadier) {
+            isTransitive = false
+        }
+        modstitchLocalRuntime(rootProject.libs.msgpack) {
+            isTransitive = false
+        }
+    }
+}
+
+if (!isFabric) {
+    shadedProjects.forEach { evaluationDependsOn(it) }
+
+    configure<NeoForgeExtension> {
+        mods.named("mod") {
+            shadedProjects.forEach { sourceSet(project(it).sourceSets.main.get()) }
+        }
+    }
 }
 
 buildConfig {
@@ -182,6 +225,14 @@ tasks {
         named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
             dependsOn(shadowJar)
             inputFile.set(shadowJar.flatMap { it.archiveFile })
+        }
+    } else {
+        jar {
+            archiveClassifier = "dev"
+        }
+
+        shadowJar {
+            archiveClassifier = ""
         }
     }
 }

@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.ktlint)
 }
 
+evaluationDependsOn(":client")
+
 allprojects {
     repositories {
         mavenCentral()

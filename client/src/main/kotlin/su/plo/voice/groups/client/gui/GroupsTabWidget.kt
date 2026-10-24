@@ -214,6 +214,8 @@ class GroupsTabWidget(
     fun toast(message: McTextComponent) {
         val converter = RenderUtil.getTextConverter()
         SystemToast.addOrUpdate(
+            //~ if >=1.21.2 '.toasts' -> '.toastManager'
+            //~ if >=26.2 '.toastManager' -> '.gui.toastManager()'
             Minecraft.getInstance().toasts,
             TOAST_ID,
             converter.convert(tr("error.title")),
