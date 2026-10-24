@@ -42,11 +42,11 @@ modstitch {
     }
 
     metadata {
-        modId = "${rootProject.name}-client"
+        modId = rootProject.name
         modName = rootProject.name
         modVersion = "${rootProject.version}+$mcVersion+$loader"
         modGroup = rootProject.group.toString()
-        modDescription = "Client-side companion for the pv-addon-groups"
+        modDescription = "Plasmo Voice groups addon with client GUI"
         modLicense = "MIT"
 
         replacementProperties.put("plasmovoice_version", plasmoVoiceVersion)
