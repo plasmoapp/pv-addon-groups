@@ -2,7 +2,6 @@ package su.plo.voice.groups.client.gui.page
 
 import net.minecraft.client.Minecraft
 import su.plo.lib.mod.client.gui.components.Button
-import su.plo.lib.mod.client.gui.components.TextFieldWidget
 import su.plo.lib.mod.client.gui.widget.GuiAbstractWidget
 import su.plo.lib.mod.client.render.gui.GuiRenderContext
 import su.plo.slib.api.chat.component.McTextComponent
@@ -13,7 +12,6 @@ import su.plo.voice.groups.client.gui.gray
 import su.plo.voice.groups.client.gui.pvIcon
 import su.plo.voice.groups.client.gui.text
 import su.plo.voice.groups.client.gui.tr
-import su.plo.voice.groups.client.gui.widget.LockedTextField
 import su.plo.voice.groups.protocol.GroupAction
 import su.plo.voice.groups.protocol.GroupDetails
 import su.plo.voice.groups.protocol.GroupsState
@@ -38,49 +36,54 @@ class SettingsPage(
 
         addHeader(tr("settings.title"), SaveButton(), onBack = { close() })
 
-        val capabilities = state.capabilities
-        val nameLengthHint =
-            tab.HintEntry {
-                tr(
-                    "settings.name.length",
-                    capabilities.minNameLength,
-                    capabilities.maxNameLength,
-                ).withStyle(McTextStyle.RED)
-            }
-        nameLengthHint.visible = !isNameValid()
+        if (GroupAction.SET_NAME in actions) {
+            val capabilities = state.capabilities
+            val nameLengthHint =
+                tab.HintEntry {
+                    tr(
+                        "settings.name.length",
+                        capabilities.minNameLength,
+                        capabilities.maxNameLength,
+                    ).withStyle(McTextStyle.RED)
+                }
+            nameLengthHint.visible = !isNameValid()
 
-        add(
-            tab.LabeledEntry(
-                tr("settings.name"),
-                field(GroupAction.SET_NAME, tr("settings.name.placeholder"), draft.name) {
-                    draft.name = it
-                    nameLengthHint.visible = !isNameValid()
-                },
-            ),
-        )
-        add(nameLengthHint)
-
-        add(tab.LabeledEntry(tr("settings.password"), passwordField(details)))
-        add(
-            tab.LabeledEntry(
-                tr("settings.permissions"),
-                field(
-                    GroupAction.SET_PERMISSIONS,
-                    if (GroupAction.SET_PERMISSIONS !in actions && details.summary.restricted) {
-                        tr("settings.permissions.hidden")
-                    } else {
-                        tr("settings.permissions.placeholder")
+            add(
+                tab.LabeledEntry(
+                    tr("settings.name"),
+                    textField(tr("settings.name.placeholder"), draft.name, tab.fieldWidth) {
+                        draft.name = it
+                        nameLengthHint.visible = !isNameValid()
                     },
-                    draft.permissions,
-                ) { draft.permissions = it },
-            ),
-        )
-        addToggle(
-            tr("settings.persistent"),
-            tr("settings.persistent.description"),
-            draft.persistent,
-            lockedReason = tr("settings.locked").takeIf { GroupAction.SET_PERSISTENT !in actions },
-        ) { draft.persistent = it }
+                ),
+            )
+            add(nameLengthHint)
+        }
+
+        if (GroupAction.SET_PASSWORD in actions) {
+            add(tab.LabeledEntry(tr("settings.password"), passwordField()))
+        }
+
+        if (GroupAction.SET_PERMISSIONS in actions) {
+            add(
+                tab.LabeledEntry(
+                    tr("settings.permissions"),
+                    textField(
+                        tr("settings.permissions.placeholder"),
+                        draft.permissions,
+                        tab.fieldWidth,
+                    ) { draft.permissions = it },
+                ),
+            )
+        }
+
+        if (GroupAction.SET_PERSISTENT in actions) {
+            addToggle(
+                tr("settings.persistent"),
+                tr("settings.persistent.description"),
+                draft.persistent,
+            ) { draft.persistent = it }
+        }
 
         if (GroupAction.UNBAN in actions) {
             add(
@@ -153,42 +156,7 @@ class SettingsPage(
         )
     }
 
-    private fun field(
-        action: GroupAction,
-        placeholder: McTextComponent,
-        value: String,
-        width: Int = tab.fieldWidth,
-        onChange: (String) -> Unit,
-    ): TextFieldWidget {
-        if (details()?.actions?.contains(action) == true) return textField(placeholder, value, width, onChange)
-
-        return LockedTextField(
-            tab.screen,
-            width,
-            value,
-            placeholder.gray(),
-            tr("settings.locked"),
-        )
-    }
-
-    private fun passwordField(details: GroupDetails): GuiAbstractWidget {
-        if (GroupAction.SET_PASSWORD !in details.actions) {
-            val placeholder =
-                if (details.summary.hasPassword) {
-                    tr("settings.password.hidden")
-                } else {
-                    tr("settings.password.placeholder")
-                }
-
-            return LockedTextField(
-                tab.screen,
-                tab.fieldWidth,
-                "",
-                placeholder.gray(),
-                tr("settings.locked"),
-            )
-        }
-
+    private fun passwordField(): GuiAbstractWidget {
         val draft = checkNotNull(draft)
         val field = textField(tr("settings.password.placeholder"), draft.password) { draft.password = it }
         field.setFormatter { value, _ -> text(if (passwordVisible) value else "*".repeat(value.length)) }

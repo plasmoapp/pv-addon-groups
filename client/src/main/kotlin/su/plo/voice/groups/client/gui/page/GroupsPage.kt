@@ -77,20 +77,18 @@ abstract class GroupsPage {
         label: McTextComponent,
         tooltip: McTextComponent?,
         value: Boolean,
-        lockedReason: McTextComponent? = null,
         onChange: (Boolean) -> Unit,
     ) = add(
         tab.LabeledEntry(
             label,
             ToggleButton(
-                BooleanConfigEntry(value).apply { isDisabled = lockedReason != null },
+                BooleanConfigEntry(value),
                 0,
                 0,
                 tab.fieldWidth,
                 20,
             ) { onChange(it) },
             tooltip,
-            lockedReason,
         ),
     )
 

@@ -501,7 +501,6 @@ class GroupsTabWidget(
         private val label: McTextComponent,
         private val widget: GuiAbstractWidget,
         private val tooltip: McTextComponent? = null,
-        private val lockedReason: McTextComponent? = null,
     ) : AbstractScrollbar<VoiceSettingsScreen>.Entry(24) {
         override fun render(
             context: GuiRenderContext,
@@ -519,16 +518,6 @@ class GroupsTabWidget(
             widget.y = y + (height - widget.height) / 2
             widget.render(context, mouseX, mouseY, delta)
             if (tooltip != null && hovered && mouseX < widget.x) setTooltip(tooltip, mouseX, mouseY)
-
-            val widgetHovered =
-                mouseX >= widget.x &&
-                    mouseX < widget.x + widget.width &&
-                    mouseY >= widget.y &&
-                    mouseY < widget.y + widget.height
-            if (lockedReason != null && widgetHovered) {
-                context.requestCursor(GuiCursor.NOT_ALLOWED)
-                setTooltip(lockedReason, mouseX, mouseY)
-            }
         }
 
         override fun widgets(): List<GuiWidgetListener> = listOf(widget)
