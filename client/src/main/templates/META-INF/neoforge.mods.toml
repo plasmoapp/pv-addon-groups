@@ -16,18 +16,18 @@ modId = "neoforge"
 type = "required"
 versionRange = "*"
 ordering = "NONE"
-side = "CLIENT"
+side = "BOTH"
 
 [[dependencies.${mod_id}]]
 modId = "minecraft"
 type = "required"
 versionRange = "${minecraft_range}"
 ordering = "NONE"
-side = "CLIENT"
+side = "BOTH"
 
 [[dependencies.${mod_id}]]
 modId = "plasmovoice"
 type = "required"
 versionRange = "[${plasmovoice_version},)"
 ordering = "AFTER"
-side = "CLIENT"
+side = "BOTH"

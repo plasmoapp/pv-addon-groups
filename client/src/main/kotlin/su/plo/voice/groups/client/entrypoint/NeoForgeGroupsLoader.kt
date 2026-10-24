@@ -1,7 +1,6 @@
 //? if neoforge {
 /*package su.plo.voice.groups.client.entrypoint
 
-import net.neoforged.api.distmarker.Dist
 import net.neoforged.bus.api.IEventBus
 import net.neoforged.fml.common.Mod
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent
@@ -10,7 +9,7 @@ import su.plo.voice.api.server.PlasmoVoiceServer
 import su.plo.voice.groups.client.ClientGroupsAddon
 import su.plo.voice.groups.server.ServerGroupsAddon
 
-@Mod(value = "pv_addon_groups", dist = [Dist.CLIENT])
+@Mod("pv_addon_groups")
 class NeoForgeGroupsLoader(
     modBus: IEventBus,
 ) {

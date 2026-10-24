@@ -14,7 +14,7 @@
         "sources": "https://github.com/plasmoapp/pv-addon-groups",
         "issues": "https://github.com/plasmoapp/pv-addon-groups/issues"
     },
-    "environment": "client",
+    "environment": "*",
     "entrypoints": {
         "client": [
             "su.plo.voice.groups.client.entrypoint.FabricGroupsLoader"
