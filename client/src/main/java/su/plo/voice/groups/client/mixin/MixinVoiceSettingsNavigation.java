@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import su.plo.lib.mod.client.gui.components.Button;
 import su.plo.lib.mod.client.gui.components.IconButton;
 import su.plo.lib.mod.client.render.gui.GuiRenderContext;
 import su.plo.slib.api.chat.component.McTextComponent;
@@ -19,11 +20,13 @@ import su.plo.voice.client.gui.settings.VoiceSettingsScreen;
 import su.plo.voice.client.gui.settings.tab.TabWidget;
 import su.plo.voice.groups.client.gui.GroupsNavigationState;
 import su.plo.voice.groups.client.gui.GroupsTabWidget;
+import su.plo.voice.groups.client.service.GroupsStatus;
 import su.plo.voice.groups.client.service.GroupsClient;
 
 import java.util.List;
 
 import static su.plo.voice.groups.client.gui.RenderKt.addonIcon;
+import static su.plo.voice.groups.client.gui.TextKt.addonStatusTooltip;
 
 @Mixin(value = VoiceSettingsNavigation.class, remap = false)
 public abstract class MixinVoiceSettingsNavigation {
@@ -72,29 +75,26 @@ public abstract class MixinVoiceSettingsNavigation {
         boolean groupsTabWasActive = groupsTabIndex >= 0 && active == groupsTabIndex;
         groupsButton = null;
         groupsTabIndex = -1;
-        if (!GroupsClient.getService().getAvailable()) {
-            if (groupsTabWasActive) active = 0;
-            return;
+
+        GroupsStatus status = GroupsClient.getService().getStatus();
+        if (status != GroupsStatus.AVAILABLE && groupsTabWasActive) active = 0;
+        if (status == GroupsStatus.UNAVAILABLE) return;
+
+        if (status == GroupsStatus.AVAILABLE) {
+            groupsTabIndex = tabWidgets.size();
+            if (groupsTabWasActive) active = groupsTabIndex;
+            tabWidgets.add(new GroupsTabWidget(parent, voiceClient, config, groupsNavigation));
         }
 
-        GroupsTabWidget tab = new GroupsTabWidget(parent, voiceClient, config, groupsNavigation);
-
-        int tabIndex = tabWidgets.size();
-        groupsTabIndex = tabIndex;
-        if (groupsTabWasActive) active = tabIndex;
-        tabWidgets.add(tab);
-
+        int tabIndex = groupsTabIndex;
+        McTextComponent tooltip = addonStatusTooltip(status);
         groupsButton = new IconButton(
                 parent.getWidth() - GROUPS_BUTTON_OFFSET,
                 8,
                 20,
                 20,
-                button -> openTab(tabIndex),
-                (button, mouseX, mouseY) -> parent.setTooltip(
-                        McTextComponent.translatable("gui.pv_addon_groups.groups"),
-                        mouseX,
-                        mouseY
-                ),
+                tabIndex >= 0 ? button -> openTab(tabIndex) : Button.NO_ACTION,
+                (button, mouseX, mouseY) -> parent.setTooltip(tooltip, mouseX, mouseY),
                 GROUPS_ICON,
                 true
         );
@@ -112,7 +112,7 @@ public abstract class MixinVoiceSettingsNavigation {
     private void renderGroupsButton(GuiRenderContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (groupsButton == null) return;
 
-        groupsButton.setActive(active != groupsTabIndex);
+        groupsButton.setActive(groupsTabIndex >= 0 && active != groupsTabIndex);
         groupsButton.render(context, mouseX, mouseY, delta);
     }
 

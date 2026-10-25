@@ -4,7 +4,6 @@ import su.plo.config.provider.ConfigurationProvider
 import su.plo.config.provider.toml.TomlConfiguration
 import su.plo.slib.api.event.permission.McPermissionsRegisterEvent
 import su.plo.slib.api.event.player.McPlayerQuitEvent
-import su.plo.slib.api.logging.McLoggerFactory
 import su.plo.slib.api.permission.PermissionDefault
 import su.plo.voice.api.addon.AddonInitializer
 import su.plo.voice.api.addon.InjectPlasmoVoice
@@ -156,11 +155,11 @@ open class GroupsAddon : AddonInitializer {
         javaClass.classLoader.getResourceAsStream(String.format("groups/%s", resourcePath))
 
     companion object {
+        const val ACTIVATION_NAME = "groups"
+
         private val toml =
             ConfigurationProvider.getProvider<ConfigurationProvider>(
                 TomlConfiguration::class.java,
             )
-
-        private const val ACTIVATION_NAME = "groups"
     }
 }

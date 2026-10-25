@@ -43,8 +43,7 @@ class ClientGroupsAddon : AddonInitializer {
     fun onVoiceConnect(event: UdpClientConnectedEvent) {
         scope.launch {
             try {
-                val response = network.handshake() ?: return@launch
-                ADDON_LOGGER.info("Groups handshake done, server protocol {}", response.protocolVersion)
+                ADDON_LOGGER.info("Groups handshake status: {}", network.handshake())
             } catch (e: Throwable) {
                 ADDON_LOGGER.debug("Groups handshake failed", e)
             }

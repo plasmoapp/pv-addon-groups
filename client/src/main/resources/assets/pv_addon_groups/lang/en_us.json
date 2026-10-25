@@ -1,5 +1,7 @@
 {
     "gui.pv_addon_groups.groups": "Groups",
+    "gui.pv_addon_groups.outdated.server": "Groups addon on this server is outdated",
+    "gui.pv_addon_groups.outdated.client": "Update groups client-side addon to use groups on this server",
 
     "gui.pv_addon_groups.back": "Back",
     "gui.pv_addon_groups.cancel": "Cancel",

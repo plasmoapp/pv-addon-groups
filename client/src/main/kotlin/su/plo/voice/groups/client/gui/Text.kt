@@ -2,6 +2,7 @@ package su.plo.voice.groups.client.gui
 
 import su.plo.slib.api.chat.component.McTextComponent
 import su.plo.slib.api.chat.style.McTextStyle
+import su.plo.voice.groups.client.service.GroupsStatus
 import su.plo.voice.groups.protocol.ActionError
 import su.plo.voice.groups.protocol.AlreadyInGroup
 import su.plo.voice.groups.protocol.Banned
@@ -53,6 +54,13 @@ fun groupStatus(group: GroupSummary): McTextComponent {
 
     return status.gray()
 }
+
+fun addonStatusTooltip(status: GroupsStatus): McTextComponent =
+    when (status) {
+        GroupsStatus.SERVER_OUTDATED -> tr("outdated.server")
+        GroupsStatus.CLIENT_OUTDATED -> tr("outdated.client")
+        else -> tr("groups")
+    }
 
 fun ActionError.message(): McTextComponent =
     when (this) {

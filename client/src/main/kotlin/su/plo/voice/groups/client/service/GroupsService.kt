@@ -21,8 +21,15 @@ import java.util.UUID
 
 typealias GroupsStateListener = (GroupsState) -> Unit
 
+enum class GroupsStatus {
+    UNAVAILABLE,
+    SERVER_OUTDATED,
+    CLIENT_OUTDATED,
+    AVAILABLE,
+}
+
 interface GroupsService {
-    val available: Boolean
+    val status: GroupsStatus
 
     val self: GroupPlayer
 

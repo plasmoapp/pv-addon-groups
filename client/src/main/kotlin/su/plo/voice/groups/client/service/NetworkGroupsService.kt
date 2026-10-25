@@ -1,9 +1,11 @@
 package su.plo.voice.groups.client.service
 
+import kotlinx.coroutines.TimeoutCancellationException
 import net.minecraft.client.Minecraft
 import su.plo.slib.api.entity.player.McGameProfile
 import su.plo.slib.api.logging.McLoggerFactory
 import su.plo.voice.api.client.PlasmoVoiceClient
+import su.plo.voice.groups.GroupsAddon
 import su.plo.voice.groups.client.channel.ChannelClient
 import su.plo.voice.groups.logging.ADDON_LOGGER
 import su.plo.voice.groups.protocol.BanRequest
@@ -22,7 +24,6 @@ import su.plo.voice.groups.protocol.GroupSummary
 import su.plo.voice.groups.protocol.GroupsState
 import su.plo.voice.groups.protocol.GroupsStateChanged
 import su.plo.voice.groups.protocol.HandshakeRequest
-import su.plo.voice.groups.protocol.HandshakeResponse
 import su.plo.voice.groups.protocol.InviteCandidatesRequest
 import su.plo.voice.groups.protocol.InviteCandidatesResult
 import su.plo.voice.groups.protocol.InviteRequest
@@ -42,7 +43,6 @@ import su.plo.voice.groups.protocol.UnbanRequest
 import su.plo.voice.groups.protocol.UnbanResult
 import su.plo.voice.groups.protocol.UpdateSettingsRequest
 import su.plo.voice.groups.protocol.UpdateSettingsResult
-import su.plo.voice.groups.protocol.isProtocolCompatible
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicLong
@@ -58,14 +58,12 @@ class NetworkGroupsService(
     private val pushes = AtomicLong()
 
     @Volatile
-    private var session: HandshakeResponse? = null
+    override var status = GroupsStatus.UNAVAILABLE
+        private set
 
     @Volatile
     override var state: GroupsState? = null
         private set
-
-    override val available: Boolean
-        get() = session != null
 
     override val self: GroupPlayer
         get() =
@@ -156,30 +154,52 @@ class NetworkGroupsService(
 
     override suspend fun updateSettings(request: UpdateSettingsRequest): UpdateSettingsResult = channel.request(request)
 
-    suspend fun handshake(): HandshakeResponse? {
-        session = null
+    suspend fun handshake(): GroupsStatus {
+        status = GroupsStatus.UNAVAILABLE
 
-        val response = channel.request(HandshakeRequest(PROTOCOL_VERSION, MIN_PROTOCOL_VERSION))
-
-        session =
-            response.takeIf { isProtocolCompatible(it.protocolVersion, it.minProtocolVersion) }
-                ?: run {
-                    logger.warn(
-                        "Groups protocol mismatch: server supports {}..{}, this mod supports {}..{}",
-                        response.minProtocolVersion,
-                        response.protocolVersion,
-                        MIN_PROTOCOL_VERSION,
+        val response =
+            try {
+                channel.request(
+                    HandshakeRequest(
                         PROTOCOL_VERSION,
-                    )
-                    null
-                }
+                        MIN_PROTOCOL_VERSION,
+                    ),
+                )
+            } catch (_: TimeoutCancellationException) {
+                null
+            }
 
-        return session
+        val result =
+            when {
+                response == null && hasGroupsSourceLine() -> GroupsStatus.SERVER_OUTDATED
+                response == null -> GroupsStatus.UNAVAILABLE
+                response.protocolVersion < MIN_PROTOCOL_VERSION -> GroupsStatus.SERVER_OUTDATED
+                response.minProtocolVersion > PROTOCOL_VERSION -> GroupsStatus.CLIENT_OUTDATED
+                else -> GroupsStatus.AVAILABLE
+            }
+
+        if (response != null && result != GroupsStatus.AVAILABLE) {
+            logger.warn(
+                "Groups protocol mismatch: server supports {}..{}, this mod supports {}..{}",
+                response.minProtocolVersion,
+                response.protocolVersion,
+                MIN_PROTOCOL_VERSION,
+                PROTOCOL_VERSION,
+            )
+        }
+
+        status = result
+        return result
     }
 
     fun reset() {
-        session = null
+        status = GroupsStatus.UNAVAILABLE
         state = null
         channel.reset()
     }
+
+    private fun hasGroupsSourceLine(): Boolean =
+        voiceClient.sourceLineManager
+            .getLineByName(GroupsAddon.ACTIVATION_NAME)
+            .isPresent
 }
