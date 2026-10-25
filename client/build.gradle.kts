@@ -19,7 +19,7 @@ val plasmoVoiceVersion =
 
 fun propertyVersion(name: String) = property("versions.$name") as String
 
-val shaded: Configuration by configurations.creating
+val shaded = configurations.create("shaded")
 val shadedProjects = listOf(":api", ":common", ":server")
 
 sourceSets {
@@ -55,7 +55,7 @@ modstitch {
         // neoforge doesn't allow dashes in mod ids
         modId = if (isFabric) rootProject.name else rootProject.name.replace('-', '_')
         modName = rootProject.name
-        modVersion = "${rootProject.version}+$target+$loader"
+        modVersion = rootProject.version.toString()
         modGroup = rootProject.group.toString()
         modDescription = "Plasmo Voice groups addon with client GUI"
         modLicense = "MIT"
@@ -73,7 +73,7 @@ modstitch {
     }
 }
 
-base.archivesName = rootProject.name
+base.archivesName = "${rootProject.name}-${rootProject.version}+$target-$loader"
 
 java {
     toolchain.languageVersion = modstitch.javaVersion.map(JavaLanguageVersion::of)
@@ -210,6 +210,10 @@ buildConfig {
 }
 
 tasks {
+    withType<AbstractArchiveTask>().configureEach {
+        archiveVersion = ""
+    }
+
     shadowJar {
         configurations = listOf(shaded)
 
@@ -234,5 +238,17 @@ tasks {
         shadowJar {
             archiveClassifier = ""
         }
+    }
+
+    val finalJar = if (modstitch.platform.isLoomRemap) modstitch.finalJarTask else shadowJar
+
+    val copyJarToRootProject =
+        register<Copy>("copyJarToRootProject") {
+            from(finalJar.flatMap { it.archiveFile })
+            into(rootProject.layout.buildDirectory.dir("libs"))
+        }
+
+    build {
+        dependsOn(copyJarToRootProject)
     }
 }
