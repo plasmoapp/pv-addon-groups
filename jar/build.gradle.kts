@@ -30,6 +30,9 @@ entrypoints {
 
     paperPlugin = true
     paperOpenClassloader = true
+
+    fabric = false
+    neoForge = false
 }
 
 val platforms =
