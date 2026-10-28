@@ -45,6 +45,7 @@
     "gui.pv_addon_groups.main.create": "Create",
     "gui.pv_addon_groups.main.create.title": "Create a new group",
     "gui.pv_addon_groups.main.no_groups": "No other groups",
+    "gui.pv_addon_groups.main.not_in_group": "You aren't in a group",
     "gui.pv_addon_groups.main.join.title": "Join \"%s\"",
     "gui.pv_addon_groups.main.join.no_permission": "You don't have permission to join this group",
     "gui.pv_addon_groups.main.join.banned": "You are banned from this group",

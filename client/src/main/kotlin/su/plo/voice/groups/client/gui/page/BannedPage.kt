@@ -13,11 +13,11 @@ class BannedPage(
         state.current?.let { it.summary.id == groupId && GroupAction.UNBAN in it.actions } == true
 
     override fun init() {
-        addHeader(tr("banned.title"))
+        val page = addCategory(tr("banned.title"), leading = listOf(backButton()))
 
         val banned = state.current?.banned.orEmpty()
         if (banned.isEmpty()) {
-            addHint(tr("banned.empty"))
+            page.add(hint(tr("banned.empty")))
             return
         }
 
@@ -26,8 +26,8 @@ class BannedPage(
                 button(tr("banned.unban")) { button ->
                     perform(button) { unban(groupId, player.id) }
                 }
-            add(
-                tab.CardEntry(
+            page.add(
+                card(
                     player,
                     text(player.name),
                     null,

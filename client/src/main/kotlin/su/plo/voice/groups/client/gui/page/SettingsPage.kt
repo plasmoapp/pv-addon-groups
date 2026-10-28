@@ -2,11 +2,11 @@ package su.plo.voice.groups.client.gui.page
 
 import net.minecraft.client.Minecraft
 import su.plo.lib.mod.client.gui.components.Button
+import su.plo.lib.mod.client.gui.components.CompositeRowWidget
 import su.plo.lib.mod.client.gui.widget.GuiAbstractWidget
 import su.plo.lib.mod.client.render.gui.GuiRenderContext
 import su.plo.slib.api.chat.component.McTextComponent
 import su.plo.slib.api.chat.style.McTextStyle
-import su.plo.voice.client.gui.settings.widget.CompositeRowWidget
 import su.plo.voice.groups.client.gui.addonIcon
 import su.plo.voice.groups.client.gui.gray
 import su.plo.voice.groups.client.gui.pvIcon
@@ -34,39 +34,39 @@ class SettingsPage(
         val draft = draft ?: Draft(details).also { draft = it }
         val actions = details.actions
 
-        addHeader(tr("settings.title"), SaveButton(), onBack = { close() })
+        val page = addCategory(tr("settings.title"), SaveButton(), leading = listOf(backButton { close() }))
 
         if (GroupAction.SET_NAME in actions) {
             val capabilities = state.capabilities
             val nameLengthHint =
-                tab.HintEntry {
+                hint(
                     tr(
                         "settings.name.length",
                         capabilities.minNameLength,
                         capabilities.maxNameLength,
-                    ).withStyle(McTextStyle.RED)
-                }
-            nameLengthHint.visible = !isNameValid()
+                    ).withStyle(McTextStyle.RED),
+                )
+            nameLengthHint.isVisible = !isNameValid()
 
-            add(
-                tab.LabeledEntry(
+            page.add(
+                labeled(
                     tr("settings.name"),
                     textField(tr("settings.name.placeholder"), draft.name, tab.fieldWidth) {
                         draft.name = it
-                        nameLengthHint.visible = !isNameValid()
+                        nameLengthHint.isVisible = !isNameValid()
                     },
                 ),
             )
-            add(nameLengthHint)
+            page.add(nameLengthHint)
         }
 
         if (GroupAction.SET_PASSWORD in actions) {
-            add(tab.LabeledEntry(tr("settings.password"), passwordField()))
+            page.add(labeled(tr("settings.password"), passwordField()))
         }
 
         if (GroupAction.SET_PERMISSIONS in actions) {
-            add(
-                tab.LabeledEntry(
+            page.add(
+                labeled(
                     tr("settings.permissions"),
                     textField(
                         tr("settings.permissions.placeholder"),
@@ -78,16 +78,18 @@ class SettingsPage(
         }
 
         if (GroupAction.SET_PERSISTENT in actions) {
-            addToggle(
-                tr("settings.persistent"),
-                tr("settings.persistent.description"),
-                draft.persistent,
-            ) { draft.persistent = it }
+            page.add(
+                toggle(
+                    tr("settings.persistent"),
+                    tr("settings.persistent.description"),
+                    draft.persistent,
+                ) { draft.persistent = it },
+            )
         }
 
         if (GroupAction.UNBAN in actions) {
-            add(
-                tab.LinkEntry(
+            page.add(
+                link(
                     tr("banned.title"),
                     tr("settings.banned", details.banned.orEmpty().size).gray(),
                 ) { tab.open(BannedPage(groupId)) },
@@ -95,15 +97,17 @@ class SettingsPage(
         }
 
         if (GroupAction.DELETE in actions) {
-            addRow(
-                button(tr("settings.delete").withStyle(McTextStyle.RED), width = 0) {
-                    confirm(
-                        tr("settings.delete"),
-                        listOf(tr("settings.delete.message", details.summary.name)),
-                        tr("settings.delete.confirm").withStyle(McTextStyle.RED),
-                        pops = 2,
-                    ) { delete(groupId) }
-                },
+            page.add(
+                row(
+                    button(tr("settings.delete").withStyle(McTextStyle.RED), width = 0) {
+                        confirm(
+                            tr("settings.delete"),
+                            listOf(tr("settings.delete.message", details.summary.name)),
+                            tr("settings.delete.confirm").withStyle(McTextStyle.RED),
+                            pops = 2,
+                        ) { delete(groupId) }
+                    },
+                ),
             )
         }
     }
@@ -171,11 +175,8 @@ class SettingsPage(
             }
 
         return CompositeRowWidget(
-            0,
-            0,
+            ELEMENT_GAP,
             tab.fieldWidth,
-            20,
-            2,
             field,
             visibility,
             copy,

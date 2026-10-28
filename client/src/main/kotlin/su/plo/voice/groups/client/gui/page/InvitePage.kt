@@ -1,10 +1,10 @@
 package su.plo.voice.groups.client.gui.page
 
 import kotlinx.coroutines.delay
-import su.plo.lib.mod.client.gui.components.AbstractScrollbar
+import su.plo.lib.mod.client.gui.components.CompositeColumnWidget
+import su.plo.lib.mod.client.gui.widget.GuiAbstractWidget
 import su.plo.slib.api.chat.component.McTextComponent
 import su.plo.slib.api.chat.style.McTextStyle
-import su.plo.voice.client.gui.settings.VoiceSettingsScreen
 import su.plo.voice.groups.client.gui.text
 import su.plo.voice.groups.client.gui.tr
 import su.plo.voice.groups.protocol.ActionError
@@ -19,15 +19,13 @@ import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
-private typealias Entry = AbstractScrollbar<VoiceSettingsScreen>.Entry
-
 class InvitePage(
     private val groupId: UUID,
 ) : GroupsPage() {
     private var query = ""
     private var remoteResults: InviteCandidates? = null
     private var searching = false
-    private var resultsAnchor: Entry? = null
+    private var results: CompositeColumnWidget? = null
 
     @Volatile
     private var searchId = 0
@@ -45,20 +43,23 @@ class InvitePage(
     override fun onStateChanged() = updateResults()
 
     override fun init() {
-        addHeader(tr("invite.title"), loadingLabel { searching && remoteResults != null })
-
-        val searchRow =
+        val page =
+            addCategory(
+                tr("invite.title"),
+                loadingLabel { searching && remoteResults != null },
+                leading = listOf(backButton()),
+            )
+        page.add(
             row(
                 textField(tr("invite.search"), query) {
                     if (it == query) return@textField
                     query = it
                     if (remoteSearch) search(after = SEARCH_DEBOUNCE) else updateResults()
                 },
-            )
-        add(searchRow)
-        resultsAnchor = searchRow
+            ),
+        )
 
-        resultEntries().forEach(::add)
+        results = page.add(CompositeColumnWidget(ELEMENT_GAP)).apply { widgets = resultWidgets() }
     }
 
     private fun search(after: Duration = Duration.ZERO) {
@@ -97,14 +98,14 @@ class InvitePage(
     }
 
     private fun updateResults() {
-        val anchor = resultsAnchor ?: return
+        val results = results ?: return
 
-        if (tab.isShown(this)) tab.replaceEntriesAfter(anchor, resultEntries())
+        if (tab.isShown(this)) results.widgets = resultWidgets()
     }
 
-    private fun resultEntries(): List<Entry> {
+    private fun resultWidgets(): List<GuiAbstractWidget> {
         val group = checkNotNull(state.current)
-        val candidates = candidates(group) ?: return listOf(tab.HintEntry { tr("loading") })
+        val candidates = candidates(group) ?: return listOf(hint(tr("loading")))
         val invitedIds = group.sentInvites.orEmpty().mapTo(HashSet()) { it.id }
         val bannedIds = group.banned.orEmpty().mapTo(HashSet()) { it.id }
 
@@ -112,13 +113,12 @@ class InvitePage(
 
         return buildList {
             if (candidates.isEmpty() && footer == null) {
-                val hint = if (query.isBlank()) tr("invite.nobody") else tr("invite.no_matches")
-                add(tab.HintEntry { hint })
+                add(hint(if (query.isBlank()) tr("invite.nobody") else tr("invite.no_matches")))
             }
             candidates.forEach {
-                add(candidateEntry(it, it.id in invitedIds, it.id in bannedIds))
+                add(candidateCard(it, it.id in invitedIds, it.id in bannedIds))
             }
-            footer?.let { add(tab.HintEntry { it }) }
+            footer?.let { add(hint(it)) }
         }
     }
 
@@ -157,11 +157,11 @@ class InvitePage(
         return players.filter { it.id !in memberIds }
     }
 
-    private fun candidateEntry(
+    private fun candidateCard(
         player: GroupPlayer,
         invited: Boolean,
         banned: Boolean,
-    ): Entry {
+    ): GuiAbstractWidget {
         val width = fitWidth(tr("invite"), tr("cancel"))
         val action =
             when {
@@ -188,7 +188,7 @@ class InvitePage(
                 else -> null
             }
 
-        return tab.CardEntry(
+        return card(
             player,
             text(player.name),
             status,

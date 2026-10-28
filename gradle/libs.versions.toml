@@ -4,7 +4,7 @@ kotlinx-json = "1.11.0"
 kotlinx-coroutines = "1.11.0"
 msgpack = "0.6.0"
 
-plasmovoice = "2.2.0-beta.2"
+plasmovoice = "2.2.0-beta.3"
 mcdsl = "2.3.0"
 config = "1.1.0"
 

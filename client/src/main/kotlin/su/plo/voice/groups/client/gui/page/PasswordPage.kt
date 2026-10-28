@@ -18,8 +18,8 @@ class PasswordPage(
 
     override fun init() {
         val title = tr("main.join.title", group.name)
-        addHeader(title)
-        add(tab.CardEntry(group.owner, text(group.name), groupStatus(group)))
+        val page = addCategory(title, leading = listOf(backButton()))
+        page.add(card(group.owner, text(group.name), groupStatus(group)))
 
         val field =
             textField(tr("password.placeholder"), password) {
@@ -29,16 +29,20 @@ class PasswordPage(
             }
         field.setFormatter { value, _ -> text(if (passwordVisible) value else "*".repeat(value.length)) }
 
-        addRow(
-            field,
-            iconButton({ pvIcon(if (passwordVisible) "eye" else "eye_disabled") }, tr("password.toggle")) {
-                passwordVisible = !passwordVisible
-            },
-            button(tr("join")) { button ->
-                tab.leaveCurrentThen(button, title, pops = 1, onFailure = ::onJoinFailed) { join(group.id, password) }
-            },
+        page.add(
+            row(
+                field,
+                iconButton({ pvIcon(if (passwordVisible) "eye" else "eye_disabled") }, tr("password.toggle")) {
+                    passwordVisible = !passwordVisible
+                },
+                button(tr("join")) { button ->
+                    tab.leaveCurrentThen(button, title, pops = 1, onFailure = ::onJoinFailed) {
+                        join(group.id, password)
+                    }
+                },
+            ),
         )
-        addHint { if (wrongPassword) tr("password.wrong").withStyle(McTextStyle.RED) else tr("password.hint") }
+        page.add(hint { if (wrongPassword) tr("password.wrong").withStyle(McTextStyle.RED) else tr("password.hint") })
     }
 
     private fun onJoinFailed(result: JoinResult) {
