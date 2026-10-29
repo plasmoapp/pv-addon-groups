@@ -134,7 +134,7 @@ class MainPage : GroupsPage() {
             player,
             if (isOwner) name.withStyle(McTextStyle.GOLD) else name,
             onlineStatus(player),
-            if (isSelf) emptyList() else memberControls(group, player),
+            if (isSelf) listOfNotNull(memberMenu(group, player)) else memberControls(group, player),
             titleTooltip = tr("owner").takeIf { isOwner },
         )
     }
@@ -166,6 +166,7 @@ class MainPage : GroupsPage() {
     ): GuiAbstractWidget? {
         val groupId = group.summary.id
         val groupName = group.summary.name
+        val isSelf = player.id == service.self.id
         val isOwner = player.id == group.summary.owner?.id
         val items =
             buildList {
@@ -183,7 +184,7 @@ class MainPage : GroupsPage() {
                     )
                 }
 
-                if (GroupAction.KICK in group.actions) {
+                if (GroupAction.KICK in group.actions && !isSelf) {
                     add(
                         tr("manage.kick") to {
                             confirm(
@@ -198,7 +199,7 @@ class MainPage : GroupsPage() {
                     )
                 }
 
-                if (GroupAction.BAN in group.actions && !isOwner) {
+                if (GroupAction.BAN in group.actions && !isSelf && !isOwner) {
                     add(
                         tr("manage.ban") to {
                             confirm(
@@ -214,7 +215,7 @@ class MainPage : GroupsPage() {
             }
 
         if (items.isNotEmpty()) return ContextMenuButton(tab, player.id, items)
-        if (group.actions.none { it in MENU_ACTIONS }) return null
+        if (isSelf || group.actions.none { it in MENU_ACTIONS }) return null
 
         return iconButton(addonIcon("more"), tr("error.owner")).also { it.isActive = false }
     }

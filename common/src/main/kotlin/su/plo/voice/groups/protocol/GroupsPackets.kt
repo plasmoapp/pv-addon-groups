@@ -228,7 +228,7 @@ data object WrongPassword : ActionError, JoinResult
 
 @Serializable
 @SerialName("self")
-data object Self : ActionError, KickResult, BanResult, TransferResult, InviteResult
+data object Self : ActionError, KickResult, BanResult, InviteResult
 
 @Serializable
 @SerialName("owner")

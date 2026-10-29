@@ -268,7 +268,6 @@ class GroupsChannel(
         mutate {
             val group = currentGroup(player, request.groupId) ?: return GroupNotFound
             if (GroupAction.TRANSFER !in projection.actions(group, player)) return NoPermission
-            if (request.playerId == player.instance.uuid) return Self
 
             when (group.transferOwnership(request.playerId)) {
                 ApiTransferResult.Success -> Success
