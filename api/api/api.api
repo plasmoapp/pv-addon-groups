@@ -411,6 +411,10 @@ public final class su/plo/voice/groups/api/result/SetPersistentResult$Success : 
 public abstract class su/plo/voice/groups/api/result/TransferResult {
 }
 
+public final class su/plo/voice/groups/api/result/TransferResult$AlreadyOwner : su/plo/voice/groups/api/result/TransferResult {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/result/TransferResult$AlreadyOwner;
+}
+
 public final class su/plo/voice/groups/api/result/TransferResult$NotInGroup : su/plo/voice/groups/api/result/TransferResult {
 	public static final field INSTANCE Lsu/plo/voice/groups/api/result/TransferResult$NotInGroup;
 }

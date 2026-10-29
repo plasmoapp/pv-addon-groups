@@ -232,7 +232,7 @@ data object Self : ActionError, KickResult, BanResult, TransferResult, InviteRes
 
 @Serializable
 @SerialName("owner")
-data object Owner : ActionError, BanResult
+data object Owner : ActionError, BanResult, TransferResult
 
 @Serializable
 @SerialName("name_length_invalid")

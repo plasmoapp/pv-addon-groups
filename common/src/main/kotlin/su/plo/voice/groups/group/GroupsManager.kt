@@ -225,6 +225,7 @@ class GroupsManager(
         playerId: UUID,
     ): TransferResult {
         checkNotDeleted(group)
+        if (group.owner?.id == playerId) return TransferResult.AlreadyOwner
         val newOwner = group.playersById[playerId] ?: return TransferResult.NotInGroup
         val oldOwner = group.owner
         group.owner = newOwner

@@ -89,6 +89,8 @@ sealed class TransferResult {
     object Success : TransferResult()
 
     object NotInGroup : TransferResult()
+
+    object AlreadyOwner : TransferResult()
 }
 
 sealed class SetNameResult {

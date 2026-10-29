@@ -34,7 +34,7 @@ fun GroupsCommands.transferCommand(): DslCommandBuilder<McBrigadierSource> =
             this,
             "player",
             lookup = { groupPlayers(it) },
-            suggestions = { otherGroupPlayers(it) },
+            suggestions = { transferSuggestions(it) },
         )
 
         executes {
@@ -42,7 +42,7 @@ fun GroupsCommands.transferCommand(): DslCommandBuilder<McBrigadierSource> =
             val newOwner = newOwnerArgument ?: return@executes
 
             if (newOwner.id == player.instance.uuid) {
-                source.sendTranslatable("pv.addon.groups.command.transfer.error.already_owner")
+                source.sendTranslatable("pv.addon.groups.command.transfer.error.already_owner", newOwner.name)
                 return@executes
             }
 
@@ -51,6 +51,10 @@ fun GroupsCommands.transferCommand(): DslCommandBuilder<McBrigadierSource> =
 
                 TransferResult.NotInGroup -> {
                     source.playerNotFoundError()
+                }
+
+                TransferResult.AlreadyOwner -> {
+                    source.sendTranslatable("pv.addon.groups.command.transfer.error.already_owner", newOwner.name)
                 }
             }
         }
@@ -155,6 +159,12 @@ private fun GroupsCommands.otherGroupPlayers(source: McCommandSource): List<McGa
     val (player, group) = senderGroup(source) ?: return emptyList()
 
     return group.players.filter { it.id != player.instance.uuid }
+}
+
+private fun GroupsCommands.transferSuggestions(source: McCommandSource): List<McGameProfile> {
+    val (player, group) = senderGroup(source) ?: return emptyList()
+
+    return group.players.filter { it.id != player.instance.uuid && it.id != group.owner?.id }
 }
 
 private fun GroupsCommands.banTargets(source: McCommandSource): List<McGameProfile> {

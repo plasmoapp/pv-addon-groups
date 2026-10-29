@@ -166,9 +166,10 @@ class MainPage : GroupsPage() {
     ): GuiAbstractWidget? {
         val groupId = group.summary.id
         val groupName = group.summary.name
+        val isOwner = player.id == group.summary.owner?.id
         val items =
             buildList {
-                if (GroupAction.TRANSFER in group.actions) {
+                if (GroupAction.TRANSFER in group.actions && !isOwner) {
                     add(
                         tr("manage.transfer") to {
                             confirm(
@@ -197,7 +198,7 @@ class MainPage : GroupsPage() {
                     )
                 }
 
-                if (GroupAction.BAN in group.actions && player.id != group.summary.owner?.id) {
+                if (GroupAction.BAN in group.actions && !isOwner) {
                     add(
                         tr("manage.ban") to {
                             confirm(

@@ -273,6 +273,7 @@ class GroupsChannel(
             when (group.transferOwnership(request.playerId)) {
                 ApiTransferResult.Success -> Success
                 ApiTransferResult.NotInGroup -> NotInGroup
+                ApiTransferResult.AlreadyOwner -> Owner
             }
         }
 
