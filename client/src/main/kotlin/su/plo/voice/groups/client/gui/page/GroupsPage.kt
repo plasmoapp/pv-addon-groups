@@ -168,11 +168,9 @@ abstract class GroupsPage {
             true,
         )
 
-    protected fun fitWidth(vararg labels: McTextComponent): Int =
-        labels.maxOf { RenderUtil.getTextWidth(it) } + BUTTON_PADDING * 2
+    protected fun fitWidth(vararg labels: McTextComponent): Int = labels.maxOf { RenderUtil.getTextWidth(it) } + BUTTON_PADDING * 2
 
-    protected fun row(vararg widgets: GuiAbstractWidget?): CompositeRowWidget =
-        CompositeRowWidget(ELEMENT_GAP, *widgets)
+    protected fun row(vararg widgets: GuiAbstractWidget?): CompositeRowWidget = CompositeRowWidget(ELEMENT_GAP, *widgets)
 
     protected fun labeled(
         label: McTextComponent,
