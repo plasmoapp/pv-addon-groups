@@ -53,6 +53,10 @@
     "gui.pv_addon_groups.main.invite.accept": "Accept",
     "gui.pv_addon_groups.main.invite.decline": "Decline",
 
+    "gui.pv_addon_groups.activation.title": "Groups Activation",
+    "gui.pv_addon_groups.activation.done": "Done",
+    "gui.pv_addon_groups.activation.done.tooltip": "You can change it later in the %s tab",
+
     "gui.pv_addon_groups.leave.title": "Leave group",
     "gui.pv_addon_groups.leave.confirm": "Leave",
     "gui.pv_addon_groups.leave.current.member": "You will leave \"%s\"",

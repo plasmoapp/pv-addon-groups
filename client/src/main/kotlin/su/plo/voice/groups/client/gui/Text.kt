@@ -24,6 +24,11 @@ fun tr(
     vararg args: Any,
 ): McTextComponent = McTextComponent.translatable("gui.pv_addon_groups.$key", *args)
 
+fun pvTr(
+    key: String,
+    vararg args: Any,
+): McTextComponent = McTextComponent.translatable("gui.plasmovoice.$key", *args)
+
 fun text(value: String): McTextComponent = McTextComponent.literal(value)
 
 fun McTextComponent.gray(): McTextComponent = withStyle(McTextStyle.GRAY)
@@ -78,13 +83,16 @@ fun ActionError.message(): McTextComponent =
         is NameLengthInvalid -> tr("error.name_length_invalid", min, max)
     }
 
-fun joinComponents(components: List<McTextComponent>): McTextComponent =
+fun joinComponents(
+    components: List<McTextComponent>,
+    separator: McTextComponent = tr("list_separator"),
+): McTextComponent =
     McTextComponent.empty().append(
         components.flatMapIndexed { index, component ->
             if (index == 0) {
                 listOf(component)
             } else {
-                listOf(tr("list_separator"), component)
+                listOf(separator, component)
             }
         },
     )

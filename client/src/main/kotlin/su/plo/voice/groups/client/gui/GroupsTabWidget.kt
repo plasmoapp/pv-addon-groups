@@ -11,10 +11,13 @@ import su.plo.lib.mod.client.render.RenderUtil
 import su.plo.lib.mod.client.render.texture.ModPlayerSkins
 import su.plo.slib.api.chat.component.McTextComponent
 import su.plo.voice.api.client.PlasmoVoiceClient
+import su.plo.voice.api.client.audio.capture.ClientActivationManager
 import su.plo.voice.api.client.config.hotkey.Hotkeys
 import su.plo.voice.client.config.VoiceClientConfig
 import su.plo.voice.client.gui.settings.VoiceSettingsScreen
-import su.plo.voice.client.gui.settings.tab.TabWidget
+import su.plo.voice.client.gui.settings.tab.AbstractHotKeysTabWidget
+import su.plo.voice.client.gui.settings.widget.ActivationThresholdWidget
+import su.plo.voice.client.gui.settings.widget.OptionWidget
 import su.plo.voice.groups.client.gui.page.GroupsPage
 import su.plo.voice.groups.client.gui.widget.ContextMenuButton
 import su.plo.voice.groups.client.service.GroupsClient
@@ -31,7 +34,7 @@ class GroupsTabWidget(
     voiceClient: PlasmoVoiceClient,
     config: VoiceClientConfig,
     private val navigation: GroupsNavigationState,
-) : TabWidget(parent, voiceClient, config) {
+) : AbstractHotKeysTabWidget(parent, voiceClient, config) {
     private val stateListener: GroupsStateListener = { Minecraft.getInstance().execute(::onStateChanged) }
 
     private var shownPage: GroupsPage? = null
@@ -53,8 +56,17 @@ class GroupsTabWidget(
     val volumes: VoiceClientConfig.Voice.SourceLineVolumes
         get() = config.voice.volumes
 
+    val activations: ClientActivationManager
+        get() = voiceClient.activationManager
+
+    val activationConfigs: VoiceClientConfig.Activations
+        get() = config.activations
+
     val fieldWidth: Int
         get() = ELEMENT_WIDTH + 24
+
+    val optionWidth: Int
+        get() = ELEMENT_WIDTH
 
     override fun init() {
         val openMenuKey = (screen.overlay as? ContextMenuButton)?.key
@@ -137,6 +149,32 @@ class GroupsTabWidget(
     }
 
     fun isShown(page: GroupsPage): Boolean = attached && navigation.currentPage === page
+
+    fun thresholdOption(): OptionWidget<ActivationThresholdWidget> {
+        val entry = config.voice.activationThreshold
+        val slider =
+            ActivationThresholdWidget(
+                parent,
+                entry,
+                voiceClient.audioCapture,
+                voiceClient.deviceManager,
+                parent.testController,
+                0,
+                0,
+                ELEMENT_WIDTH - 24,
+                20,
+            )
+
+        return OptionWidget(
+            parent,
+            McTextComponent.translatable("gui.plasmovoice.devices.activation_threshold"),
+            slider,
+            entry,
+            McTextComponent.translatable("gui.plasmovoice.devices.activation_threshold.tooltip"),
+            null,
+            slider.buttons,
+        )
+    }
 
     fun <T> launch(
         call: suspend GroupsService.() -> T,

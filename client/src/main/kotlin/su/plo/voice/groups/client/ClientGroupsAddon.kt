@@ -19,6 +19,7 @@ import su.plo.voice.groups.client.service.GroupsClient
 import su.plo.voice.groups.client.service.NetworkGroupsService
 import su.plo.voice.groups.logging.ADDON_LOGGER
 import su.plo.voice.groups.protocol.CHANNEL_KEY
+import java.io.File
 
 @Addon(
     id = BuildConstants.ADDON_ID,
@@ -37,6 +38,9 @@ class ClientGroupsAddon : AddonInitializer {
     override fun onAddonInitialize() {
         network = NetworkGroupsService(createChannelClient(ResourceLocation.parse(CHANNEL_KEY)), voiceClient)
         GroupsClient.service = network
+        GroupsClient.loadConfig(
+            File(voiceClient.configFolder.parentFile, "${BuildConstants.ADDON_ID}/client.toml"),
+        )
     }
 
     @EventSubscribe
