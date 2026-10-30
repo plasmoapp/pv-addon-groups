@@ -68,37 +68,33 @@ public abstract class MixinVoiceSettingsNavigation {
     @Unique
     private int groupsTabIndex = -1;
 
+    @Unique
+    private GroupsStatus groupsStatus;
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void updateGroupsOnStatusChange(CallbackInfo ci) {
+        GroupsStatus status = GroupsClient.getService().getStatus();
+        if (status == groupsStatus) return;
+
+        if (groupsButton != null) parent.removeWidget(groupsButton);
+
+        boolean groupsTabActive = groupsTabIndex >= 0 && active == groupsTabIndex;
+        if (status != GroupsStatus.AVAILABLE && groupsTabActive) openTab(0);
+
+        addGroups(status);
+        parent.repositionElements();
+    }
+
     @Inject(method = "init", at = @At("HEAD"))
     private void addGroupsTab(CallbackInfo ci) {
         // PV keeps the settings screen (and `active`) across servers while rebuilding tabWidgets on each init,
         // so a stale groups index can point past the list or at another tab once availability changes
         boolean groupsTabWasActive = groupsTabIndex >= 0 && active == groupsTabIndex;
-        groupsButton = null;
+        if (groupsTabWasActive) active = 0;
         groupsTabIndex = -1;
 
-        GroupsStatus status = GroupsClient.getService().getStatus();
-        if (status != GroupsStatus.AVAILABLE && groupsTabWasActive) active = 0;
-        if (status == GroupsStatus.UNAVAILABLE) return;
-
-        if (status == GroupsStatus.AVAILABLE) {
-            groupsTabIndex = tabWidgets.size();
-            if (groupsTabWasActive) active = groupsTabIndex;
-            tabWidgets.add(new GroupsTabWidget(parent, voiceClient, config, groupsNavigation));
-        }
-
-        int tabIndex = groupsTabIndex;
-        McTextComponent tooltip = addonStatusTooltip(status);
-        groupsButton = new IconButton(
-                parent.getWidth() - GROUPS_BUTTON_OFFSET,
-                8,
-                20,
-                20,
-                tabIndex >= 0 ? button -> openTab(tabIndex) : Button.NO_ACTION,
-                (button, mouseX, mouseY) -> parent.setTooltip(tooltip, mouseX, mouseY),
-                GROUPS_ICON,
-                true
-        );
-        parent.addWidget(groupsButton);
+        addGroups(GroupsClient.getService().getStatus());
+        if (groupsTabWasActive && groupsTabIndex >= 0) active = groupsTabIndex;
     }
 
     @Inject(method = "repositionElements", at = @At("TAIL"))
@@ -112,7 +108,7 @@ public abstract class MixinVoiceSettingsNavigation {
     private void renderGroupsButton(GuiRenderContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (groupsButton == null) return;
 
-        groupsButton.setActive(groupsTabIndex >= 0 && active != groupsTabIndex);
+        groupsButton.setActive(groupsStatus == GroupsStatus.AVAILABLE && active != groupsTabIndex);
         groupsButton.render(context, mouseX, mouseY, delta);
     }
 
@@ -120,5 +116,32 @@ public abstract class MixinVoiceSettingsNavigation {
     private int reserveGroupsButtonWidth(int disableButtonsWidth) {
         if (groupsButton == null) return disableButtonsWidth;
         return disableButtonsWidth + GROUPS_BUTTON_OFFSET - 52;
+    }
+
+    @Unique
+    private void addGroups(GroupsStatus status) {
+        groupsStatus = status;
+        groupsButton = null;
+        if (status == GroupsStatus.UNAVAILABLE) return;
+
+        boolean available = status == GroupsStatus.AVAILABLE;
+        if (available && groupsTabIndex < 0) {
+            groupsTabIndex = tabWidgets.size();
+            tabWidgets.add(new GroupsTabWidget(parent, voiceClient, config, groupsNavigation));
+        }
+
+        int tabIndex = groupsTabIndex;
+        McTextComponent tooltip = addonStatusTooltip(status);
+        groupsButton = new IconButton(
+                parent.getWidth() - GROUPS_BUTTON_OFFSET,
+                8,
+                20,
+                20,
+                available ? button -> openTab(tabIndex) : Button.NO_ACTION,
+                (button, mouseX, mouseY) -> parent.setTooltip(tooltip, mouseX, mouseY),
+                GROUPS_ICON,
+                true
+        );
+        parent.addWidget(groupsButton);
     }
 }
