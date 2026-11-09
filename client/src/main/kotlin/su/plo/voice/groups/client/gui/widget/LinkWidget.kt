@@ -1,5 +1,6 @@
 package su.plo.voice.groups.client.gui.widget
 
+import com.mojang.blaze3d.platform.InputConstants
 import su.plo.lib.mod.client.gui.components.CompositeRowWidget
 import su.plo.lib.mod.client.gui.widget.GuiAbstractWidget
 import su.plo.lib.mod.client.render.gui.GuiCursor
@@ -22,7 +23,7 @@ class LinkWidget private constructor(
         button: Int,
     ): Boolean {
         if (super.mouseClicked(mouseX, mouseY, button)) return true
-        if (button != 0 || !isMouseOver(mouseX, mouseY)) return false
+        if (button != InputConstants.MOUSE_BUTTON_LEFT || !isMouseOver(mouseX, mouseY)) return false
 
         playDownSound()
         onClick()
