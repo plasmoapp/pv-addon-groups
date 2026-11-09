@@ -5,6 +5,7 @@
     "version": "${mod_version}",
     "description": "${mod_description}",
     "license": "${mod_license}",
+    "icon": "icon.png",
     "authors": [
         "KPidS",
         "Apehum"

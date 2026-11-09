@@ -1,6 +1,7 @@
 modLoader = "javafml"
 loaderVersion = "[1,)"
 license = "${mod_license}"
+${iconKey}="icon.png"
 issueTrackerURL = "https://github.com/plasmoapp/pv-addon-groups/issues"
 
 [[mods]]
