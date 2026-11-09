@@ -151,6 +151,7 @@ class MainPage : GroupsPage() {
             20,
             activationTypeName(type.value()),
             ClientActivation.Type.entries.map(::activationTypeName),
+            type.value().ordinal,
             false,
             { index -> activationTypeTooltip(ClientActivation.Type.entries[index]) },
         ) { index ->
