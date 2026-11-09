@@ -1,9 +1,9 @@
 package su.plo.voice.groups.client.gui.widget
 
 import su.plo.lib.mod.client.gui.components.Button
+import su.plo.lib.mod.client.render.Colors
 import su.plo.lib.mod.client.render.gui.GuiRenderContext
 import su.plo.slib.api.chat.component.McTextComponent
-import su.plo.voice.groups.client.gui.drawIcon
 import su.plo.voice.groups.client.gui.pvIcon
 
 class ResetButton(
@@ -27,6 +27,13 @@ class ResetButton(
         delta: Float,
     ) {
         super.renderButton(context, mouseX, mouseY, delta)
-        context.drawIcon(pvIcon("reset"), x + 2, y + 2, active)
+        context.blitIcon(
+            pvIcon("reset"),
+            x + 2,
+            y + 2,
+            16,
+            16,
+            if (active) Colors.WHITE else Colors.GRAY,
+        )
     }
 }

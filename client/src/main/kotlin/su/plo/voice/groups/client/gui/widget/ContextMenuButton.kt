@@ -10,7 +10,6 @@ import su.plo.lib.mod.client.render.gui.GuiRenderContext
 import su.plo.slib.api.chat.component.McTextComponent
 import su.plo.voice.groups.client.gui.GroupsTabWidget
 import su.plo.voice.groups.client.gui.addonIcon
-import su.plo.voice.groups.client.gui.drawIcon
 import java.awt.Color
 
 class ContextMenuButton(
@@ -49,7 +48,14 @@ class ContextMenuButton(
         delta: Float,
     ) {
         super.renderButton(context, mouseX, mouseY, delta)
-        context.drawIcon(addonIcon("more"), x + 2, y + 2, active)
+        context.blitIcon(
+            addonIcon("more"),
+            x + 2,
+            y + 2,
+            16,
+            16,
+            if (active) Colors.WHITE else Colors.GRAY,
+        )
         if (!open) return
 
         menuX = x + width - menuWidth
