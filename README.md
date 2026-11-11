@@ -138,3 +138,19 @@ On the proxy, `<players>` is a comma-separated list of names.
 | `pv.addon.groups.ban.owner`      | Use `/groups ban/unban` if owner                                    | True    |
 | `pv.addon.groups.ban.all`        | Use `/groups ban/unban` in any group                                | OP      |
 
+## API
+
+API is published to maven central.
+Entrypoint to groups API is at [GroupsApi](https://github.com/plasmoapp/pv-addon-groups/blob/main/api/src/main/kotlin/su/plo/voice/groups/api/GroupsApi.kt).
+
+[![Maven Central](https://img.shields.io/maven-central/v/su.plo.voice.addon/groups-api)](https://central.sonatype.com/artifact/su.plo.voice.addon/groups-api)
+
+```kotlin
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly("su.plo.voice.addon:groups-api:$VERSION")
+}
+```
