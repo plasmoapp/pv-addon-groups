@@ -23,19 +23,14 @@ import java.util.concurrent.CopyOnWriteArrayList
 class GroupImpl(
     private val manager: GroupsManager,
     val playerSet: ServerPlayerSet,
-    id: UUID,
-    name: String,
-    password: String? = null,
-    persistent: Boolean = false,
-    playersById: MutableMap<UUID, McGameProfile> = ConcurrentHashMap(),
-    bannedPlayers: MutableList<McGameProfile> = CopyOnWriteArrayList(),
-    owner: McGameProfile? = null,
-) : GroupData(id, name, password, persistent, playersById, bannedPlayers, owner),
-    Group {
-    var permissionsFilterInternal: HashSet<String> = HashSet()
-
-    private val invitesByTarget: MutableMap<UUID, GroupInviteImpl> = ConcurrentHashMap()
-
+    override val id: UUID,
+    override var name: String,
+    override var password: String? = null,
+    override var persistent: Boolean = false,
+    val playersById: MutableMap<UUID, McGameProfile> = ConcurrentHashMap(),
+    override val bannedPlayers: MutableList<McGameProfile> = CopyOnWriteArrayList(),
+    override var owner: McGameProfile? = null,
+) : Group {
     override val isDeleted: Boolean
         get() = manager.groupsById[id] !== this
 
@@ -56,6 +51,13 @@ class GroupImpl(
 
     override val onlinePlayerCount: Int
         get() = onlinePlayers.size
+
+    var permissionsFilterInternal: HashSet<String> = HashSet()
+
+    private val invitesByTarget: MutableMap<UUID, GroupInviteImpl> = ConcurrentHashMap()
+
+    val data: GroupData
+        get() = GroupData(id, name, password, persistent, playersById, bannedPlayers, owner)
 
     override fun isBanned(playerUuid: UUID): Boolean = bannedPlayers.any { it.id == playerUuid }
 

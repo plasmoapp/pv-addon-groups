@@ -9,12 +9,12 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 @Serializable
-open class GroupData(
+data class GroupData(
     @Serializable(with = UUIDSerializer::class)
     val id: UUID,
-    var name: String,
-    var password: String? = null,
-    var persistent: Boolean = false,
+    val name: String,
+    val password: String? = null,
+    val persistent: Boolean = false,
     val playersById: MutableMap<
         @Serializable(with = UUIDSerializer::class)
         UUID,
@@ -26,5 +26,5 @@ open class GroupData(
         McGameProfile,
     > = CopyOnWriteArrayList(),
     @Serializable(with = McGameProfileSerializer::class)
-    var owner: McGameProfile? = null,
+    val owner: McGameProfile? = null,
 )

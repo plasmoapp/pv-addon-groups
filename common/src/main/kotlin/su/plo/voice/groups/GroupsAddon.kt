@@ -55,7 +55,10 @@ open class GroupsAddon : AddonInitializer {
         val snapshot =
             synchronized(groupManager) {
                 JsonGroupRepository.Snapshot(
-                    groups = groupManager.groupsById.values.filter { it.persistent },
+                    groups =
+                        groupManager.groupsById.values
+                            .filter { it.persistent }
+                            .map { it.data },
                     groupByPlayer = groupManager.groupByPlayer.map { it.key to it.value.id }.toMap(),
                 )
             }
