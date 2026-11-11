@@ -50,6 +50,7 @@ public abstract interface class su/plo/voice/groups/api/GroupInvite {
 }
 
 public abstract interface class su/plo/voice/groups/api/GroupsApi {
+	public static final field Companion Lsu/plo/voice/groups/api/GroupsApi$Companion;
 	public abstract fun createGroup ()Lsu/plo/voice/groups/api/GroupCreateBuilder;
 	public abstract fun declineInvite (Lsu/plo/voice/groups/api/GroupInvite;)Lsu/plo/voice/groups/api/result/DeclineInviteResult;
 	public abstract fun deleteGroup (Lsu/plo/voice/groups/api/Group;)Lsu/plo/voice/groups/api/result/DeleteResult;
@@ -57,8 +58,20 @@ public abstract interface class su/plo/voice/groups/api/GroupsApi {
 	public abstract fun getGroups ()Ljava/util/Collection;
 	public abstract fun getPlayerGroup (Ljava/util/UUID;)Lsu/plo/voice/groups/api/Group;
 	public abstract fun getPlayerInvites (Ljava/util/UUID;)Ljava/util/Collection;
+	public static fun instance ()Lsu/plo/voice/groups/api/GroupsApi;
 	public abstract fun join (Lsu/plo/voice/api/server/player/VoicePlayer;Lsu/plo/voice/groups/api/Group;Ljava/lang/String;)Lsu/plo/voice/groups/api/result/JoinResult;
 	public abstract fun leave (Ljava/util/UUID;)Lsu/plo/voice/groups/api/result/LeaveResult;
+}
+
+public final class su/plo/voice/groups/api/GroupsApi$Companion {
+	public final fun instance ()Lsu/plo/voice/groups/api/GroupsApi;
+}
+
+public final class su/plo/voice/groups/api/GroupsApiProvider {
+	public static final field INSTANCE Lsu/plo/voice/groups/api/GroupsApiProvider;
+	public final fun getInstance ()Lsu/plo/voice/groups/api/GroupsApi;
+	public final fun require ()Lsu/plo/voice/groups/api/GroupsApi;
+	public final fun setInstance (Lsu/plo/voice/groups/api/GroupsApi;)V
 }
 
 public final class su/plo/voice/groups/api/event/GroupCreatedEvent : su/plo/slib/api/event/GlobalEvent {

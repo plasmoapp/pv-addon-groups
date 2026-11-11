@@ -11,6 +11,8 @@ import java.util.UUID
 
 /**
  * Entry point of the groups addon API.
+ *
+ * Use [GroupsApi.instance] to get groups API instance.
  */
 interface GroupsApi {
     /** Unmodifiable live view of all groups. */
@@ -75,4 +77,13 @@ interface GroupsApi {
      * @param playerId the player UUID.
      */
     fun leave(playerId: UUID): LeaveResult
+
+    companion object {
+        /**
+         * @return the groups API instance.
+         * @throws IllegalStateException if groups API is not initialized yet.
+         */
+        @JvmStatic
+        fun instance(): GroupsApi = GroupsApiProvider.require()
+    }
 }

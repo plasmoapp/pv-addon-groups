@@ -9,9 +9,11 @@ import su.plo.voice.api.addon.AddonInitializer
 import su.plo.voice.api.addon.InjectPlasmoVoice
 import su.plo.voice.api.server.PlasmoBaseVoiceServer
 import su.plo.voice.api.server.audio.line.BaseServerSourceLine
+import su.plo.voice.groups.api.GroupsApiProvider
 import su.plo.voice.groups.api.event.InviteRemoveReason
 import su.plo.voice.groups.command.GroupsPermissions
 import su.plo.voice.groups.group.GroupImpl
+import su.plo.voice.groups.group.GroupsApiDelegate
 import su.plo.voice.groups.group.GroupsManager
 import su.plo.voice.groups.listener.ActivationListener
 import su.plo.voice.groups.listener.GroupsConnectionListener
@@ -35,6 +37,7 @@ open class GroupsAddon : AddonInitializer {
 
     init {
         McPermissionsRegisterEvent.registerListener(GroupsPermissions::register)
+        GroupsApiProvider.instance = GroupsApiDelegate { groupManager }
     }
 
     override fun onAddonInitialize() {
