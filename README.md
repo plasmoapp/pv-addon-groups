@@ -14,17 +14,15 @@
 
 # pv-addon-groups
 
-Server-side [Plasmo Voice](https://modrinth.com/mod/plasmo-voice) add-on.
-
 Create group voice chat channels. Keep talking with players far away.
 
-Groups are managed via chat commands. GUI client side add-on coming soon™.
+Groups are managed via chat commands or optional client-side GUI add-on.
 
 Groups can be password protected, or only allow player with certain permissions.
 
 ## Installation
 
-You can install this add-on as either (Paper, Fabric, Forge) OR (Bungee, Velocity) mod/plugin
+You can install this add-on as either (Paper, Fabric, NeoForge) OR (Bungee, Velocity) mod/plugin.
 
 If you install it as a Bungee or Velocity plugin then groups will work for players an all servers.
 
@@ -37,11 +35,24 @@ Players can talk while beeing on different servers.
 1. Open Plasmo Voice menu `V` (by default), go to the `Activation` tab and configure the `Groups` activation.
 2. Use a command to create a group `/groups create [...flags]`
 3. Invite players to the group `/groups invite <player>`
-3. Use the activation to talk in the group.
+4. Use the activation to talk in the group.
 
 ### Browsing groups
 
 You can browse public groups using a command: `/groups` or `/groups browse`
+
+## GUI
+
+Starting with 2.0.0, Fabric and NeoForge mods contains an optional client-side add-on with groups GUI.
+It requires 2.0.0+ to be installed on the server to work.
+
+The GUI is available as a separate tab in Plasmo Voice menu `V` (by default):
+
+<img src=".github/assets/invites.png" alt="Browsing groups and invites" width="100%">
+
+<img src=".github/assets/group.png" alt="Group members" width="100%">
+
+<img src=".github/assets/settings.png" alt="Group settings" width="100%">
 
 ## Flags
 
