@@ -26,6 +26,7 @@ import su.plo.voice.groups.client.service.GroupsService
 import su.plo.voice.groups.protocol.ActionResult
 import su.plo.voice.groups.protocol.GroupPlayer
 import su.plo.voice.groups.protocol.GroupsState
+import java.awt.Color
 
 abstract class GroupsPage {
     protected lateinit var tab: GroupsTabWidget
@@ -213,18 +214,19 @@ abstract class GroupsPage {
     ): CompositeColumnWidget =
         CompositeColumnWidget(LINE_GAP, LABELS_PADDING_TOP).apply {
             add(text(title, titleTooltip))
-            subtitle?.let { add(TextWidget(it, Colors.GRAY)) }
+            subtitle?.let { add(text(it, null, Colors.GRAY)) }
         }
 
     private fun text(
         value: McTextComponent,
         tooltip: McTextComponent?,
+        color: Color = Colors.WHITE,
     ): GuiAbstractWidget =
-        if (tooltip == null) {
-            TextWidget(value)
-        } else {
-            TooltipTextWidget(value) { mouseX, mouseY -> tab.setTooltip(tooltip, mouseX, mouseY) }
-        }
+        TooltipTextWidget(
+            value,
+            color,
+            tooltip,
+        ) { shown, mouseX, mouseY -> tab.setTooltip(shown, mouseX, mouseY) }
 
     private fun tooltip(value: McTextComponent?): Button.OnTooltip =
         if (value == null) {
